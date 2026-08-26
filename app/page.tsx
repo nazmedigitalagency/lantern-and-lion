@@ -68,7 +68,7 @@ export default function Home() {
           <a href="#activities" onClick={() => setMenuOpen(false)}>Activities</a>
           <a href="#safety" onClick={() => setMenuOpen(false)}>Safety</a>
         </nav>
-        <div className="header-actions"><a className="text-link" href="#signin">Sign in</a><a className="button button-coral" href="/onboarding">Try onboarding</a></div>
+        <div className="header-actions"><a className="text-link" href="/parent-access">Parent sign in</a><a className="button button-coral" href="/parent-access">Create account</a></div>
       </header>
 
       <section className="hero">
@@ -153,9 +153,9 @@ export default function Home() {
 
       <section className="section quotes"><div className="section-heading"><p className="kicker">Around the family table</p><h2>The best result is a real conversation.</h2></div><div className="quote-grid">{parentQuotes.map(([quote,person],index) => <blockquote className={index === 1 ? 'featured' : ''} key={person}><span>“</span><p>{quote}</p><cite>{person}</cite></blockquote>)}</div></section>
 
-      <section className="join-section" id="join"><div><p className="kicker">Open the lantern</p><h2>Give them a place where the Bible feels close.</h2><p>Start with one family account. We’ll guide you through the rest.</p></div><a className="button button-primary" href="#register">Create your family account</a></section>
+      <section className="join-section" id="join"><div><p className="kicker">Open the lantern</p><h2>Give them a place where the Bible feels close.</h2><p>Start with one family account. We’ll guide you through the rest.</p></div><a className="button button-primary" href="/parent-access">Create your family account</a></section>
 
-      <footer><div className="footer-brand"><Image src="/lantern-lion-logo.png" alt="" width={76} height={76} /><div><strong>Lantern &amp; Lion</strong><p>Bible play for growing minds.</p></div></div><div><b>Explore</b><a href="#how">How it works</a><a href="#activities">Activities</a><a href="#game">Try a game</a></div><div><b>Families</b><a id="signin" href="#signin">Sign in</a><a id="register" href="#register">Register</a><a href="#safety">Safety</a></div><div><b>Company</b><a href="#about">About</a><a href="#help">Help</a><a href="#privacy">Privacy</a><a href="#terms">Terms</a></div><p className="copyright">© 2026 Lantern &amp; Lion. Built with care for families.</p></footer>
+      <footer><div className="footer-brand"><Image src="/lantern-lion-logo.png" alt="" width={76} height={76} /><div><strong>Lantern &amp; Lion</strong><p>Bible play for growing minds.</p></div></div><div><b>Explore</b><a href="#how">How it works</a><a href="#activities">Activities</a><a href="#game">Try a game</a></div><div><b>Families</b><a href="/parent-access">Parent sign in</a><a href="/parent-access">Create account</a><a href="#safety">Safety</a></div><div><b>Company</b><a href="#about">About</a><a href="#help">Help</a><a href="#privacy">Privacy</a><a href="#terms">Terms</a></div><p className="copyright">© 2026 Lantern &amp; Lion. Built with care for families.</p></footer>
     </main>
   );
 }
