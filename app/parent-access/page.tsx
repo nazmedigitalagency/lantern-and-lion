@@ -95,6 +95,7 @@ export default function ParentAccessPage() {
       <p>Your demo parent account is ready. Family setup and child profiles will begin from here in the next build.</p>
       <div className="access-next-preview"><span>Next step</span><strong>Set up your family</strong><small>Add children, choose age groups and create their private ways to enter.</small></div>
       <a className="button button-primary" href="/family-setup">Set up my family</a>
+      <a className="access-secondary-link" href="/parent-dashboard">Open parent dashboard</a>
       <a className="access-secondary-link" href="/onboarding">Preview child onboarding</a>
       <button className="access-signout" onClick={() => { localStorage.removeItem('lanternLionDemoSession'); setSignedInName(''); setPassword(''); }}>Sign out of the demo</button>
     </section></main>;
