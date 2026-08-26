@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-type GameName = 'verse' | 'truth' | 'trail';
+type GameName = 'verse' | 'truth' | 'trail' | 'match';
+type MatchToken = 'lamp' | 'path';
 
 const activities = [
   ['A', 'Living the story', 'Step into a Bible story, make a choice and see what follows.', 'cream'],
@@ -25,16 +26,33 @@ export default function Home() {
   const [verseSelected, setVerseSelected] = useState<string[]>([]);
   const [truthAnswer, setTruthAnswer] = useState<string | null>(null);
   const [trailStep, setTrailStep] = useState(0);
+  const [matchPlaces, setMatchPlaces] = useState<Record<string, MatchToken | undefined>>({});
+  const [selectedMatch, setSelectedMatch] = useState<MatchToken | null>(null);
+  const [matchChecked, setMatchChecked] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [market, setMarket] = useState('NG');
 
   const verseComplete = verseSelected.length === 3;
-  const gameCount = useMemo(() => ({ verse: '1 of 3', truth: '2 of 3', trail: '3 of 3' })[game], [game]);
-  const marketPrice = useMemo(() => ({ NG: ['₦', '2,000'], GB: ['£', '4.99'], US: ['$', '5.99'], GH: ['GH₵', '45'], KE: ['KSh', '750'] }[market] ?? ['$', '5.99']), [market]);
+  const verseCorrect = verseSelected.join('|') === 'lamp|light|path';
+  const gameCount = ({ verse: '1 of 4', truth: '2 of 4', trail: '3 of 4', match: '4 of 4' })[game];
+  const matchComplete = Boolean(matchPlaces.feet && matchPlaces.way);
+  const matchCorrect = matchPlaces.feet === 'lamp' && matchPlaces.way === 'path';
 
   function chooseGame(next: GameName) {
     setGame(next);
     setTruthAnswer(null);
+  }
+
+  function placeMatch(target: 'feet' | 'way', token: MatchToken) {
+    setMatchPlaces((current) => {
+      const next = { ...current };
+      for (const key of Object.keys(next)) {
+        if (next[key] === token) next[key] = undefined;
+      }
+      next[target] = token;
+      return next;
+    });
+    setSelectedMatch(null);
+    setMatchChecked(false);
   }
 
   return (
@@ -49,7 +67,6 @@ export default function Home() {
           <a href="#how" onClick={() => setMenuOpen(false)}>How it works</a>
           <a href="#activities" onClick={() => setMenuOpen(false)}>Activities</a>
           <a href="#safety" onClick={() => setMenuOpen(false)}>Safety</a>
-          <a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
         </nav>
         <div className="header-actions"><a className="text-link" href="#signin">Sign in</a><a className="button button-coral" href="#join">Start free</a></div>
       </header>
@@ -64,18 +81,19 @@ export default function Home() {
         </div>
 
         <div className="game-shell" id="game">
-          <div className="game-topline"><span>Pick a game</span><strong>{game === 'verse' ? 'Build the verse' : game === 'truth' ? 'Spot the truth' : 'Lantern trail'}</strong><span>{gameCount}</span></div>
+          <div className="game-topline"><span>Pick a game</span><strong>{game === 'verse' ? 'Build the verse' : game === 'truth' ? 'Spot the truth' : game === 'trail' ? 'Lantern trail' : 'Match the clues'}</strong><span>{gameCount}</span></div>
           <div className="game-tabs" role="tablist" aria-label="Try a game">
             <button role="tab" aria-selected={game === 'verse'} onClick={() => chooseGame('verse')}>Words</button>
             <button role="tab" aria-selected={game === 'truth'} onClick={() => chooseGame('truth')}>Choice</button>
             <button role="tab" aria-selected={game === 'trail'} onClick={() => chooseGame('trail')}>Trail</button>
+            <button role="tab" aria-selected={game === 'match'} onClick={() => chooseGame('match')}>Match</button>
           </div>
           {game === 'verse' && <div className="game-card">
             <div className="lantern-icon">✦</div><p className="game-prompt">Tap the words in the right order.</p>
-            <blockquote>“Your word is a <b>{verseSelected[0] ?? '____'}</b> for my feet, a <b>{verseSelected[1] ?? '____'}</b> on my <b>{verseSelected[2] ?? '____'}</b>.”</blockquote>
-            <p className="verse-ref">Psalm 119:105</p>
+            <blockquote>“Your word is a <b>{verseSelected[0] ?? '____'}</b> to my feet, and a <b>{verseSelected[1] ?? '____'}</b> for my <b>{verseSelected[2] ?? '____'}</b>.”</blockquote>
+            <p className="verse-ref">Psalm 119:105, WEB</p>
             <div className="word-bank">{['path', 'light', 'lamp'].map((word) => <button key={word} disabled={verseSelected.includes(word)} onClick={() => setVerseSelected((current) => [...current, word])}>{word}</button>)}</div>
-            {verseComplete ? <div className="game-success" role="status">You found the light. Nice work!</div> : <p className="game-hint">Pick the first word to begin.</p>}
+            {verseComplete ? <div className={verseCorrect ? 'game-success' : 'game-note'} role="status">{verseCorrect ? 'You put every word in its place. Nice work!' : 'Nearly there. Read the verse once more, then try a different order.'}</div> : <p className="game-hint">Pick the first word to begin.</p>}
             <button className="reset-game" onClick={() => setVerseSelected([])}>Start again</button>
           </div>}
           {game === 'truth' && <div className="game-card choice-game">
@@ -88,6 +106,22 @@ export default function Home() {
             <p className="game-prompt">Move the lantern along the path. Each stop reveals part of the story.</p>
             <p className="trail-copy">{['God called Samuel by name.', 'Samuel stopped and listened.', 'He answered, “Speak, Lord.”', 'Listening helped Samuel take his next step.'][trailStep]}</p>
             <button className="button button-primary trail-button" onClick={() => setTrailStep((step) => step === 3 ? 0 : step + 1)}>{trailStep === 3 ? 'Walk it again' : 'Next stop'}</button>
+          </div>}
+          {game === 'match' && <div className="game-card match-game">
+            <div className="match-mark" aria-hidden="true"><span></span><i></i></div>
+            <p className="game-prompt">Drag each clue to the part of the verse it matches. On a phone, tap a clue, then tap its place.</p>
+            <div className="match-tokens" aria-label="Clues to match">
+              {([{ id: 'lamp', label: 'Lantern', symbol: 'L' }, { id: 'path', label: 'Footsteps', symbol: 'F' }] as const).map((token) => {
+                const placed = Object.values(matchPlaces).includes(token.id);
+                return <button key={token.id} draggable={!placed} className={selectedMatch === token.id ? 'selected' : ''} disabled={placed} onDragStart={(event) => event.dataTransfer.setData('text/plain', token.id)} onClick={() => setSelectedMatch(token.id)}><span>{token.symbol}</span>{token.label}</button>;
+              })}
+            </div>
+            <div className="match-zones">
+              {([{ id: 'feet', text: 'a lamp to my feet' }, { id: 'way', text: 'a light for my path' }] as const).map((zone) => <button key={zone.id} className={matchPlaces[zone.id] ? 'filled' : ''} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const token = event.dataTransfer.getData('text/plain') as MatchToken; if (token === 'lamp' || token === 'path') placeMatch(zone.id, token); }} onClick={() => selectedMatch && placeMatch(zone.id, selectedMatch)}><small>{matchPlaces[zone.id] ? (matchPlaces[zone.id] === 'lamp' ? 'Lantern' : 'Footsteps') : 'Drop a clue here'}</small><strong>{zone.text}</strong></button>)}
+            </div>
+            <button className="button button-primary check-match" disabled={!matchComplete} onClick={() => setMatchChecked(true)}>Check my matches</button>
+            {matchChecked && <div className={matchCorrect ? 'game-success' : 'game-note'} role="status">{matchCorrect ? 'That fits the verse. The lamp helps your feet see the path ahead.' : 'Good try. Swap the clues and see which picture fits each phrase.'}</div>}
+            <button className="reset-game" onClick={() => { setMatchPlaces({}); setSelectedMatch(null); setMatchChecked(false); }}>Clear matches</button>
           </div>}
           <p className="privacy-note">No account needed. Nothing from these games is saved.</p>
         </div>
@@ -119,11 +153,9 @@ export default function Home() {
 
       <section className="section quotes"><div className="section-heading"><p className="kicker">Around the family table</p><h2>The best result is a real conversation.</h2></div><div className="quote-grid">{parentQuotes.map(([quote,person],index) => <blockquote className={index === 1 ? 'featured' : ''} key={person}><span>“</span><p>{quote}</p><cite>{person}</cite></blockquote>)}</div></section>
 
-      <section className="section pricing" id="pricing"><div className="pricing-copy"><p className="kicker">Simple family pricing</p><h2>Same club. A fairer local price.</h2><p>Families receive the same features wherever they live. The price changes by billing country so it makes sense locally.</p><label>Show price for<select value={market} onChange={(event) => setMarket(event.target.value)}><option value="NG">Nigeria</option><option value="GB">United Kingdom</option><option value="US">United States</option><option value="GH">Ghana</option><option value="KE">Kenya</option></select></label></div><div className="price-card"><p>Family membership</p><div><sup>{marketPrice[0]}</sup><strong>{marketPrice[1]}</strong><span>/ month</span></div><ul><li>Up to five children</li><li>Child and teen experiences</li><li>Parent progress view</li><li>Teacher-led classes</li><li>All games and stories</li></ul><a className="button button-coral" href="#join">Start with a free trial</a><small>Cancel from your parent account. No adverts.</small></div></section>
-
       <section className="join-section" id="join"><div><p className="kicker">Open the lantern</p><h2>Give them a place where the Bible feels close.</h2><p>Start with one family account. We’ll guide you through the rest.</p></div><a className="button button-primary" href="#register">Create your family account</a></section>
 
-      <footer><div className="footer-brand"><Image src="/lantern-lion-logo.png" alt="" width={76} height={76} /><div><strong>Lantern &amp; Lion</strong><p>Bible play for growing minds.</p></div></div><div><b>Explore</b><a href="#how">How it works</a><a href="#activities">Activities</a><a href="#pricing">Pricing</a></div><div><b>Families</b><a id="signin" href="#signin">Sign in</a><a id="register" href="#register">Register</a><a href="#safety">Safety</a></div><div><b>Company</b><a href="#about">About</a><a href="#help">Help</a><a href="#privacy">Privacy</a><a href="#terms">Terms</a></div><p className="copyright">© 2026 Lantern &amp; Lion. Built with care for families.</p></footer>
+      <footer><div className="footer-brand"><Image src="/lantern-lion-logo.png" alt="" width={76} height={76} /><div><strong>Lantern &amp; Lion</strong><p>Bible play for growing minds.</p></div></div><div><b>Explore</b><a href="#how">How it works</a><a href="#activities">Activities</a><a href="#game">Try a game</a></div><div><b>Families</b><a id="signin" href="#signin">Sign in</a><a id="register" href="#register">Register</a><a href="#safety">Safety</a></div><div><b>Company</b><a href="#about">About</a><a href="#help">Help</a><a href="#privacy">Privacy</a><a href="#terms">Terms</a></div><p className="copyright">© 2026 Lantern &amp; Lion. Built with care for families.</p></footer>
     </main>
   );
 }
