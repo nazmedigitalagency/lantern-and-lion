@@ -68,7 +68,7 @@ export default function Home() {
           <a href="#activities" onClick={() => setMenuOpen(false)}>Activities</a>
           <a href="#safety" onClick={() => setMenuOpen(false)}>Safety</a>
         </nav>
-        <div className="header-actions"><a className="text-link" href="#signin">Sign in</a><a className="button button-coral" href="#join">Start free</a></div>
+        <div className="header-actions"><a className="text-link" href="#signin">Sign in</a><a className="button button-coral" href="/onboarding">Try onboarding</a></div>
       </header>
 
       <section className="hero">
@@ -76,7 +76,7 @@ export default function Home() {
           <p className="eyebrow"><span aria-hidden="true">●</span> Safe Bible play for growing minds</p>
           <h1>Bible learning they’ll ask to come back to.</h1>
           <p className="hero-lead">Stories, games and real-life choices that help children know God’s Word and live it. You stay close without hovering over every tap.</p>
-          <div className="hero-actions"><a className="button button-primary" href="#join">Create your family account</a><a className="button button-secondary" href="#game">Try a game first</a></div>
+          <div className="hero-actions"><a className="button button-primary" href="/onboarding">Try the club onboarding</a><a className="button button-secondary" href="#game">Try a game first</a></div>
           <ul className="trust-list" aria-label="Family safety promises"><li><span>✓</span> Grown-up controlled</li><li><span>✓</span> No ads</li><li><span>✓</span> No strangers</li></ul>
         </div>
 
