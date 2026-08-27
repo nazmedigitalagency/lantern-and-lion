@@ -28,6 +28,7 @@ export default function FamilySetupPage() {
   const [privateArtwork, setPrivateArtwork] = useState(true);
   const [teacherMessages, setTeacherMessages] = useState(true);
   const [progressEmails, setProgressEmails] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
@@ -39,6 +40,7 @@ export default function FamilySetupPage() {
         setPrivateArtwork(saved.privateArtwork); setTeacherMessages(saved.teacherMessages); setProgressEmails(saved.progressEmails);
       }
     } catch { /* Continue with a fresh demo family. */ }
+    setHydrated(true);
   }, []);
 
   function resetChildForm() { setChildName(''); setAge('8'); setAvatar('lion'); setPin(''); setEditingId(null); setError(''); }
@@ -66,6 +68,8 @@ export default function FamilySetupPage() {
     localStorage.setItem('lanternLionDemoFamily', JSON.stringify(family));
     setStep(4);
   }
+
+  if (!hydrated) return <main className="dashboard-loading" aria-live="polite"><span></span><p>Opening family setup…</p></main>;
 
   return <main className="family-setup-page">
     <header className="family-header"><a href="/" className="family-brand"><Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority /><span><strong>Lantern &amp; Lion</strong><small>Parent space</small></span></a>{step < 4 && <div className="family-progress"><span>Family setup · {step} of 3</span><div><i style={{ width: `${step * 33.33}%` }} /></div></div>}<a href="/parent-access" className="family-exit">Parent account</a></header>

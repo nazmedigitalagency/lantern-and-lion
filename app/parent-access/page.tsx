@@ -61,6 +61,7 @@ export default function ParentAccessPage() {
         setError('Please confirm that you are the parent or responsible grown-up.');
         return;
       }
+      ['lanternLionDemoFamily','lanternLionDemoAssignments','lanternLionDemoProgress','lanternLionDemoHelpRequest'].forEach((key) => localStorage.removeItem(key));
       localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, country }));
       localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase() }));
       setSignedInName(name.trim());
@@ -111,7 +112,7 @@ export default function ParentAccessPage() {
 
       <section className="access-form-panel">
         <div className="access-form-wrap">
-          <div className="access-tabs" role="tablist" aria-label="Parent account access"><button role="tab" aria-selected={mode === 'signin'} onClick={() => switchMode('signin')}>Sign in</button><button role="tab" aria-selected={mode === 'signup'} onClick={() => switchMode('signup')}>Create account</button></div>
+          <div className="access-tabs" aria-label="Parent account access"><button aria-pressed={mode === 'signin'} onClick={() => switchMode('signin')}>Sign in</button><button aria-pressed={mode === 'signup'} onClick={() => switchMode('signup')}>Create account</button></div>
 
           <div className="access-heading"><p className="access-kicker">{mode === 'signin' ? 'Welcome back' : 'Start your family space'}</p><h2>{mode === 'signin' ? 'Sign in as a parent.' : 'Create your parent account.'}</h2><p>{mode === 'signin' ? 'Use the demo details below or an account you created on this device.' : 'This takes about a minute. You can add children later.'}</p></div>
 

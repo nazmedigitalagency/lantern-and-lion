@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 type Child = { id: number; name: string; age: number; avatar: string; pin: string };
 type Family = { familyName: string; country: string; children: Child[]; privateArtwork: boolean; teacherMessages: boolean; progressEmails: boolean };
+type Assignment = { id: number; childId: number; title: string; due: string };
 type Page = 'overview' | 'children' | 'assignments' | 'messages' | 'settings';
 
 const fallbackFamily: Family = { familyName: 'The Adeyemi Family', country: 'Nigeria', children: [{ id: 1, name: 'Amara', age: 9, avatar: 'lion', pin: '2468' }, { id: 2, name: 'Tobi', age: 14, avatar: 'lantern', pin: '1357' }], privateArtwork: true, teacherMessages: true, progressEmails: false };
@@ -15,30 +16,54 @@ export default function ParentDashboardPage() {
   const [family, setFamily] = useState<Family>(fallbackFamily);
   const [parentName, setParentName] = useState('Jordan Adeyemi');
   const [selectedChild, setSelectedChild] = useState<number>(fallbackFamily.children[0].id);
-  const [assignments, setAssignments] = useState<Array<{ id: number; childId: number; title: string; due: string }>>([{ id: 1, childId: 1, title: 'David chooses courage', due: 'Friday' }]);
+  const [assignments, setAssignments] = useState<Assignment[]>([{ id: 1, childId: 1, title: 'David chooses courage', due: 'Friday' }]);
   const [lesson, setLesson] = useState(lessonOptions[0]);
   const [due, setDue] = useState('Friday');
   const [savedNotice, setSavedNotice] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([{ from: 'Mrs Grace', body: 'Amara asked a thoughtful question about courage today.', time: 'Today, 10:24' }]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
       const storedFamily = JSON.parse(localStorage.getItem('lanternLionDemoFamily') || 'null');
       const session = JSON.parse(localStorage.getItem('lanternLionDemoSession') || 'null');
       const storedAssignments = JSON.parse(localStorage.getItem('lanternLionDemoAssignments') || 'null');
-      if (storedFamily?.children?.length) { setFamily(storedFamily); setSelectedChild(storedFamily.children[0].id); }
+      if (storedFamily?.children?.length) {
+        setFamily(storedFamily); setSelectedChild(storedFamily.children[0].id);
+        if (!Array.isArray(storedAssignments)) {
+          const seeded = [{ id: Date.now(), childId: storedFamily.children[0].id, title: 'David chooses courage', due: 'Friday' }];
+          setAssignments(seeded); localStorage.setItem('lanternLionDemoAssignments', JSON.stringify(seeded));
+        } else {
+          const validIds = new Set(storedFamily.children.map((child: Child) => child.id));
+          const seen = new Set<string>();
+          const normalized = storedAssignments.filter((item: Assignment) => {
+            const key = `${item.childId}:${item.title}`;
+            if (!validIds.has(item.childId) || seen.has(key)) return false;
+            seen.add(key); return true;
+          });
+          setAssignments(normalized); localStorage.setItem('lanternLionDemoAssignments', JSON.stringify(normalized));
+        }
+      }
       if (session?.name) setParentName(session.name);
-      if (Array.isArray(storedAssignments)) setAssignments(storedAssignments);
+      else if (Array.isArray(storedAssignments)) setAssignments(storedAssignments);
     } catch { /* Keep the demo family available. */ }
+    setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!savedNotice) return;
+    const timer = window.setTimeout(() => setSavedNotice(''), 3200);
+    return () => window.clearTimeout(timer);
+  }, [savedNotice]);
 
   const children = family.children.length ? family.children : fallbackFamily.children;
   const activeChild = children.find((child) => child.id === selectedChild) || children[0];
 
   function addAssignment() {
-    const next = [...assignments, { id: Date.now(), childId: selectedChild, title: lesson, due }];
-    setAssignments(next); localStorage.setItem('lanternLionDemoAssignments', JSON.stringify(next)); setSavedNotice(`${lesson} was assigned to ${activeChild.name}.`);
+    const existing = assignments.find((item) => item.childId === selectedChild && item.title === lesson);
+    const next = existing ? assignments.map((item) => item.id === existing.id ? { ...item, due } : item) : [...assignments, { id: Date.now(), childId: selectedChild, title: lesson, due }];
+    setAssignments(next); localStorage.setItem('lanternLionDemoAssignments', JSON.stringify(next)); setSavedNotice(existing ? `${lesson} was already assigned. The due date is now ${due}.` : `${lesson} was assigned to ${activeChild.name}.`);
   }
 
   function saveSettings(next: Family) {
@@ -50,8 +75,10 @@ export default function ParentDashboardPage() {
     setMessages((current) => [...current, { from: 'You', body: message.trim(), time: 'Just now' }]); setMessage(''); setSavedNotice('Your demo message was added.');
   }
 
+  if (!hydrated) return <main className="dashboard-loading" aria-live="polite"><span></span><p>Opening the parent space…</p></main>;
+
   return <main className="parent-dashboard-page">
-    <aside className="parent-sidebar"><a className="parent-dashboard-brand" href="/"><Image src="/lantern-lion-logo.png" alt="" width={58} height={58} priority /><span><strong>Lantern &amp; Lion</strong><small>Parent space</small></span></a><nav aria-label="Parent dashboard"><button className={page === 'overview' ? 'active' : ''} onClick={() => setPage('overview')}><span>H</span>Home</button><button className={page === 'children' ? 'active' : ''} onClick={() => setPage('children')}><span>C</span>Children</button><button className={page === 'assignments' ? 'active' : ''} onClick={() => setPage('assignments')}><span>A</span>Assignments</button><button className={page === 'messages' ? 'active' : ''} onClick={() => setPage('messages')}><span>M</span>Messages <b>1</b></button><button className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}><span>S</span>Settings</button></nav><div className="parent-sidebar-bottom"><a href="/child-dashboard">Preview child space</a><a href="/family-setup">Manage family setup</a><a href="/parent-access">Sign out</a></div></aside>
+    <aside className="parent-sidebar"><a className="parent-dashboard-brand" href="/"><Image src="/lantern-lion-logo.png" alt="" width={58} height={58} priority /><span><strong>Lantern &amp; Lion</strong><small>Parent space</small></span></a><nav aria-label="Parent dashboard"><button aria-pressed={page === 'overview'} className={page === 'overview' ? 'active' : ''} onClick={() => setPage('overview')}><span>H</span>Home</button><button aria-pressed={page === 'children'} className={page === 'children' ? 'active' : ''} onClick={() => setPage('children')}><span>C</span>Children</button><button aria-pressed={page === 'assignments'} className={page === 'assignments' ? 'active' : ''} onClick={() => setPage('assignments')}><span>A</span>Assignments</button><button aria-pressed={page === 'messages'} className={page === 'messages' ? 'active' : ''} onClick={() => setPage('messages')}><span>M</span>Messages <b>1</b></button><button aria-pressed={page === 'settings'} className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}><span>S</span>Settings</button></nav><div className="parent-sidebar-bottom"><a href="/child-dashboard">Preview child space</a><a href="/family-setup">Manage family setup</a><a href="/parent-access">Sign out</a></div></aside>
 
     <section className="parent-dashboard-main"><header className="parent-dashboard-top"><div><p>{family.familyName}</p><span>Demo parent dashboard</span></div><button className="parent-account-button"><span>{parentName.slice(0,1)}</span><div><strong>{parentName}</strong><small>Family owner</small></div></button></header>
 
@@ -63,7 +90,7 @@ export default function ParentDashboardPage() {
 
       {page === 'assignments' && <div className="parent-dashboard-content"><div className="parent-page-title"><p className="parent-dash-kicker">Assignments</p><h1>Choose what comes next.</h1><p>Assign one useful activity at a time. Children can still explore the rest of the club.</p></div><section className="assignment-builder"><div><label>Child<select value={selectedChild} onChange={(event) => setSelectedChild(Number(event.target.value))}>{children.map((child) => <option key={child.id} value={child.id}>{child.name}</option>)}</select></label><label>Activity<select value={lesson} onChange={(event) => setLesson(event.target.value)}>{lessonOptions.map((item) => <option key={item}>{item}</option>)}</select></label><label>Finish by<select value={due} onChange={(event) => setDue(event.target.value)}><option>Friday</option><option>Sunday</option><option>Next Wednesday</option><option>No due date</option></select></label><button className="button button-primary" onClick={addAssignment}>Assign activity</button></div><aside><p className="parent-dash-kicker">Current assignments</p>{assignments.length ? assignments.map((item) => <article key={item.id}><span>{children.find((child) => child.id === item.childId)?.name.slice(0,1) || 'C'}</span><div><strong>{item.title}</strong><small>{children.find((child) => child.id === item.childId)?.name} · Due {item.due}</small></div><button onClick={() => { const next = assignments.filter((assignment) => assignment.id !== item.id); setAssignments(next); localStorage.setItem('lanternLionDemoAssignments', JSON.stringify(next)); }}>Remove</button></article>) : <p className="empty-assignment">Nothing is assigned right now.</p>}</aside></section></div>}
 
-      {page === 'messages' && <div className="parent-dashboard-content"><div className="parent-page-title"><p className="parent-dash-kicker">Teacher messages</p><h1>Keep the conversation with grown-ups.</h1><p>Teachers can message you about assigned groups. Children never receive private teacher messages.</p></div><section className="message-layout"><aside><button className="active"><span>G</span><div><strong>Mrs Grace</strong><small>Children’s group · 1 new</small></div></button><button><span>D</span><div><strong>Mr Daniel</strong><small>Teen group</small></div></button></aside><div className="message-thread"><header><span>G</span><div><strong>Mrs Grace</strong><small>Assigned teacher for {children[0].name}</small></div></header><div className="message-list">{messages.map((item,index) => <article className={item.from === 'You' ? 'sent' : ''} key={`${item.time}-${index}`}><span>{item.from}</span><p>{item.body}</p><small>{item.time}</small></article>)}</div><div className="message-compose"><label className="sr-only" htmlFor="parent-message">Message Mrs Grace</label><textarea id="parent-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Write a short message to Mrs Grace" /><button onClick={sendMessage}>Send message</button></div></div></section></div>}
+      {page === 'messages' && <div className="parent-dashboard-content"><div className="parent-page-title"><p className="parent-dash-kicker">Teacher messages</p><h1>Keep the conversation with grown-ups.</h1><p>Teachers can message you about assigned groups. Children never receive private teacher messages.</p></div><section className="message-layout"><aside><button className="active"><span>G</span><div><strong>Mrs Grace</strong><small>Children’s group · 1 new</small></div></button><button><span>D</span><div><strong>Mr Daniel</strong><small>Teen group</small></div></button></aside><div className="message-thread"><header><span>G</span><div><strong>Mrs Grace</strong><small>Assigned teacher for {children[0].name}</small></div></header><div className="message-list">{messages.map((item,index) => <article className={item.from === 'You' ? 'sent' : ''} key={`${item.time}-${index}`}><span>{item.from}</span><p>{index === 0 && item.from === 'Mrs Grace' ? `${children[0].name} asked a thoughtful question about courage today.` : item.body}</p><small>{item.time}</small></article>)}</div><div className="message-compose"><label className="sr-only" htmlFor="parent-message">Message Mrs Grace</label><textarea id="parent-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Write a short message to Mrs Grace" /><button onClick={sendMessage}>Send message</button></div></div></section></div>}
 
       {page === 'settings' && <div className="parent-dashboard-content"><div className="parent-page-title"><p className="parent-dash-kicker">Family settings</p><h1>Privacy choices in one place.</h1><p>These demo settings are saved on this device. Child-facing screens cannot change them.</p></div><section className="parent-settings-card"><div><h2>Sharing and contact</h2><p>Choose how work stays private and when you hear from the club.</p></div><div className="parent-setting-list"><label><div><strong>Keep creations inside the family</strong><small>Artwork and written answers stay private unless you share them.</small></div><input type="checkbox" checked={family.privateArtwork} onChange={(event) => saveSettings({ ...family, privateArtwork: event.target.checked })} /><span></span></label><label><div><strong>Allow assigned teacher messages</strong><small>Teachers can contact this parent account, never the child privately.</small></div><input type="checkbox" checked={family.teacherMessages} onChange={(event) => saveSettings({ ...family, teacherMessages: event.target.checked })} /><span></span></label><label><div><strong>Weekly progress email</strong><small>One summary each week. No daily reminders.</small></div><input type="checkbox" checked={family.progressEmails} onChange={(event) => saveSettings({ ...family, progressEmails: event.target.checked })} /><span></span></label></div><div className="parent-settings-links"><a href="/family-setup">Edit family and child profiles</a><a href="/parent-access">Parent account details</a></div></section></div>}
       {savedNotice && <div className="parent-dashboard-toast" role="status"><span>✓</span><p>{savedNotice}</p><button onClick={() => setSavedNotice('')}>Close</button></div>}

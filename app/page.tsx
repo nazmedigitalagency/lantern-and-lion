@@ -82,11 +82,11 @@ export default function Home() {
 
         <div className="game-shell" id="game">
           <div className="game-topline"><span>Pick a game</span><strong>{game === 'verse' ? 'Build the verse' : game === 'truth' ? 'Spot the truth' : game === 'trail' ? 'Lantern trail' : 'Match the clues'}</strong><span>{gameCount}</span></div>
-          <div className="game-tabs" role="tablist" aria-label="Try a game">
-            <button role="tab" aria-selected={game === 'verse'} onClick={() => chooseGame('verse')}>Words</button>
-            <button role="tab" aria-selected={game === 'truth'} onClick={() => chooseGame('truth')}>Choice</button>
-            <button role="tab" aria-selected={game === 'trail'} onClick={() => chooseGame('trail')}>Trail</button>
-            <button role="tab" aria-selected={game === 'match'} onClick={() => chooseGame('match')}>Match</button>
+          <div className="game-tabs" aria-label="Try a game">
+            <button aria-pressed={game === 'verse'} onClick={() => chooseGame('verse')}>Words</button>
+            <button aria-pressed={game === 'truth'} onClick={() => chooseGame('truth')}>Choice</button>
+            <button aria-pressed={game === 'trail'} onClick={() => chooseGame('trail')}>Trail</button>
+            <button aria-pressed={game === 'match'} onClick={() => chooseGame('match')}>Match</button>
           </div>
           {game === 'verse' && <div className="game-card">
             <div className="lantern-icon">✦</div><p className="game-prompt">Tap the words in the right order.</p>

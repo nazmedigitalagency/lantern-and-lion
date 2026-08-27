@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Fredoka, Nunito_Sans } from 'next/font/google';
 import './globals.css';
+import MotionController from './motion-controller';
 
 const fredoka = Fredoka({ variable: '--font-fredoka', subsets: ['latin'], display: 'swap' });
 const nunito = Nunito_Sans({ variable: '--font-nunito', subsets: ['latin'], display: 'swap' });
@@ -24,5 +25,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className={`${fredoka.variable} ${nunito.variable}`}>{children}</body></html>;
+  return <html lang="en"><body className={`${fredoka.variable} ${nunito.variable}`}><MotionController />{children}</body></html>;
 }
