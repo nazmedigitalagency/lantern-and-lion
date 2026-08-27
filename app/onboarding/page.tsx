@@ -20,6 +20,7 @@ export default function OnboardingPage() {
   const [avatar, setAvatar] = useState<Avatar | null>(null);
   const [safetyReady, setSafetyReady] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
+  const [answerFeedback, setAnswerFeedback] = useState<'correct' | 'wrong' | null>(null);
 
   const firstName = name.trim().split(/\s+/)[0] || 'friend';
   const isTeen = path === 'teen';
@@ -32,6 +33,12 @@ export default function OnboardingPage() {
     setAvatar(null);
     setSafetyReady(false);
     setAnswer(null);
+    setAnswerFeedback(null);
+  }
+
+  function chooseFirstLight(next: 'listen' | 'rush' | 'hide') {
+    if (next === 'listen') { setAnswer(next); setAnswerFeedback('correct'); return; }
+    setAnswer(null); setAnswerFeedback('wrong');
   }
 
   return (
@@ -90,11 +97,11 @@ export default function OnboardingPage() {
           <h1>{isTeen ? 'What does listening look like?' : 'Samuel heard his name. What should he do?'}</h1>
           <p className="story-line">“Then Samuel said, ‘Speak; for your servant hears.’” <span>1 Samuel 3:10, WEB</span></p>
           <div className="first-choices">
-            <button className={answer === 'listen' ? 'picked' : ''} onClick={() => setAnswer('listen')}>Pause and listen carefully</button>
-            <button className={answer === 'rush' ? 'picked' : ''} onClick={() => setAnswer('rush')}>Rush ahead without listening</button>
-            <button className={answer === 'hide' ? 'picked' : ''} onClick={() => setAnswer('hide')}>Pretend he heard nothing</button>
+            <button className={answer === 'listen' ? 'picked' : ''} onClick={() => chooseFirstLight('listen')}>Pause and listen carefully</button>
+            <button className={answer === 'rush' ? 'picked' : ''} onClick={() => chooseFirstLight('rush')}>Rush ahead without listening</button>
+            <button className={answer === 'hide' ? 'picked' : ''} onClick={() => chooseFirstLight('hide')}>Pretend he heard nothing</button>
           </div>
-          {answer && <div className={activityCorrect ? 'onboarding-success' : 'onboarding-try'} role="status">{activityCorrect ? 'Yes. Samuel stopped, listened and answered.' : 'Have another look at Samuel’s words. Which choice shows that he was listening?'}</div>}
+          {answerFeedback && <div className={answerFeedback === 'correct' ? 'onboarding-success' : 'onboarding-try'} role="status">{answerFeedback === 'correct' ? 'Yes. Samuel stopped, listened and answered.' : 'Have another look at Samuel’s words. Your choice has been cleared so you can try again.'}</div>}
           <div className="onboarding-actions"><button className="back-button" onClick={() => setStep(3)}>Back</button><button className="button button-primary" disabled={!activityCorrect} onClick={() => setStep(5)}>Finish my first light</button></div>
         </div>}
 

@@ -52,7 +52,13 @@ export default function LearnPage() {
     if (activity.type === 'match') correct = Boolean(activity.pairs?.every(([moment,lesson]) => matches[moment] === lesson));
     if (activity.type === 'reflect') correct = reflection.trim().length >= 12;
     setAttempts((value) => value + 1);
-    if (!correct) { setFeedback(activity.type === 'reflect' ? 'That is a good start. Add a little more so future you remembers the moment.' : 'Not quite yet, and that’s okay. Look again, use the hint if you need it, and try once more.'); return; }
+    if (!correct) {
+      setFeedback(activity.type === 'reflect' ? 'That is a good start. Add a little more so future you remembers the moment.' : 'Not quite yet, and that’s okay. Your choices have been reset so you can try a new answer.');
+      if (activity.type === 'story' || activity.type === 'choice') setChosen('');
+      if (activity.type === 'order') setOrdered([]);
+      if (activity.type === 'match') setMatches({});
+      return;
+    }
     const saved = JSON.parse(localStorage.getItem('lanternLionDemoProgress') || '[]');
     const next = Array.from(new Set([...(Array.isArray(saved) ? saved : []),activity.title]));
     localStorage.setItem('lanternLionDemoProgress',JSON.stringify(next));

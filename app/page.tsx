@@ -24,15 +24,15 @@ const parentQuotes = [
 export default function Home() {
   const [game, setGame] = useState<GameName>('verse');
   const [verseSelected, setVerseSelected] = useState<string[]>([]);
+  const [verseFeedback, setVerseFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [truthAnswer, setTruthAnswer] = useState<string | null>(null);
+  const [truthFeedback, setTruthFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [trailStep, setTrailStep] = useState(0);
   const [matchPlaces, setMatchPlaces] = useState<Record<string, MatchToken | undefined>>({});
   const [selectedMatch, setSelectedMatch] = useState<MatchToken | null>(null);
   const [matchChecked, setMatchChecked] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const verseComplete = verseSelected.length === 3;
-  const verseCorrect = verseSelected.join('|') === 'lamp|light|path';
   const gameCount = ({ verse: '1 of 4', truth: '2 of 4', trail: '3 of 4', match: '4 of 4' })[game];
   const matchComplete = Boolean(matchPlaces.feet && matchPlaces.way);
   const matchCorrect = matchPlaces.feet === 'lamp' && matchPlaces.way === 'path';
@@ -40,6 +40,7 @@ export default function Home() {
   function chooseGame(next: GameName) {
     setGame(next);
     setTruthAnswer(null);
+    setTruthFeedback(null);
   }
 
   function placeMatch(target: 'feet' | 'way', token: MatchToken) {
@@ -53,6 +54,24 @@ export default function Home() {
     });
     setSelectedMatch(null);
     setMatchChecked(false);
+  }
+
+  function chooseVerseWord(word: string) {
+    const next = [...verseSelected,word];
+    setVerseFeedback(null);
+    if (next.length < 3) { setVerseSelected(next); return; }
+    if (next.join('|') === 'lamp|light|path') { setVerseSelected(next); setVerseFeedback('correct'); return; }
+    setVerseSelected([]); setVerseFeedback('wrong');
+  }
+
+  function chooseTruth(answer: 'kind' | 'miss') {
+    if (answer === 'kind') { setTruthAnswer(answer); setTruthFeedback('correct'); return; }
+    setTruthAnswer(null); setTruthFeedback('wrong');
+  }
+
+  function checkMatches() {
+    if (matchCorrect) { setMatchChecked(true); return; }
+    setMatchPlaces({}); setSelectedMatch(null); setMatchChecked(true);
   }
 
   return (
@@ -92,14 +111,14 @@ export default function Home() {
             <div className="lantern-icon">✦</div><p className="game-prompt">Tap the words in the right order.</p>
             <blockquote>“Your word is a <b>{verseSelected[0] ?? '____'}</b> to my feet, and a <b>{verseSelected[1] ?? '____'}</b> for my <b>{verseSelected[2] ?? '____'}</b>.”</blockquote>
             <p className="verse-ref">Psalm 119:105, WEB</p>
-            <div className="word-bank">{['path', 'light', 'lamp'].map((word) => <button key={word} disabled={verseSelected.includes(word)} onClick={() => setVerseSelected((current) => [...current, word])}>{word}</button>)}</div>
-            {verseComplete ? <div className={verseCorrect ? 'game-success' : 'game-note'} role="status">{verseCorrect ? 'You put every word in its place. Nice work!' : 'Nearly there. Read the verse once more, then try a different order.'}</div> : <p className="game-hint">Pick the first word to begin.</p>}
-            <button className="reset-game" onClick={() => setVerseSelected([])}>Start again</button>
+            <div className="word-bank">{['path', 'light', 'lamp'].map((word) => <button key={word} disabled={verseSelected.includes(word)} onClick={() => chooseVerseWord(word)}>{word}</button>)}</div>
+            {verseFeedback ? <div className={verseFeedback === 'correct' ? 'game-success' : 'game-note'} role="status">{verseFeedback === 'correct' ? 'You put every word in its place. Nice work!' : 'Nearly there. The words are back in the bank, ready for another try.'}</div> : <p className="game-hint">Pick the first word to begin.</p>}
+            <button className="reset-game" onClick={() => {setVerseSelected([]);setVerseFeedback(null);}}>Start again</button>
           </div>}
           {game === 'truth' && <div className="game-card choice-game">
             <div className="choice-mark">?</div><p className="game-prompt">Maya sees a new child eating alone. What could love look like?</p>
-            <div className="choice-list"><button onClick={() => setTruthAnswer('kind')}>Ask if she can sit with them</button><button onClick={() => setTruthAnswer('miss')}>Wait for somebody else to go</button><button onClick={() => setTruthAnswer('miss')}>Send a funny picture from far away</button></div>
-            {truthAnswer && <div className={truthAnswer === 'kind' ? 'game-success' : 'game-note'} role="status">{truthAnswer === 'kind' ? 'That is a kind first step. Love moves closer.' : 'Try once more. Which choice helps the new child feel seen?'}</div>}
+            <div className="choice-list"><button aria-pressed={truthAnswer === 'kind'} onClick={() => chooseTruth('kind')}>Ask if she can sit with them</button><button aria-pressed={false} onClick={() => chooseTruth('miss')}>Wait for somebody else to go</button><button aria-pressed={false} onClick={() => chooseTruth('miss')}>Send a funny picture from far away</button></div>
+            {truthFeedback && <div className={truthFeedback === 'correct' ? 'game-success' : 'game-note'} role="status">{truthFeedback === 'correct' ? 'That is a kind first step. Love moves closer.' : 'Try once more. Your choice has been cleared. Which answer helps the new child feel seen?'}</div>}
           </div>}
           {game === 'trail' && <div className="game-card trail-game">
             <div className="trail-board" aria-label={`Lantern is at step ${trailStep + 1} of 4`}><span className={trailStep >= 0 ? 'lit' : ''}>1</span><i></i><span className={trailStep >= 1 ? 'lit' : ''}>2</span><i></i><span className={trailStep >= 2 ? 'lit' : ''}>3</span><i></i><span className={trailStep >= 3 ? 'lit' : ''}>4</span></div>
@@ -119,8 +138,8 @@ export default function Home() {
             <div className="match-zones">
               {([{ id: 'feet', text: 'a lamp to my feet' }, { id: 'way', text: 'a light for my path' }] as const).map((zone) => <button key={zone.id} className={matchPlaces[zone.id] ? 'filled' : ''} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const token = event.dataTransfer.getData('text/plain') as MatchToken; if (token === 'lamp' || token === 'path') placeMatch(zone.id, token); }} onClick={() => selectedMatch && placeMatch(zone.id, selectedMatch)}><small>{matchPlaces[zone.id] ? (matchPlaces[zone.id] === 'lamp' ? 'Lantern' : 'Footsteps') : 'Drop a clue here'}</small><strong>{zone.text}</strong></button>)}
             </div>
-            <button className="button button-primary check-match" disabled={!matchComplete} onClick={() => setMatchChecked(true)}>Check my matches</button>
-            {matchChecked && <div className={matchCorrect ? 'game-success' : 'game-note'} role="status">{matchCorrect ? 'That fits the verse. The lamp helps your feet see the path ahead.' : 'Good try. Swap the clues and see which picture fits each phrase.'}</div>}
+            <button className="button button-primary check-match" disabled={!matchComplete} onClick={checkMatches}>Check my matches</button>
+            {matchChecked && <div className={matchCorrect ? 'game-success' : 'game-note'} role="status">{matchCorrect ? 'That fits the verse. The lamp helps your feet see the path ahead.' : 'Good try. The clues are back at the start so you can match them again.'}</div>}
             <button className="reset-game" onClick={() => { setMatchPlaces({}); setSelectedMatch(null); setMatchChecked(false); }}>Clear matches</button>
           </div>}
           <p className="privacy-note">No account needed. Nothing from these games is saved.</p>
