@@ -61,7 +61,7 @@ export default function ParentAccessPage() {
         setError('Please confirm that you are the parent or responsible grown-up.');
         return;
       }
-      ['lanternLionDemoFamily','lanternLionDemoAssignments','lanternLionDemoProgress','lanternLionDemoHelpRequest'].forEach((key) => localStorage.removeItem(key));
+      ['lanternLionDemoFamily','lanternLionDemoAssignments','lanternLionDemoProgress','lanternLionDemoHelpRequest','lanternLionActiveChildId'].forEach((key) => localStorage.removeItem(key));
       localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, country }));
       localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase() }));
       setSignedInName(name.trim());
