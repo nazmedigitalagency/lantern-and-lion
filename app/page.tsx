@@ -87,7 +87,7 @@ export default function Home() {
           <a href="#activities" onClick={() => setMenuOpen(false)}>Activities</a>
           <a href="#safety" onClick={() => setMenuOpen(false)}>Safety</a>
         </nav>
-        <div className="header-actions"><a className="text-link" href="/teacher-access">Teacher sign in</a><a className="text-link" href="/parent-access">Parent sign in</a><a className="button button-coral" href="/parent-access">Create account</a></div>
+        <div className="header-actions"><a className="text-link" href="/multiplayer">Team games</a><a className="text-link" href="/teacher-access">Teacher sign in</a><a className="text-link" href="/parent-access">Parent sign in</a><a className="button button-coral" href="/parent-access">Create account</a></div>
       </header>
 
       <section className="hero">
