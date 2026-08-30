@@ -18,6 +18,8 @@ import { StreakCard } from '../lib/streak/StreakCard';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
+import { LeagueCard } from '../lib/leagues/LeagueCard';
+import { getLeaguePod } from '../lib/leagues/storage';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Tab = 'home' | 'learn' | 'play' | 'journey' | 'profile';
@@ -651,6 +653,7 @@ export default function TeenDashboardPage() {
         <div className="teen-header-right">
           <Link href="/adventure" className="teen-world-link">🗺️ World</Link>
           <Link href="/character" className="teen-world-link">🧑 Character</Link>
+          <Link href="/leagues" className="teen-world-link">🏆 Leagues</Link>
           <span className="teen-streak-pill">🔥 {dailyQuestSummary.streak}-day</span>
           <span className="teen-points-pill">{points} XP · {level.name}</span>
           <div className="teen-profile-switch">
@@ -688,6 +691,11 @@ export default function TeenDashboardPage() {
           {learningStreak && (
             <StreakCard streak={learningStreak} tone="teen" onFetchCalendar={fetchStreakCalendar} />
           )}
+
+          <LeagueCard
+            pod={getLeaguePod(teen.id, teen.name, teen.age, teen.avatar, charAppearance)}
+            isTeen={true}
+          />
 
           {todaySummary && (todaySummary.games_played > 0 || todaySummary.quests_completed > 0 || todaySummary.xp_earned > 0 || todaySummary.achievements_earned > 0) && (
             <section className="child-your-day" aria-label="Your day so far">

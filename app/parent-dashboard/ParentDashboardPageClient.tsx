@@ -10,6 +10,8 @@ import { readAppearance, readEquipment } from '../character/storage';
 import { getWallet } from '../lib/economy/wallet-service';
 import { getLevelInfo } from '../lib/xp-levels';
 import { getItem } from '../character/catalog';
+import { getCurrentSeason, getTierProgress } from '../lib/leagues/config';
+import { getSeasonXp, getLeaguePod } from '../lib/leagues/storage';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Family = { familyName: string; country: string; children: Child[]; privateArtwork: boolean; teacherMessages: boolean; progressEmails: boolean };
@@ -632,6 +634,49 @@ export default function ParentDashboardPage() {
                   <span>Memory verses locked</span>
                 </article>
               </div>
+
+              {(() => {
+                const currentSeason = getCurrentSeason();
+                const childSeasonXp = getSeasonXp(activeChild.id, currentSeason.id);
+                const progress = getTierProgress(childSeasonXp);
+                const childPod = getLeaguePod(activeChild.id, activeChild.name, activeChild.age, activeChild.avatar);
+                const userInPod = childPod.participants.find((p) => p.isCurrentUser);
+
+                return (
+                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem', border: `1.5px solid ${progress.currentTier.badgeTone}` }}>
+                    <div className="panel-heading">
+                      <div>
+                        <p className="parent-dash-kicker">Competitive League &amp; Season Progress</p>
+                        <h2>{progress.currentTier.emoji} {progress.currentTier.name} · Rank #{userInPod?.rank || 1} in Pod</h2>
+                      </div>
+                      <Link href="/leagues">View League Arena →</Link>
+                    </div>
+                    <p className="parent-skill-note">
+                      {activeChild.name} is currently competing in <strong>{currentSeason.name}</strong>. Seasonal XP is earned purely through lessons, Bible games, and memory verse activities.
+                    </p>
+                    <div style={{ marginTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: '0.35rem' }}>
+                        <span>⭐ <strong>{childSeasonXp.toLocaleString()}</strong> Season XP</span>
+                        {progress.nextTier ? (
+                          <span>Next Tier ({progress.nextTier.name}): {progress.nextTier.minXp.toLocaleString()} XP</span>
+                        ) : (
+                          <span>Top League Reached 🦁</span>
+                        )}
+                      </div>
+                      <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            width: `${progress.progressPercent}%`,
+                            height: '100%',
+                            background: progress.currentTier.badgeTone,
+                            borderRadius: '9999px',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </section>
+                );
+              })()}
 
               {activeChildSkillProfile && activeChildSkillProfile.totalSessions > 0 && (
                 <section className="parent-skill-panel">
