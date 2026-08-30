@@ -5,19 +5,33 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { getRegions } from '../adventure/world-data';
-import { getRegionStatus } from '../adventure/progression';
+import { getRegionStatus, requirementsMet } from '../adventure/progression';
 import { GameHUD, LevelUpModal, XPToastStack } from '../lib/economy/components';
 import { getTransactions } from '../lib/economy/wallet-service';
 import { useWalletSync } from '../lib/economy/use-wallet-sync';
 import { getSkillProfile } from '../lib/skill-profile';
-import { AppearanceSwatch, CharacterAvatar, InventoryItemCard, ItemIllustration, SkillStars, StatChip } from './components';
-import { EQUIPMENT_SLOTS, getAppearanceOptionsForSlot, getItem } from './catalog';
+import {
+  AppearanceSwatch,
+  CharacterAvatar,
+  InventoryItemCard,
+  ItemIllustration,
+  RarityBadge,
+  ShopItemCard,
+  SkillStars,
+  StatChip,
+} from './components';
+import { EQUIPMENT_SLOTS, getAppearanceOptionsForSlot, getItem, getItemsForSlot } from './catalog';
 import {
   describeRequirement,
   getAchievementsSummary,
   getItemsForSlotWithStatus,
   type WorldContext,
 } from './progression';
+import {
+  getOwnedItemIds,
+  isItemOwned,
+  purchaseItem,
+} from './inventory-service';
 import {
   hasActiveSession,
   loadWorldContext,
@@ -30,9 +44,9 @@ import {
   saveEquipment,
   type PlayerProfile,
 } from './storage';
-import type { CharacterAppearance, CharacterEquipment, EquipmentSlot } from './types';
+import type { CharacterAppearance, CharacterEquipment, EquipmentItem, EquipmentSlot } from './types';
 
-type Tab = 'overview' | 'skills' | 'customize' | 'inventory';
+type Tab = 'overview' | 'customize' | 'shop' | 'inventory' | 'skills';
 
 export default function CharacterPage() {
   const router = useRouter();
@@ -46,6 +60,9 @@ export default function CharacterPage() {
   const [editingName, setEditingName] = useState(false);
   const [tab, setTab] = useState<Tab>('overview');
   const [activeSlot, setActiveSlot] = useState<EquipmentSlot>('headwear');
+  const [shopCategory, setShopCategory] = useState<EquipmentSlot>('clothing');
+  const [shopNotice, setShopNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -68,11 +85,7 @@ export default function CharacterPage() {
   const dashboardHref = profile?.kind === 'teen' ? '/teen-dashboard' : '/child-dashboard';
 
   const { wallet, levelInfo, toasts, dismissToast, levelUpEvent, dismissLevelUp } = useWalletSync(profile?.id ?? null, ctx);
-  // Cheap read (capped, tiny list) — recomputed every render so it stays in
-  // sync with `wallet` without needing a memo dependency hack.
-  const recentTransactions = profile ? getTransactions(profile.id, 6) : [];
-  // Same "cheap read, recompute every render" approach as recentTransactions above —
-  // stays in sync with newly-played arcade sessions without a memo dependency hack.
+  const recentTransactions = profile ? getTransactions(profile.id, 8) : [];
   const skillProfile = profile ? getSkillProfile(profile.id) : null;
 
   function updateAppearance(slot: keyof CharacterAppearance, value: string) {
@@ -80,6 +93,8 @@ export default function CharacterPage() {
     const next = { ...appearance, [slot]: value };
     setAppearance(next);
     saveAppearance(profile.id, next);
+    setSaveNotice('Appearance updated!');
+    window.setTimeout(() => setSaveNotice(null), 2500);
   }
 
   function equip(slot: EquipmentSlot, itemId: string) {
@@ -87,6 +102,8 @@ export default function CharacterPage() {
     const next = { ...equipment, [slot]: itemId };
     setEquipment(next);
     saveEquipment(profile.id, next);
+    setSaveNotice('Gear equipped!');
+    window.setTimeout(() => setSaveNotice(null), 2500);
   }
 
   function unequip(slot: EquipmentSlot) {
@@ -95,6 +112,20 @@ export default function CharacterPage() {
     delete next[slot];
     setEquipment(next);
     saveEquipment(profile.id, next);
+    setSaveNotice('Gear unequipped.');
+    window.setTimeout(() => setSaveNotice(null), 2500);
+  }
+
+  function handleBuy(item: EquipmentItem) {
+    if (!profile) return;
+    const res = purchaseItem(profile.id, item);
+    if (res.success) {
+      setShopNotice({ type: 'success', message: res.message });
+      equip(item.slot, item.id);
+    } else {
+      setShopNotice({ type: 'error', message: res.error });
+    }
+    window.setTimeout(() => setShopNotice(null), 3500);
   }
 
   function submitName() {
@@ -108,6 +139,7 @@ export default function CharacterPage() {
   }
 
   const specialSlotItem = equipment.special;
+  const companionItem = equipment.pet || (specialSlotItem && getItem(specialSlotItem)?.isCompanion ? specialSlotItem : null);
 
   if (!hydrated || !profile) {
     return (
@@ -124,8 +156,8 @@ export default function CharacterPage() {
         <Link href={dashboardHref} className="child-logo">
           <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
           <span>
-            <strong>Character</strong>
-            <small>Lantern &amp; Lion</small>
+            <strong>Character &amp; Style</strong>
+            <small>{profile.kind === 'teen' ? 'Lion’s Den' : 'Lantern Club'}</small>
           </span>
         </Link>
         <div className="adv-topbar-center">
@@ -141,6 +173,11 @@ export default function CharacterPage() {
         <section className="char-hero">
           <div className="char-avatar-hero-display">
             <CharacterAvatar appearance={appearance} equipment={equipment} size="large" showPedestal={true} />
+            {saveNotice && (
+              <div className="char-saved-badge" aria-live="polite">
+                ✨ {saveNotice}
+              </div>
+            )}
           </div>
           <div className="char-hero-info">
             {editingName ? (
@@ -157,7 +194,7 @@ export default function CharacterPage() {
             ) : (
               <button type="button" className="char-name-edit" onClick={() => { setNameDraft(name); setEditingName(true); }}>
                 <h1>{name}</h1>
-                <small>✏️ Edit name</small>
+                <small>✏️ Edit display name</small>
               </button>
             )}
             <p className="char-title-line">
@@ -171,16 +208,25 @@ export default function CharacterPage() {
                 ? 'Top level reached for now!'
                 : `${levelInfo.xpIntoLevel} / ${levelInfo.nextLevelXp - levelInfo.currentLevelXp} XP to Level ${levelInfo.level + 1}`}
             </small>
+
+            {/* Quick Currency Summary Bar */}
+            <div className="char-quick-currencies" style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
+              <span className="char-wallet-chip">⭐ <b>{wallet.xp.toLocaleString()}</b> XP</span>
+              <span className="char-wallet-chip">🪙 <b>{wallet.coins.toLocaleString()}</b> Coins</span>
+              <span className="char-wallet-chip">💎 <b>{wallet.gems.toLocaleString()}</b> Gems</span>
+            </div>
           </div>
         </section>
 
         <nav className="child-nav char-tab-nav" aria-label="Character sections">
           <button aria-pressed={tab === 'overview'} className={tab === 'overview' ? 'active' : ''} onClick={() => setTab('overview')}>Overview</button>
-          <button aria-pressed={tab === 'skills'} className={tab === 'skills' ? 'active' : ''} onClick={() => setTab('skills')}>Skills</button>
-          <button aria-pressed={tab === 'customize'} className={tab === 'customize' ? 'active' : ''} onClick={() => setTab('customize')}>Customize</button>
-          <button aria-pressed={tab === 'inventory'} className={tab === 'inventory' ? 'active' : ''} onClick={() => setTab('inventory')}>Inventory</button>
+          <button aria-pressed={tab === 'customize'} className={tab === 'customize' ? 'active' : ''} onClick={() => setTab('customize')}>🎨 Customize</button>
+          <button aria-pressed={tab === 'shop'} className={tab === 'shop' ? 'active' : ''} onClick={() => setTab('shop')}>🛍️ Lantern Shop</button>
+          <button aria-pressed={tab === 'inventory'} className={tab === 'inventory' ? 'active' : ''} onClick={() => setTab('inventory')}>🎒 Inventory</button>
+          <button aria-pressed={tab === 'skills'} className={tab === 'skills' ? 'active' : ''} onClick={() => setTab('skills')}>📊 Skills</button>
         </nav>
 
+        {/* OVERVIEW TAB */}
         {tab === 'overview' && (
           <div className="char-overview">
             <div className="char-stat-grid">
@@ -191,40 +237,38 @@ export default function CharacterPage() {
             </div>
 
             <section className="char-panel">
-              <p className="child-kicker">Wallet</p>
-              <div className="char-wallet-row">
-                <span className="char-wallet-chip">⭐ <b>{wallet.xp.toLocaleString()}</b> XP</span>
-                <span className="char-wallet-chip">🪙 <b>{wallet.coins.toLocaleString()}</b> coins</span>
-                <span className="char-wallet-chip">💎 <b>{wallet.gems.toLocaleString()}</b> gems</span>
-              </div>
+              <p className="child-kicker">Companion &amp; Artifact</p>
+              {companionItem ? (
+                <div className="char-companion-display">
+                  <ItemIllustration itemId={companionItem} size={54} />
+                  <div>
+                    <strong>{getItem(companionItem)?.name || 'Faith Companion'}</strong>
+                    <p className="char-companion-line">Travels alongside you on your biblical journeys with glowing light.</p>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <p className="char-companion-line">No companion equipped yet — unlock the Lion Cub, Lost Sheep or Dove in the Lantern Shop or via quests!</p>
+                  <button type="button" className="button button-secondary" onClick={() => { setTab('shop'); setShopCategory('pet'); }}>Browse Pets →</button>
+                </div>
+              )}
+            </section>
+
+            <section className="char-panel">
+              <p className="child-kicker">Transaction Ledger</p>
               {recentTransactions.length > 0 ? (
                 <ul className="char-transaction-list">
                   {recentTransactions.map((t) => (
                     <li key={t.id}>
                       <span className={t.amount >= 0 ? 'char-tx-positive' : 'char-tx-negative'}>
-                        {t.amount >= 0 ? '+' : '−'}{Math.abs(t.amount)} {t.type === 'xp' ? 'XP' : t.type === 'coins' ? '🪙' : '💎'}
+                        {t.amount >= 0 ? '+' : '−'}{Math.abs(t.amount)} {t.type === 'xp' ? 'XP' : t.type === 'coins' ? '🪙 Coins' : '💎 Gems'}
                       </span>
                       <small>{t.description}</small>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="char-companion-line">No transactions yet — complete a quest to start earning.</p>
-              )}
-            </section>
-
-            <section className="char-panel">
-              <p className="child-kicker">Companion &amp; Artifact</p>
-              {specialSlotItem ? (
-                <div className="char-companion-display">
-                  <ItemIllustration itemId={specialSlotItem} size={54} />
-                  <div>
-                    <strong>{getItem(specialSlotItem)?.name}</strong>
-                    <p className="char-companion-line">Travels alongside you on your biblical journeys with glowing light.</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="char-companion-line">No companion yet — some Special items found on your adventure can travel with you.</p>
+                <p className="char-companion-line">No transactions yet — complete lessons, quests, or games to earn XP and Coins!</p>
               )}
             </section>
 
@@ -247,11 +291,149 @@ export default function CharacterPage() {
           </div>
         )}
 
+        {/* CUSTOMIZE TAB */}
+        {tab === 'customize' && (
+          <div className="char-customize">
+            <section className="char-panel">
+              <p className="child-kicker">Skin tone</p>
+              <div className="char-swatch-row">
+                {getAppearanceOptionsForSlot('skinTone').map((option) => (
+                  <AppearanceSwatch key={option.id} active={appearance.skinTone === option.id} onSelect={() => updateAppearance('skinTone', option.id)} label={option.name}>
+                    <span className="char-swatch-color" style={{ background: option.value }} />
+                  </AppearanceSwatch>
+                ))}
+              </div>
+            </section>
+
+            <section className="char-panel">
+              <p className="child-kicker">Hair style &amp; texture</p>
+              <div className="char-swatch-row">
+                {getAppearanceOptionsForSlot('hairStyle').map((option) => (
+                  <AppearanceSwatch key={option.id} active={appearance.hairStyle === option.id} onSelect={() => updateAppearance('hairStyle', option.id)} label={option.name}>
+                    <span className={`char-swatch-hair char-hair-${option.value}`} />
+                  </AppearanceSwatch>
+                ))}
+              </div>
+            </section>
+
+            <section className="char-panel">
+              <p className="child-kicker">Expression &amp; Face</p>
+              <div className="char-swatch-row">
+                {getAppearanceOptionsForSlot('face').map((option) => (
+                  <AppearanceSwatch key={option.id} active={appearance.face === option.id} onSelect={() => updateAppearance('face', option.id)} label={option.name}>
+                    <span className="char-swatch-emoji" aria-hidden="true">
+                      {option.id === 'smile' ? '🙂' : option.id === 'grin' ? '😄' : option.id === 'calm' ? '😌' : option.id === 'wonder' ? '😲' : option.id === 'thinking' ? '🤔' : option.id === 'celebrating' ? '🥳' : option.id === 'victory' ? '😉' : '🙂'}
+                    </span>
+                  </AppearanceSwatch>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* LANTERN SHOP TAB */}
+        {tab === 'shop' && (
+          <div className="char-shop-view">
+            {shopNotice && (
+              <div
+                style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
+                  backgroundColor: shopNotice.type === 'success' ? '#ecfdf5' : '#fef2f2',
+                  color: shopNotice.type === 'success' ? '#047857' : '#b91c1c',
+                  border: `1px solid ${shopNotice.type === 'success' ? '#a7f3d0' : '#fecaca'}`,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+                role="alert"
+              >
+                {shopNotice.type === 'success' ? '🎉' : '⚠️'} {shopNotice.message}
+              </div>
+            )}
+
+            <div className="char-slot-tabs">
+              {EQUIPMENT_SLOTS.map((slot) => (
+                <button
+                  key={slot.id}
+                  className={shopCategory === slot.id ? 'active' : ''}
+                  aria-pressed={shopCategory === slot.id}
+                  onClick={() => setShopCategory(slot.id)}
+                >
+                  <span aria-hidden="true">{slot.icon}</span> {slot.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="char-item-grid">
+              {getItemsForSlot(shopCategory).map((item) => {
+                const owned = isItemOwned(profile.id, item.id);
+                const isEquipped = equipment[item.slot] === item.id;
+                const isGated = !requirementsMet(item.unlockRequirement, ctx);
+                const gateReason = isGated
+                  ? item.unlockRequirement.map((req) => describeRequirement(req, ctx.kind)).join(' and ')
+                  : undefined;
+                const priceCoins = item.priceCoins ?? 0;
+                const priceGems = item.priceGems ?? 0;
+                const canAfford = wallet.coins >= priceCoins && wallet.gems >= priceGems;
+
+                return (
+                  <ShopItemCard
+                    key={item.id}
+                    item={item}
+                    isOwned={owned}
+                    isEquipped={isEquipped}
+                    isGated={isGated}
+                    gateReason={gateReason}
+                    onBuy={() => handleBuy(item)}
+                    onEquip={() => equip(item.slot, item.id)}
+                    onUnequip={() => unequip(item.slot)}
+                    canAfford={canAfford}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* INVENTORY TAB */}
+        {tab === 'inventory' && (
+          <div className="char-inventory">
+            <div className="char-slot-tabs">
+              {EQUIPMENT_SLOTS.map((slot) => (
+                <button
+                  key={slot.id}
+                  className={activeSlot === slot.id ? 'active' : ''}
+                  aria-pressed={activeSlot === slot.id}
+                  onClick={() => setActiveSlot(slot.id)}
+                >
+                  <span aria-hidden="true">{slot.icon}</span> {slot.label}
+                </button>
+              ))}
+            </div>
+            <div className="char-item-grid">
+              {getItemsForSlotWithStatus(activeSlot, ctx, equipment, profile.id).map(({ item, status }) => (
+                <InventoryItemCard
+                  key={item.id}
+                  item={item}
+                  status={status}
+                  requirementCopy={item.unlockRequirement.map((req) => describeRequirement(req, ctx.kind)).join(' and ')}
+                  onEquip={() => equip(item.slot, item.id)}
+                  onUnequip={() => unequip(item.slot)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SKILLS TAB */}
         {tab === 'skills' && skillProfile && (
           <div className="char-overview">
             <section className="char-panel">
               <p className="child-kicker">What {name || 'you'}’re learning</p>
-              <p className="char-companion-line">Every Arcade game — Scripture Maze, Memory Match, Lightning Quiz, and the rest — feeds this profile. It grows the more you play, any game.</p>
+              <p className="char-companion-line">Every Arcade game — Scripture Maze, Memory Match, Lightning Quiz, and the rest — feeds this profile. It grows the more you play.</p>
               {skillProfile.skills.length > 0 ? (
                 <div className="char-skill-list">
                   {skillProfile.skills.map((s) => (
@@ -283,65 +465,6 @@ export default function CharacterPage() {
             )}
 
             <Link href="/arcade" className="button button-secondary char-adventure-link">Open Lantern Arcade →</Link>
-          </div>
-        )}
-
-        {tab === 'customize' && (
-          <div className="char-customize">
-            <section className="char-panel">
-              <p className="child-kicker">Skin tone</p>
-              <div className="char-swatch-row">
-                {getAppearanceOptionsForSlot('skinTone').map((option) => (
-                  <AppearanceSwatch key={option.id} active={appearance.skinTone === option.id} onSelect={() => updateAppearance('skinTone', option.id)} label={option.name}>
-                    <span className="char-swatch-color" style={{ background: option.value }} />
-                  </AppearanceSwatch>
-                ))}
-              </div>
-            </section>
-            <section className="char-panel">
-              <p className="child-kicker">Hair style</p>
-              <div className="char-swatch-row">
-                {getAppearanceOptionsForSlot('hairStyle').map((option) => (
-                  <AppearanceSwatch key={option.id} active={appearance.hairStyle === option.id} onSelect={() => updateAppearance('hairStyle', option.id)} label={option.name}>
-                    <span className={`char-swatch-hair char-hair-${option.value}`} />
-                  </AppearanceSwatch>
-                ))}
-              </div>
-            </section>
-            <section className="char-panel">
-              <p className="child-kicker">Expression &amp; Face</p>
-              <div className="char-swatch-row">
-                {getAppearanceOptionsForSlot('face').map((option) => (
-                  <AppearanceSwatch key={option.id} active={appearance.face === option.id} onSelect={() => updateAppearance('face', option.id)} label={option.name}>
-                    <span className="char-swatch-emoji" aria-hidden="true">{option.value}</span>
-                  </AppearanceSwatch>
-                ))}
-              </div>
-            </section>
-          </div>
-        )}
-
-        {tab === 'inventory' && (
-          <div className="char-inventory">
-            <div className="char-slot-tabs">
-              {EQUIPMENT_SLOTS.map((slot) => (
-                <button key={slot.id} className={activeSlot === slot.id ? 'active' : ''} aria-pressed={activeSlot === slot.id} onClick={() => setActiveSlot(slot.id)}>
-                  {slot.label}
-                </button>
-              ))}
-            </div>
-            <div className="char-item-grid">
-              {getItemsForSlotWithStatus(activeSlot, ctx, equipment).map(({ item, status }) => (
-                <InventoryItemCard
-                  key={item.id}
-                  item={item}
-                  status={status}
-                  requirementCopy={item.unlockRequirement.map((req) => describeRequirement(req, ctx.kind)).join(' and ')}
-                  onEquip={() => equip(item.slot, item.id)}
-                  onUnequip={() => unequip(item.slot)}
-                />
-              ))}
-            </div>
           </div>
         )}
       </div>

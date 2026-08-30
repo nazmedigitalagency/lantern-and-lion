@@ -273,6 +273,99 @@ export function ItemIllustration({
         </svg>
       );
 
+    case 'starter-lantern':
+    case 'explorer-lantern':
+    case 'golden-lantern':
+    case 'scripture-lantern':
+    case 'celestial-fire-lantern':
+      return (
+        <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
+          <circle cx="32" cy="32" r="30" fill="#f59e0b" fillOpacity="0.12" />
+          <path d="M32 6V16" stroke="#b45309" strokeWidth="3" strokeLinecap="round" />
+          <path d="M20 16H44L40 22H24L20 16Z" fill="#78350f" />
+          <rect x="22" y="22" width="20" height="26" rx="3" fill="#fef08a" stroke="#d97706" strokeWidth="2.5" />
+          <circle cx="32" cy="35" r="10" fill="#f59e0b" fillOpacity="0.4" />
+          <path d="M32 28C32 28 27 34 27 37C27 39.8 29.2 42 32 42C34.8 42 37 39.8 37 37C37 34 32 28 32 28Z" fill="#f97316" />
+          <circle cx="32" cy="37" r="2" fill="#ffffff" />
+          <rect x="18" y="48" width="28" height="6" rx="2" fill="#78350f" />
+        </svg>
+      );
+
+    case 'starter-satchel':
+    case 'explorer-backpack':
+    case 'scrolls-backpack':
+    case 'celestial-wings-pack':
+      return (
+        <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
+          <circle cx="32" cy="32" r="30" fill="#047857" fillOpacity="0.1" />
+          <rect x="18" y="20" width="28" height="32" rx="6" fill="#047857" stroke="#064e3b" strokeWidth="2.5" />
+          <rect x="22" y="14" width="20" height="8" rx="2" fill="#d97706" stroke="#b45309" strokeWidth="2" />
+          <path d="M22 34H42" stroke="#064e3b" strokeWidth="2.5" />
+          <circle cx="32" cy="34" r="3" fill="#fbbf24" />
+        </svg>
+      );
+
+    case 'lion-cub-pet':
+    case 'lion-companion':
+      return (
+        <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
+          <circle cx="32" cy="32" r="30" fill="#f59e0b" fillOpacity="0.15" />
+          <circle cx="32" cy="34" r="16" fill="#b45309" stroke="#78350f" strokeWidth="2" />
+          <circle cx="32" cy="35" r="11" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" />
+          <circle cx="23" cy="24" r="4" fill="#f59e0b" />
+          <circle cx="41" cy="24" r="4" fill="#f59e0b" />
+          <circle cx="28" cy="33" r="2" fill="#1e293b" />
+          <circle cx="36" cy="33" r="2" fill="#1e293b" />
+          <ellipse cx="32" cy="39" rx="4" ry="3" fill="#fef3c7" />
+          <circle cx="32" cy="38" r="1.2" fill="#78350f" />
+        </svg>
+      );
+
+    case 'peace-dove-pet':
+      return (
+        <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
+          <circle cx="32" cy="32" r="30" fill="#38bdf8" fillOpacity="0.1" />
+          <ellipse cx="28" cy="34" rx="14" ry="10" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2" />
+          <circle cx="40" cy="28" r="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2" />
+          <circle cx="42" cy="27" r="1.5" fill="#1e293b" />
+          <path d="M46 28L52 30L46 32Z" fill="#f59e0b" />
+          <path d="M48 30C52 28 56 28 60 26" stroke="#047857" strokeWidth="1.5" />
+          <ellipse cx="56" cy="27" rx="2.5" ry="1.5" fill="#10b981" />
+        </svg>
+      );
+
+    case 'explorer-hoodie':
+    case 'denim-jacket':
+    case 'scripture-tee':
+      return (
+        <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
+          <circle cx="32" cy="32" r="30" fill="#3b82f6" fillOpacity="0.1" />
+          <path d="M16 22L26 14L38 14L48 22L44 50H20L16 22Z" fill="#047857" stroke="#064e3b" strokeWidth="2.5" />
+          <path d="M26 14L32 26L38 14" stroke="#f59e0b" strokeWidth="2" fill="none" />
+          <rect x="24" y="36" width="16" height="10" rx="2" fill="#064e3b" />
+        </svg>
+      );
+
+    case 'high-top-sneakers':
+      return (
+        <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
+          <circle cx="32" cy="32" r="30" fill="#ef4444" fillOpacity="0.1" />
+          <path d="M16 26H32V46C32 48 28 50 22 50H14L16 26Z" fill="#dc2626" stroke="#991b1b" strokeWidth="2.5" />
+          <path d="M34 26H50L54 48C54 50 48 50 44 50H34V26Z" fill="#dc2626" stroke="#991b1b" strokeWidth="2.5" />
+          <rect x="12" y="46" width="44" height="6" rx="2" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+        </svg>
+      );
+
+    case 'scholar-glasses':
+      return (
+        <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
+          <circle cx="32" cy="32" r="30" fill="#f59e0b" fillOpacity="0.1" />
+          <circle cx="22" cy="32" r="10" stroke="#d97706" strokeWidth="2.5" fill="none" />
+          <circle cx="42" cy="32" r="10" stroke="#d97706" strokeWidth="2.5" fill="none" />
+          <path d="M32 32H34" stroke="#d97706" strokeWidth="3" />
+        </svg>
+      );
+
     case 'tomb-light-halo':
       return (
         <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
@@ -303,8 +396,9 @@ export function ItemIllustration({
     default:
       return (
         <svg width={s} height={s} viewBox="0 0 64 64" fill="none" className={className}>
-          <circle cx="32" cy="32" r="28" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
-          <path d="M32 20V44M20 32H44" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="32" cy="32" r="28" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" />
+          <circle cx="32" cy="32" r="16" fill="#fef08a" stroke="#f59e0b" strokeWidth="2" />
+          <path d="M32 24V40M24 32H40" stroke="#b45309" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       );
   }

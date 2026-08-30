@@ -20,16 +20,32 @@ import { getRegions } from '../adventure/world-data';
 import { equipmentItems, getItemsForSlot } from './catalog';
 import type { CharacterEquipment, EquipmentItem, EquipmentSlot, ItemStatus } from './types';
 
+import { isItemOwned } from './inventory-service';
+
 export { describeRequirement, getPlayerLevelInfo, getTotalXpEarned };
 export type { WorldContext };
 
-export function getItemStatus(item: EquipmentItem, ctx: WorldContext, equipment: CharacterEquipment): ItemStatus {
+export function getItemStatus(
+  item: EquipmentItem,
+  ctx: WorldContext,
+  equipment: CharacterEquipment,
+  profileId?: number
+): ItemStatus {
   if (equipment[item.slot] === item.id) return 'equipped';
+  if (profileId !== undefined && isItemOwned(profileId, item.id)) return 'owned';
   return requirementsMet(item.unlockRequirement, ctx) ? 'unlocked' : 'locked';
 }
 
-export function getItemsForSlotWithStatus(slot: EquipmentSlot, ctx: WorldContext, equipment: CharacterEquipment) {
-  return getItemsForSlot(slot).map((item) => ({ item, status: getItemStatus(item, ctx, equipment) }));
+export function getItemsForSlotWithStatus(
+  slot: EquipmentSlot,
+  ctx: WorldContext,
+  equipment: CharacterEquipment,
+  profileId?: number
+) {
+  return getItemsForSlot(slot).map((item) => ({
+    item,
+    status: getItemStatus(item, ctx, equipment, profileId),
+  }));
 }
 
 /**

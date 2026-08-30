@@ -7,17 +7,31 @@
 
 import type { UnlockRequirement } from '../adventure/types';
 
-export type EquipmentSlot = 'headwear' | 'clothing' | 'shoes' | 'accessory' | 'special';
+export type EquipmentSlot =
+  | 'headwear'
+  | 'clothing'
+  | 'shoes'
+  | 'accessory'
+  | 'backpack'
+  | 'lantern'
+  | 'pet'
+  | 'emote'
+  | 'special';
+
 export type AppearanceSlot = 'skinTone' | 'hairStyle' | 'face';
+
+export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 export type EquipmentItem = {
   id: string;
   slot: EquipmentSlot;
   name: string;
-  /** Placeholder visual until real illustration assets exist. */
+  description?: string;
   emoji: string;
+  rarity?: ItemRarity;
+  priceCoins?: number;
+  priceGems?: number;
   unlockRequirement: UnlockRequirement[];
-  /** Marks an item that represents a companion creature rather than worn gear. */
   isCompanion?: boolean;
 };
 
@@ -25,16 +39,28 @@ export type AppearanceOption = {
   id: string;
   slot: AppearanceSlot;
   name: string;
-  /** CSS color for skin tone; an emoji/glyph for hair + face. */
+  /** CSS color for skin tone; an id/glyph for hair + face. */
   value: string;
+  rarity?: ItemRarity;
+  priceCoins?: number;
+  priceGems?: number;
+  unlockRequirement?: UnlockRequirement[];
 };
 
 export type CharacterAppearance = {
   skinTone: string;
   hairStyle: string;
   face: string;
+  gender?: 'male' | 'female';
 };
 
 export type CharacterEquipment = Partial<Record<EquipmentSlot, string>>;
 
-export type ItemStatus = 'locked' | 'unlocked' | 'equipped';
+export type ItemStatus = 'locked' | 'unlocked' | 'owned' | 'equipped';
+
+export type InventoryRecord = {
+  profileId: number;
+  ownedItemIds: string[];
+  equipped: CharacterEquipment;
+  updatedAt: string;
+};

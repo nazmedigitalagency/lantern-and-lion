@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getSkillProfile } from '../lib/skill-profile';
+import { CharacterAvatar } from '../character/components';
+import { readAppearance, readEquipment } from '../character/storage';
+import { getWallet } from '../lib/economy/wallet-service';
+import { getLevelInfo } from '../lib/xp-levels';
+import { getItem } from '../character/catalog';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Family = { familyName: string; country: string; children: Child[]; privateArtwork: boolean; teacherMessages: boolean; progressEmails: boolean };
@@ -568,15 +573,33 @@ export default function ParentDashboardPage() {
             </div>
 
             <section className="single-child-report">
-              <div className="single-child-head">
-                <span>{activeChild.name.slice(0, 1)}</span>
-                <div>
-                  <p className="parent-dash-kicker">{activeChild.age >= 13 ? 'Lion’s Den (Ages 13–17)' : 'The Lantern Club (Ages 5–12)'}</p>
-                  <h2>{activeChild.name}’s activity report</h2>
-                  <small>PIN: {activeChild.pin} · Username: @{activeChild.username || activeChild.name.toLowerCase()}</small>
-                </div>
-                <a href={`/child-dashboard?preview=1&child=${activeChild.id}`}>Preview child dashboard</a>
-              </div>
+              {(() => {
+                const childApp = readAppearance(activeChild.id);
+                const childEq = readEquipment(activeChild.id);
+                const childWallet = getWallet(activeChild.id);
+                const childLvl = getLevelInfo(childWallet.xp);
+
+                return (
+                  <>
+                    <div className="single-child-head" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                      <div style={{ width: 84, height: 84, flexShrink: 0 }}>
+                        <CharacterAvatar appearance={childApp} equipment={childEq} size="small" showPedestal={false} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p className="parent-dash-kicker">{activeChild.age >= 13 ? 'Lion’s Den (Ages 13–17)' : 'The Lantern Club (Ages 5–12)'}</p>
+                        <h2>{activeChild.name} · Level {childLvl.level} {childLvl.title}</h2>
+                        <small>PIN: {activeChild.pin} · Username: @{activeChild.username || activeChild.name.toLowerCase()}</small>
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '0.8rem', background: '#fef3c7', color: '#92400e', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>⭐ {childWallet.xp.toLocaleString()} XP</span>
+                          <span style={{ fontSize: '0.8rem', background: '#ecfdf5', color: '#065f46', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>🪙 {childWallet.coins.toLocaleString()} Coins</span>
+                          <span style={{ fontSize: '0.8rem', background: '#eff6ff', color: '#1e40af', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>💎 {childWallet.gems.toLocaleString()} Gems</span>
+                        </div>
+                      </div>
+                      <a href={`/child-dashboard?preview=1&child=${activeChild.id}`}>Preview child dashboard</a>
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="child-report-metrics">
                 <article>
