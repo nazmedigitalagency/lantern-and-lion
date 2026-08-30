@@ -7,6 +7,7 @@ const fredoka = Fredoka({ variable: '--font-fredoka', subsets: ['latin'], displa
 const nunito = Nunito_Sans({ variable: '--font-nunito', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
   title: 'Lantern & Lion | Bible play for growing minds',
   description: 'Safe Bible stories, games and real-life choices for children and teens, with parents close by.',
   icons: { icon: '/lantern-lion-logo.png' },
