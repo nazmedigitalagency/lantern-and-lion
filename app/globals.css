@@ -414,6 +414,14 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   .family-finished-links{flex-direction:column;gap:8px}
 }
 
+/* ── Google OAuth & Auth Divider ───────────────────────── */
+.button-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:50px;margin-bottom:16px;padding:0 20px;border:2px solid var(--navy);border-radius:14px;background:var(--white);color:var(--navy);font:900 15px var(--font-nunito);cursor:pointer;box-shadow:4px 4px 0 var(--navy);transition:all 150ms ease}
+.button-google:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--navy);background:#f8fafc}
+.button-google:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--navy)}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#d8e2ea}
+
+
 /* ── Kid-Safe Family Summary Modal ─────────────────────── */
 .child-family-summary-btn{width:100%;padding:10px 12px;display:flex;align-items:center;gap:8px;border:0;border-top:1px solid #dce6ed;background:transparent;color:var(--navy);font:900 13px var(--font-nunito);text-align:left;cursor:pointer;transition:background 120ms ease}
 .child-family-summary-btn:hover{background:var(--sky)}
