@@ -52,6 +52,13 @@ export default function TeenAccessPage() {
       setSuccessTeen(found);
       localStorage.setItem('lanternLionTeenSession', JSON.stringify({ teenId: found.id, username: found.username, name: found.name, age: found.age }));
       localStorage.setItem('lanternLionActiveChildId', String(found.id));
+
+      fetch('/api/child-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: enteredUsername, pin: enteredPin }),
+      }).catch(() => { /* Offline/local-only session. */ });
+
       window.setTimeout(() => {
         let pending: string | null = null;
         try {

@@ -79,6 +79,16 @@ export default function ChildAccessPage() {
         JSON.stringify({ childId: foundChild.id, username: foundChild.username, name: foundChild.name })
       );
       localStorage.setItem('lanternLionActiveChildId', String(foundChild.id));
+
+      // Establish the real server-side session (cookie) so a parent/teacher
+      // can see this login and activity from their own device. Best-effort:
+      // gameplay still works locally even if this fails (e.g. offline).
+      fetch('/api/child-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: enteredUsername, pin: enteredPin }),
+      }).catch(() => { /* Offline/local-only session. */ });
+
       window.setTimeout(() => {
         let pending: string | null = null;
         try {

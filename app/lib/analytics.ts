@@ -16,12 +16,20 @@ export type GameAnalyticsEventName =
   | 'CASE_COMPLETED'
   | 'CASE_MASTERED'
   | 'GROUP_SOLVED'
-  | 'MISTAKE_MADE';
+  | 'MISTAKE_MADE'
+  | 'LESSON_STARTED'
+  | 'LESSON_COMPLETED'
+  | 'QUEST_STARTED'
+  | 'QUEST_COMPLETED'
+  | 'ACHIEVEMENT_EARNED'
+  | 'XP_EARNED';
 
 export type GameAnalyticsPayload = {
   userId: number;
   gameId: string;
-  difficulty: string;
+  difficulty?: string;
+  /** Identifies the specific lesson, quest, or achievement for those event types. */
+  activityId?: string;
   category?: string;
   story?: string;
   /** Bible Detective: the case id/title, and the clue id/type for CLUE_VIEWED. */
@@ -76,6 +84,7 @@ export function logGameEvent(event: GameAnalyticsEventName, payload: GameAnalyti
       body: JSON.stringify({
         event,
         gameId: payload.gameId,
+        activityId: payload.activityId,
         difficulty: payload.difficulty,
         category: payload.category,
         score: payload.score,

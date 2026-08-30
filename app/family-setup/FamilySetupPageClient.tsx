@@ -131,6 +131,27 @@ export default function FamilySetupPage() {
     if (children.length > 0) {
       localStorage.setItem('lanternLionActiveChildId', String(children[0].id));
     }
+
+    // Persist real records so a parent/teacher can see this family's activity
+    // from any device. Best-effort: the local family space still works
+    // offline even if this call fails.
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      fetch('/api/family', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          familyName: family.familyName,
+          country: family.country,
+          timezone,
+          children: children.map((c) => ({ name: c.name, username: c.username, age: c.age, avatar: c.avatar, pin: c.pin })),
+        }),
+      })
+        .then((res) => res.json() as Promise<{ error?: string }>)
+        .then((data) => { if (data?.error) setError(data.error); })
+        .catch(() => { /* Offline/local-only family. */ });
+    } catch { /* Non-blocking. */ }
+
     setStep(4);
   }
 

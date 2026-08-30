@@ -29,6 +29,55 @@ function suggestionFor(request: HelpRequest): string {
 }
 type Page = 'overview' | 'children' | 'assignments' | 'messages' | 'settings';
 
+type DailySummaryRow = {
+  active_seconds: number;
+  session_count: number;
+  games_played: number;
+  games_completed: number;
+  lessons_completed: number;
+  quests_completed: number;
+  xp_earned: number;
+  achievements_earned: number;
+} | null;
+
+type TodayActivityChild = {
+  child: { id: string; name: string; username?: string; age: number; avatar: string };
+  summary: DailySummaryRow;
+  timeline: { eventType: string; occurredAt: string; metadata?: Record<string, unknown> }[];
+};
+
+type NotificationItem = {
+  id: string;
+  child_id: string | null;
+  type: string;
+  title: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+};
+
+function formatActiveTime(seconds: number): string {
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+const EVENT_LABELS: Record<string, string> = {
+  USER_LOGIN: 'Logged in',
+  SESSION_STARTED: 'Session started',
+  SESSION_RESUMED: 'Came back after a break',
+  SESSION_IDLE: 'Went idle',
+  SESSION_ENDED: 'Logged out',
+  GAME_STARTED: 'Started a game',
+  GAME_COMPLETED: 'Completed a game',
+  LESSON_STARTED: 'Started a lesson',
+  LESSON_COMPLETED: 'Completed a lesson',
+  QUEST_STARTED: 'Started a quest',
+  QUEST_COMPLETED: 'Completed a quest',
+  ACHIEVEMENT_EARNED: 'Earned an achievement',
+  XP_EARNED: 'Earned XP',
+};
+
 const fallbackFamily: Family = {
   familyName: 'The Adeyemi Family',
   country: 'Nigeria',
@@ -61,6 +110,11 @@ export default function ParentDashboardPage() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([{ from: 'Mrs Grace', body: 'Amara asked a thoughtful question about courage today.', time: 'Today, 10:24' }]);
   const [hydrated, setHydrated] = useState(false);
+  const [todayActivity, setTodayActivity] = useState<TodayActivityChild[]>([]);
+  const [activityTimezone, setActivityTimezone] = useState('UTC');
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [selectedActivityChild, setSelectedActivityChild] = useState<string | null>(null);
+  const [classMemberships, setClassMemberships] = useState<{ classroomId: string; classroomName: string; childId: string; childName: string; approved: boolean }[]>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -140,6 +194,48 @@ export default function ParentDashboardPage() {
     const timer = window.setTimeout(() => setSavedNotice(''), 3200);
     return () => window.clearTimeout(timer);
   }, [savedNotice]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    fetch('/api/family/today')
+      .then((res) => (res.ok ? (res.json() as Promise<{ children: TodayActivityChild[]; timezone: string }>) : null))
+      .then((data) => {
+        if (data?.children) {
+          setTodayActivity(data.children);
+          setActivityTimezone(data.timezone || 'UTC');
+          if (!selectedActivityChild && data.children[0]) setSelectedActivityChild(data.children[0].child.id);
+        }
+      })
+      .catch(() => { /* Real backend not reachable — section stays hidden. */ });
+
+    fetch('/api/notifications?limit=15')
+      .then((res) => (res.ok ? (res.json() as Promise<{ notifications: NotificationItem[] }>) : null))
+      .then((data) => { if (data?.notifications) setNotifications(data.notifications); })
+      .catch(() => { /* Non-blocking. */ });
+
+    fetch('/api/family/classrooms')
+      .then((res) => (res.ok ? (res.json() as Promise<{ memberships: typeof classMemberships }>) : null))
+      .then((data) => { if (data?.memberships) setClassMemberships(data.memberships); })
+      .catch(() => { /* Non-blocking. */ });
+  }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function approveClassroom(classroomId: string, childId: string, approved: boolean) {
+    setClassMemberships((current) => current.map((m) => (m.classroomId === classroomId && m.childId === childId ? { ...m, approved } : m)));
+    fetch(`/api/classrooms/${classroomId}/students/${childId}/approve`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approved }),
+    }).catch(() => {});
+  }
+
+  function markNotificationRead(id: string) {
+    setNotifications((current) => current.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, read: true }),
+    }).catch(() => {});
+  }
 
   const children = family.children.length ? family.children : fallbackFamily.children;
   const activeChild = children.find((child) => child.id === selectedChild) || children[0];
@@ -248,6 +344,89 @@ export default function ParentDashboardPage() {
                 <small>{helpRequest ? 'activity to review' : 'all on track'}</small>
               </article>
             </div>
+
+            {todayActivity.length > 0 && (
+              <section className="parent-activity-section" aria-label="Today's learning activity">
+                <div className="panel-heading">
+                  <div>
+                    <p className="parent-dash-kicker">Today&apos;s activity</p>
+                    <h2>Learning today</h2>
+                  </div>
+                  {todayActivity.length > 1 && (
+                    <select value={selectedActivityChild || ''} onChange={(e) => setSelectedActivityChild(e.target.value)}>
+                      {todayActivity.map((item) => (
+                        <option key={item.child.id} value={item.child.id}>{item.child.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                {(() => {
+                  const active = todayActivity.find((item) => item.child.id === selectedActivityChild) || todayActivity[0];
+                  const summary = active.summary;
+                  return (
+                    <>
+                      <div className="parent-activity-tiles">
+                        <div><b>{formatActiveTime(summary?.active_seconds || 0)}</b><span>🕐 Active time</span></div>
+                        <div><b>{summary?.games_played || 0}</b><span>🎮 Games played</span></div>
+                        <div><b>{summary?.lessons_completed || 0}</b><span>📚 Lessons</span></div>
+                        <div><b>{summary?.xp_earned || 0}</b><span>⭐ XP earned</span></div>
+                        <div><b>{summary?.quests_completed || 0}</b><span>🔥 Quests</span></div>
+                        <div><b>{summary?.achievements_earned || 0}</b><span>🏆 Achievements</span></div>
+                      </div>
+                      <ul className="parent-activity-timeline">
+                        {active.timeline.length === 0 && <li>No activity yet today.</li>}
+                        {active.timeline.map((event, i) => (
+                          <li key={i}>
+                            <time>{new Date(event.occurredAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: activityTimezone })}</time>
+                            <span>{EVENT_LABELS[event.eventType] || event.eventType}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  );
+                })()}
+              </section>
+            )}
+
+            {classMemberships.some((m) => !m.approved) && (
+              <section className="parent-activity-section" aria-label="Class join requests">
+                <div className="panel-heading">
+                  <div>
+                    <p className="parent-dash-kicker">Class requests</p>
+                    <h2>Waiting for your approval</h2>
+                  </div>
+                </div>
+                <ul className="parent-notification-list">
+                  {classMemberships.filter((m) => !m.approved).map((m) => (
+                    <li key={`${m.classroomId}-${m.childId}`}>
+                      <strong>{m.childName}</strong> wants to join <strong>{m.classroomName}</strong>
+                      <div style={{ marginTop: 8 }}>
+                        <button className="button button-primary" onClick={() => approveClassroom(m.classroomId, m.childId, true)}>Approve</button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {notifications.length > 0 && (
+              <section className="parent-activity-section" aria-label="Notifications">
+                <div className="panel-heading">
+                  <div>
+                    <p className="parent-dash-kicker">Notifications</p>
+                    <h2>Recent updates</h2>
+                  </div>
+                </div>
+                <ul className="parent-notification-list">
+                  {notifications.map((n) => (
+                    <li key={n.id} className={n.read_at ? '' : 'unread'} onClick={() => !n.read_at && markNotificationRead(n.id)}>
+                      <strong>{n.title}</strong>
+                      <p style={{ margin: '4px 0 0' }}>{n.body}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <div className="parent-overview-grid">
               <section className="family-progress-panel">

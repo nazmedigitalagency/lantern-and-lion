@@ -13,6 +13,7 @@ import { ItemIllustration } from '../character/item-icons';
 import { getItem } from '../character/catalog';
 import { readAppearance, readEquipment, readCharacterName } from '../character/storage';
 import type { CharacterAppearance, CharacterEquipment } from '../character/types';
+import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
@@ -381,6 +382,17 @@ export default function TeenDashboardPage() {
   const [tab, setTab] = useState<Tab>('home');
   const [playMode, setPlayMode] = useState<PlayMode>('menu');
   const [hydrated, setHydrated] = useState(false);
+  const [todaySummary, setTodaySummary] = useState<{ active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number } | null>(null);
+
+  useActivityHeartbeat(hydrated);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    fetch('/api/child/today')
+      .then((res) => (res.ok ? (res.json() as Promise<{ summary: typeof todaySummary }>) : null))
+      .then((data) => { if (data?.summary) setTodaySummary(data.summary); })
+      .catch(() => { /* Offline — widget just stays hidden. */ });
+  }, [hydrated]);
 
   const [points, setPoints] = useState(220);
   const [casesSolved, setCasesSolved] = useState<string[]>([]);
@@ -614,7 +626,7 @@ export default function TeenDashboardPage() {
             {showProfiles && (
               <div className="teen-profile-menu">
                 <button type="button" className="child-family-summary-btn" onClick={() => { setShowFamilyModal(true); setShowProfiles(false); }}>🌟 Our family summary</button>
-                <Link href="/teen-access" onClick={() => { localStorage.removeItem('lanternLionTeenSession'); localStorage.removeItem('lanternLionActiveChildId'); }} className="teen-signout-link">Sign out of {teen.name}</Link>
+                <Link href="/teen-access" onClick={() => { fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {}); localStorage.removeItem('lanternLionTeenSession'); localStorage.removeItem('lanternLionActiveChildId'); }} className="teen-signout-link">Sign out of {teen.name}</Link>
               </div>
             )}
           </div>
@@ -640,6 +652,18 @@ export default function TeenDashboardPage() {
               <small>{nextLevel ? `${nextLevel.min - points} XP to ${nextLevel.name}` : 'Top rank reached'}</small>
             </div>
           </section>
+
+          {todaySummary && (todaySummary.games_played > 0 || todaySummary.quests_completed > 0 || todaySummary.xp_earned > 0 || todaySummary.achievements_earned > 0) && (
+            <section className="child-your-day" aria-label="Your day so far">
+              <h2>Your day</h2>
+              <div className="your-day-stats">
+                <span>🔥 {todaySummary.quests_completed} quest{todaySummary.quests_completed === 1 ? '' : 's'} completed</span>
+                <span>⭐ {todaySummary.xp_earned} XP earned</span>
+                <span>🎮 {todaySummary.games_played} game{todaySummary.games_played === 1 ? '' : 's'} played</span>
+                <span>🏆 {todaySummary.achievements_earned} achievement{todaySummary.achievements_earned === 1 ? '' : 's'}</span>
+              </div>
+            </section>
+          )}
 
           <section className="teen-daily-card">
             <div className="teen-daily-head">
@@ -1055,7 +1079,7 @@ export default function TeenDashboardPage() {
             {pinNotice && <p className="teen-inline-error">{pinNotice}</p>}
           </section>
 
-          <Link href="/teen-access" onClick={() => { localStorage.removeItem('lanternLionTeenSession'); localStorage.removeItem('lanternLionActiveChildId'); }} className="teen-signout-full">Sign out of the Lion’s Den</Link>
+          <Link href="/teen-access" onClick={() => { fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {}); localStorage.removeItem('lanternLionTeenSession'); localStorage.removeItem('lanternLionActiveChildId'); }} className="teen-signout-full">Sign out of the Lion’s Den</Link>
         </div>
       )}
       {safetyNotice && <div className="child-help-confirmation" role="status"><span>✓</span><p>{safetyNotice}</p><button onClick={() => setSafetyNotice('')}>Close</button></div>}

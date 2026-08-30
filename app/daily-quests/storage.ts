@@ -7,6 +7,7 @@
 
 import { awardCoins, awardGems, awardXP } from '../lib/economy/wallet-service';
 import type { AwardResult } from '../lib/economy/types';
+import { logGameEvent } from '../lib/analytics';
 import { DAILY_SLOT_CATEGORIES, BONUS_XP, getTemplate, pickTemplateForSlot } from './catalog';
 import { computeSnapshot, getDateKeysBetween, getTodayDateKey, isSetFullyComplete } from './progression';
 import type { ChestReward, DailyQuestSet, HistoryEntry } from './types';
@@ -109,6 +110,7 @@ export function completeQuestsByMode(profileId: number, set: DailyQuestSet, mode
     if (!template || !modes.has(template.completionMode)) return instance;
     awards.push(awardXP(profileId, template.xp, 'daily-quest', template.title));
     awards.push(awardCoins(profileId, template.coins, 'daily-quest', template.title));
+    logGameEvent('QUEST_COMPLETED', { userId: profileId, gameId: 'daily-quest', activityId: template.id, xpEarned: template.xp });
     changed = true;
     return { ...instance, completed: true, completedAt: new Date().toISOString() };
   });
@@ -129,6 +131,7 @@ export function completeQuestManually(profileId: number, set: DailyQuestSet, tem
     awardXP(profileId, template.xp, 'daily-quest', template.title),
     awardCoins(profileId, template.coins, 'daily-quest', template.title),
   ];
+  logGameEvent('QUEST_COMPLETED', { userId: profileId, gameId: 'daily-quest', activityId: template.id, xpEarned: template.xp });
   const quests = set.quests.map((q) => (q.templateId === templateId ? { ...q, completed: true, completedAt: new Date().toISOString() } : q));
   const nextSet = { ...set, quests };
   writeSet(profileId, nextSet);
@@ -153,6 +156,7 @@ export function claimDailyBonusIfComplete(profileId: number, set: DailyQuestSet)
   const chest = randomChestReward(set.date, profileId);
   const awards: AwardResult[] = [awardXP(profileId, chest.xp, 'daily-quest', 'Daily Quests complete'), awardCoins(profileId, chest.coins, 'daily-quest', 'Daily chest')];
   if (chest.gems > 0) awards.push(awardGems(profileId, chest.gems, 'daily-quest', 'Daily chest'));
+  logGameEvent('ACHIEVEMENT_EARNED', { userId: profileId, gameId: 'daily-quest', activityId: `daily-complete-${set.date}`, xpEarned: chest.xp });
 
   const nextSet = { ...set, bonusClaimed: true, chestOpened: true };
   writeSet(profileId, nextSet);

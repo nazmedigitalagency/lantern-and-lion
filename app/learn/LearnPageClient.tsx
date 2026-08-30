@@ -7,6 +7,7 @@ import { curriculumModules, type CurriculumModule } from '../curriculum-data';
 import { getModuleLessons, getNextModuleInTrack } from '../curriculum-lessons';
 import StudioAudioPlayer from '../components/StudioAudioPlayer';
 import { hasActiveSession, readActiveProfile } from '../adventure/storage';
+import { logGameEvent } from '../lib/analytics';
 
 type Activity = {
   slug: string;
@@ -838,6 +839,7 @@ export default function LearnPage() {
           [curriculumModule.id]: { completedIndices, lastCompletedIndex: Math.max(moduleProgress.lastCompletedIndex ?? -1, lessonIndex) },
         };
         localStorage.setItem('lanternLionModuleProgress', JSON.stringify(progressMap));
+        logGameEvent('LESSON_COMPLETED', { userId: activeId, gameId: curriculumModule.id, activityId: activity.slug });
       }
     }
 
