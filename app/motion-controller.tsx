@@ -31,7 +31,27 @@ function launchConfetti(source: Element) {
 
 export default function MotionController() {
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Suppress Vite dev server HMR socket unhandled rejection loop (send was called before connect)
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      const msg = typeof reason === 'string' ? reason : reason?.message || '';
+      if (
+        msg.includes('send was called before connect') ||
+        msg.includes('The play() request was interrupted') ||
+        msg.includes('user didn\'t interact with the document first') ||
+        (reason instanceof DOMException && reason.name === 'AbortError')
+      ) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return () => {
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      };
+    }
     document.documentElement.classList.add('motion-ready');
 
     const revealItems = Array.from(document.querySelectorAll<HTMLElement>(revealSelectors));

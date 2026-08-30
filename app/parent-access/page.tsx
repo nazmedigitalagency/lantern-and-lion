@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { FormEvent, useState } from 'react';
+import Link from 'next/link';
+import { FormEvent, useEffect, useState } from 'react';
 
 type Mode = 'signin' | 'signup';
 
@@ -22,7 +23,51 @@ export default function ParentAccessPage() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [isNewAccount, setIsNewAccount] = useState(false);
+  const [tourStep, setTourStep] = useState(1);
+
+  const tourSteps = [
+    {
+      kicker: 'Step 1: Your monitoring hub',
+      title: 'See what they learn without hovering.',
+      body: 'Your parent dashboard gives you real-time visibility into your children’s stories, memorised verses, quizzes, and reflection choices. You can track their weekly progress at a glance.',
+      tag: 'Parent Dashboard',
+      icon: '📊',
+    },
+    {
+      kicker: 'Step 2: Safe & child-friendly',
+      title: 'Distraction-free, zero ads, no strangers.',
+      body: 'Children enter a safe sanctuary. There is no open public chat, no external links, and no advertising. Shared artwork and prayers stay private to your family and approved teachers.',
+      tag: 'Safety by Design',
+      icon: '🛡️',
+    },
+    {
+      kicker: 'Step 3: Age-tailored clubs',
+      title: 'Lantern Club (5-12) & Lion’s Den (13-17).',
+      body: 'Younger children get visual story trails and word puzzles. Teens get deeper case studies, decision labs, and faith discussions tailored to their world.',
+      tag: 'Two Distinct Spaces',
+      icon: '🦁',
+    },
+    {
+      kicker: 'Step 4: Next step — Child profiles',
+      title: 'Create their username & 4-digit PIN.',
+      body: 'Children don’t need an email! You will give each child a simple login name and a 4-digit PIN. They can easily sign in from any phone, tablet, or computer.',
+      tag: 'Ready to Begin',
+      icon: '🔑',
+    },
+  ];
+
   const [signedInName, setSignedInName] = useState('');
+  const [pendingModuleRedirect, setPendingModuleRedirect] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        setPendingModuleRedirect(sessionStorage.getItem('lanternLionPendingModuleRedirect') || '');
+      } catch { /* Storage unavailable; no resume link shown. */ }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -61,9 +106,11 @@ export default function ParentAccessPage() {
         setError('Please confirm that you are the parent or responsible grown-up.');
         return;
       }
-      ['lanternLionDemoFamily','lanternLionDemoAssignments','lanternLionDemoProgress','lanternLionDemoHelpRequest','lanternLionActiveChildId'].forEach((key) => localStorage.removeItem(key));
+      ['lanternLionDemoFamily','lanternLionDemoAssignments','lanternLionDemoProgress','lanternLionDemoHelpRequest','lanternLionActiveChildId','lanternLionChildSession','lanternLionTeenSession','lanternLionTeacherSession'].forEach((key) => localStorage.removeItem(key));
       localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, country }));
       localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase() }));
+      setIsNewAccount(true);
+      setTourStep(1);
       setSignedInName(name.trim());
       return;
     }
@@ -85,27 +132,169 @@ export default function ParentAccessPage() {
     }
     const accountName = matchesDemo ? demoAccount.name : savedAccount?.name ?? 'Parent';
     localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: accountName, email: normalizedEmail }));
+    setIsNewAccount(false);
     setSignedInName(accountName);
   }
 
   if (signedInName) {
-    return <main className="parent-access-page"><section className="access-success-card">
-      <div className="access-success-mark"><span></span></div>
-      <p className="access-kicker">Parent access confirmed</p>
-      <h1>Welcome, {signedInName.split(' ')[0]}.</h1>
-      <p>Your demo parent account is ready. Family setup and child profiles will begin from here in the next build.</p>
-      <div className="access-next-preview"><span>Next step</span><strong>Set up your family</strong><small>Add children, choose age groups and create their private ways to enter.</small></div>
-      <a className="button button-primary" href="/family-setup">Set up my family</a>
-      <a className="access-secondary-link" href="/parent-dashboard">Open parent dashboard</a>
-      <a className="access-secondary-link" href="/onboarding">Preview child onboarding</a>
-      <button className="access-signout" onClick={() => { localStorage.removeItem('lanternLionDemoSession'); setSignedInName(''); setPassword(''); }}>Sign out of the demo</button>
-    </section></main>;
+    if (isNewAccount) {
+      const step = tourSteps[tourStep - 1];
+      return (
+        <main className="parent-access-page">
+          <section className="access-tour-card">
+            <div className="tour-header">
+              <div className="tour-badge">
+                <span>{step.icon}</span>
+                <small>{step.tag}</small>
+              </div>
+              <div className="tour-progress" aria-label={`Step ${tourStep} of ${tourSteps.length}`}>
+                <span>Step {tourStep} of {tourSteps.length}</span>
+                <div className="tour-dots">
+                  {tourSteps.map((_, i) => (
+                    <span key={i} className={i + 1 <= tourStep ? 'active' : ''} />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <p className="access-kicker">{step.kicker}</p>
+            <h1>{step.title}</h1>
+            <p className="tour-body">{step.body}</p>
+
+            <div className="tour-preview-box">
+              {tourStep === 1 && (
+                <div className="tour-widget widget-dashboard">
+                  <div className="widget-row">
+                    <span className="w-avatar">A</span>
+                    <div><strong>Amara · Age 9</strong><small>3 stories · 2 verses memorised</small></div>
+                    <span className="w-status">Active today</span>
+                  </div>
+                  <div className="widget-bar"><i style={{ width: '60%' }} /></div>
+                </div>
+              )}
+              {tourStep === 2 && (
+                <div className="tour-widget widget-safety">
+                  <div className="safe-pill">🔒 Private family sanctuary</div>
+                  <div className="safe-pill">🚫 No open public chats</div>
+                  <div className="safe-pill">👀 Parent monitors anytime</div>
+                </div>
+              )}
+              {tourStep === 3 && (
+                <div className="tour-widget widget-clubs">
+                  <div className="club-card lantern-card">
+                    <strong>The Lantern Club</strong>
+                    <small>Ages 5–12 · Stories, puzzles, badges</small>
+                  </div>
+                  <div className="club-card lion-card">
+                    <strong>Lion’s Den</strong>
+                    <small>Ages 13–17 · Case files, real life</small>
+                  </div>
+                </div>
+              )}
+              {tourStep === 4 && (
+                <div className="tour-widget widget-pin">
+                  <div className="pin-demo-box">
+                    <span>Child Login:</span>
+                    <strong>amara</strong> + <b>PIN [ • • • • ]</b>
+                  </div>
+                  <small>No email needed for children!</small>
+                </div>
+              )}
+            </div>
+
+            <div className="tour-actions">
+              {tourStep > 1 && (
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => setTourStep(tourStep - 1)}
+                >
+                  Back
+                </button>
+              )}
+              {tourStep < tourSteps.length ? (
+                <button
+                  type="button"
+                  className="button button-primary"
+                  onClick={() => setTourStep(tourStep + 1)}
+                >
+                  Next: {tourSteps[tourStep].tag} →
+                </button>
+              ) : (
+                <a className="button button-primary" href="/family-setup">
+                  Create child profiles now →
+                </a>
+              )}
+            </div>
+            <button
+              type="button"
+              className="tour-skip"
+              onClick={() => setIsNewAccount(false)}
+            >
+              Skip tour &amp; go to family setup
+            </button>
+          </section>
+        </main>
+      );
+    }
+
+    return (
+      <main className="parent-access-page">
+        <section className="access-success-card">
+          <div className="access-success-mark"><span></span></div>
+          <p className="access-kicker">Parent access confirmed</p>
+          <h1>Welcome, {signedInName.split(' ')[0]}.</h1>
+          <p>Your parent account is active. Manage your family, set child usernames and PINs, and view activity reports.</p>
+          {pendingModuleRedirect && (
+            <div className="access-next-preview">
+              <span>Picking up where you left off</span>
+              <strong>Continue the lesson you were previewing</strong>
+              <small>You clicked into a curriculum lesson before signing in. Jump straight back in, or set up your family first.</small>
+              <a
+                className="button button-primary"
+                href={pendingModuleRedirect}
+                onClick={() => {
+                  try { sessionStorage.removeItem('lanternLionPendingModuleRedirect'); } catch { /* No-op */ }
+                }}
+                style={{ marginTop: 12 }}
+              >
+                Continue to the lesson →
+              </a>
+            </div>
+          )}
+          <div className="access-next-preview">
+            <span>Next step</span>
+            <strong>Set up your family &amp; child logins</strong>
+            <small>Add child profiles, generate login usernames, and assign 4-digit PINs.</small>
+          </div>
+          <a className="button button-primary" href="/family-setup">Set up child profiles</a>
+          <a className="access-secondary-link" href="/parent-dashboard">Open parent dashboard</a>
+          <button
+            type="button"
+            className="access-secondary-link tour-review-btn"
+            onClick={() => { setIsNewAccount(true); setTourStep(1); }}
+          >
+            Review platform tour
+          </button>
+          <button
+            className="access-signout"
+            onClick={() => {
+              localStorage.removeItem('lanternLionDemoSession');
+              setSignedInName('');
+              setPassword('');
+            }}
+          >
+            Sign out of demo
+          </button>
+        </section>
+      </main>
+    );
   }
 
   return (
     <main className="parent-access-page">
       <section className="access-story-panel">
-        <a className="access-brand" href="/" aria-label="Lantern and Lion home"><Image src="/lantern-lion-logo.png" alt="" width={64} height={64} priority /><span><strong>Lantern &amp; Lion</strong><small>The Lantern Club</small></span></a>
+        <Link className="access-brand" href="/" aria-label="Lantern and Lion home"><Image src="/lantern-lion-logo.png" alt="" width={64} height={64} priority /><span><strong>Lantern &amp; Lion</strong><small>The Lantern Club</small></span></Link>
         <div className="access-story-copy"><p className="access-kicker">The grown-up space</p><h1>Stay close while they grow.</h1><p>Your parent account keeps family details, progress and privacy controls in one place.</p><ul><li><span>01</span>Children don’t need their own email.</li><li><span>02</span>You decide who can join the family.</li><li><span>03</span>No payment is needed during this demo.</li></ul></div>
         <p className="access-story-note">Demo mode stores test details only on this device.</p>
       </section>
@@ -129,7 +318,7 @@ export default function ParentAccessPage() {
             <button className="button button-primary access-submit" type="submit">{mode === 'signin' ? 'Sign in to parent space' : 'Create demo account'}</button>
           </form>
           <p className="access-switch">{mode === 'signin' ? 'New to Lantern & Lion?' : 'Already made an account?'} <button onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}>{mode === 'signin' ? 'Create one' : 'Sign in'}</button></p>
-          <a className="access-home-link" href="/">Back to the home page</a>
+          <Link className="access-home-link" href="/">Back to the home page</Link>
         </div>
       </section>
     </main>
