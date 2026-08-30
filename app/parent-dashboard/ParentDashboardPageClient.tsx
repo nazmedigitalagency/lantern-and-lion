@@ -45,10 +45,19 @@ type DailySummaryRow = {
   achievements_earned: number;
 } | null;
 
+type ChildStreak = {
+  currentStreak: number;
+  longestStreak: number;
+  graceDays: number;
+  todayQualified: boolean;
+  daysActiveThisWeek: number;
+};
+
 type TodayActivityChild = {
   child: { id: string; name: string; username?: string; age: number; avatar: string };
   summary: DailySummaryRow;
   timeline: { eventType: string; occurredAt: string; metadata?: Record<string, unknown> }[];
+  streak: ChildStreak;
 };
 
 type NotificationItem = {
@@ -81,6 +90,7 @@ const EVENT_LABELS: Record<string, string> = {
   QUEST_COMPLETED: 'Completed a quest',
   ACHIEVEMENT_EARNED: 'Earned an achievement',
   XP_EARNED: 'Earned XP',
+  STREAK_EXTENDED: 'Kept the learning streak going',
 };
 
 const fallbackFamily: Family = {
@@ -371,6 +381,7 @@ export default function ParentDashboardPage() {
                   return (
                     <>
                       <div className="parent-activity-tiles">
+                        <div><b>🔥 {active.streak.currentStreak}</b><span>Day streak</span></div>
                         <div><b>{formatActiveTime(summary?.active_seconds || 0)}</b><span>🕐 Active time</span></div>
                         <div><b>{summary?.games_played || 0}</b><span>🎮 Games played</span></div>
                         <div><b>{summary?.lessons_completed || 0}</b><span>📚 Lessons</span></div>
@@ -378,6 +389,9 @@ export default function ParentDashboardPage() {
                         <div><b>{summary?.quests_completed || 0}</b><span>🔥 Quests</span></div>
                         <div><b>{summary?.achievements_earned || 0}</b><span>🏆 Achievements</span></div>
                       </div>
+                      <p className="parent-streak-note">
+                        Longest streak: {active.streak.longestStreak} day{active.streak.longestStreak === 1 ? '' : 's'} · Active {active.streak.daysActiveThisWeek}/7 days this week · 🛡️ {active.streak.graceDays} Grace Day{active.streak.graceDays === 1 ? '' : 's'} remaining
+                      </p>
                       <ul className="parent-activity-timeline">
                         {active.timeline.length === 0 && <li>No activity yet today.</li>}
                         {active.timeline.map((event, i) => (

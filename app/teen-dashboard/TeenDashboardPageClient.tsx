@@ -14,6 +14,9 @@ import { getItem } from '../character/catalog';
 import { readAppearance, readEquipment, readCharacterName } from '../character/storage';
 import type { CharacterAppearance, CharacterEquipment } from '../character/types';
 import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
+import { StreakCard } from '../lib/streak/StreakCard';
+import { claimStreakMilestoneIfNew } from '../lib/streak/client';
+import type { StreakStatus } from '../lib/streak/server';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
@@ -383,16 +386,39 @@ export default function TeenDashboardPage() {
   const [playMode, setPlayMode] = useState<PlayMode>('menu');
   const [hydrated, setHydrated] = useState(false);
   const [todaySummary, setTodaySummary] = useState<{ active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number } | null>(null);
+  const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
+  const [milestoneToast, setMilestoneToast] = useState<{ label: string; coins: number; gems: number } | null>(null);
 
   useActivityHeartbeat(hydrated);
 
   useEffect(() => {
     if (!hydrated) return;
     fetch('/api/child/today')
-      .then((res) => (res.ok ? (res.json() as Promise<{ summary: typeof todaySummary }>) : null))
-      .then((data) => { if (data?.summary) setTodaySummary(data.summary); })
+      .then((res) => (res.ok ? (res.json() as Promise<{ summary: typeof todaySummary; streak: StreakStatus }>) : null))
+      .then((data) => {
+        if (data?.summary) setTodaySummary(data.summary);
+        if (data?.streak) {
+          setLearningStreak(data.streak);
+          const milestone = claimStreakMilestoneIfNew(activeId, data.streak.currentStreak);
+          if (milestone) {
+            setMilestoneToast(milestone);
+            window.setTimeout(() => setMilestoneToast(null), 5000);
+          }
+        }
+      })
       .catch(() => { /* Offline — widget just stays hidden. */ });
-  }, [hydrated]);
+  }, [hydrated, activeId]);
+
+  async function fetchStreakCalendar() {
+    try {
+      const res = await fetch('/api/child/streak-calendar?days=7');
+      if (!res.ok) return [];
+      const data = (await res.json()) as { calendar: { date: string; state: 'complete' | 'grace' | 'pending' | 'none' }[] };
+      return data.calendar || [];
+    } catch {
+      return [];
+    }
+  }
 
   const [points, setPoints] = useState(220);
   const [casesSolved, setCasesSolved] = useState<string[]>([]);
@@ -609,6 +635,12 @@ export default function TeenDashboardPage() {
 
   return (
     <main className="teen-dashboard">
+      {milestoneToast && (
+        <div className="streak-milestone-toast" role="status" aria-live="polite">
+          <strong>🔥 {milestoneToast.label}!</strong>
+          <span>+{milestoneToast.coins} 🪙{milestoneToast.gems > 0 ? ` +${milestoneToast.gems} 💎` : ''}</span>
+        </div>
+      )}
       <header className="teen-topbar">
         <Link href="/" className="teen-logo"><Image src="/lantern-lion-logo.png" alt="" width={50} height={50} /><span><strong>Lion’s Den</strong><small>Lantern &amp; Lion</small></span></Link>
         <nav className="teen-nav" aria-label="Teen dashboard">
@@ -652,6 +684,10 @@ export default function TeenDashboardPage() {
               <small>{nextLevel ? `${nextLevel.min - points} XP to ${nextLevel.name}` : 'Top rank reached'}</small>
             </div>
           </section>
+
+          {learningStreak && (
+            <StreakCard streak={learningStreak} tone="teen" onFetchCalendar={fetchStreakCalendar} />
+          )}
 
           {todaySummary && (todaySummary.games_played > 0 || todaySummary.quests_completed > 0 || todaySummary.xp_earned > 0 || todaySummary.achievements_earned > 0) && (
             <section className="child-your-day" aria-label="Your day so far">
