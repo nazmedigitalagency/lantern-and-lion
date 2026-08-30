@@ -12,7 +12,7 @@ const avatarOptions = [
   { id: 'lion', label: 'Lion', mark: 'L', tone: 'gold' },
   { id: 'lantern', label: 'Lantern', mark: 'B', tone: 'coral' },
   { id: 'dove', label: 'Dove', mark: 'P', tone: 'sky' },
-  { id: 'olive', label: 'Olive branch', mark: 'G', tone: 'teal' },
+  { id: 'star', label: 'Morning Star', mark: 'S', tone: 'teal' },
 ];
 
 export default function FamilySetupPage() {
