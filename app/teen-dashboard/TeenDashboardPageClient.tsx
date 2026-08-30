@@ -20,6 +20,9 @@ import type { StreakStatus } from '../lib/streak/server';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
 import { LeagueCard } from '../lib/leagues/LeagueCard';
 import { getLeaguePod } from '../lib/leagues/storage';
+import { LearningJourneyCard, type LearningPlanResponse } from '../lib/adaptive/LearningJourneyCard';
+import { getNextMissionRecommendation } from '../adventure/progression';
+import { loadWorldContext } from '../adventure/storage';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Tab = 'home' | 'learn' | 'play' | 'journey' | 'profile';
@@ -390,8 +393,17 @@ export default function TeenDashboardPage() {
   const [todaySummary, setTodaySummary] = useState<{ active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number } | null>(null);
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
   const [milestoneToast, setMilestoneToast] = useState<{ label: string; coins: number; gems: number } | null>(null);
+  const [learningPlan, setLearningPlan] = useState<LearningPlanResponse | null>(null);
 
   useActivityHeartbeat(hydrated);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    fetch('/api/child/learning-plan')
+      .then((res) => (res.ok ? (res.json() as Promise<LearningPlanResponse>) : null))
+      .then((data) => { if (data) setLearningPlan(data); })
+      .catch(() => { /* Offline — widget just stays hidden. */ });
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -697,6 +709,10 @@ export default function TeenDashboardPage() {
             isTeen={true}
           />
 
+          {learningPlan && (
+            <LearningJourneyCard plan={learningPlan} isTeen={true} />
+          )}
+
           {todaySummary && (todaySummary.games_played > 0 || todaySummary.quests_completed > 0 || todaySummary.xp_earned > 0 || todaySummary.achievements_earned > 0) && (
             <section className="child-your-day" aria-label="Your day so far">
               <h2>Your day</h2>
@@ -721,6 +737,28 @@ export default function TeenDashboardPage() {
               {dailyQuestSummary.completed >= dailyQuestSummary.total ? 'View rewards →' : 'Start quests →'}
             </Link>
           </section>
+
+          {(() => {
+            const advCtx = loadWorldContext(teen.id, 'teen');
+            const next = getNextMissionRecommendation(advCtx);
+            return (
+              <section className="teen-daily-card" style={{ border: '1.5px solid #38bdf8', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 58, 138, 0.4) 100%)' }}>
+                <div className="teen-daily-head">
+                  <span aria-hidden="true" style={{ fontSize: '1.75rem' }}>{next.region.icon}</span>
+                  <div>
+                    <span style={{ fontSize: '0.7rem', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Expedition Portal · {next.region.name}
+                    </span>
+                    <strong style={{ display: 'block', color: '#ffffff', fontSize: '1.05rem' }}>{next.title}</strong>
+                    <small style={{ color: '#cbd5e1' }}>{next.subtitle}</small>
+                  </div>
+                </div>
+                <Link href={next.actionHref} className="button button-primary">
+                  ▶ Launch Expedition →
+                </Link>
+              </section>
+            );
+          })()}
 
           {/* ── Teen Hero Character Showcase ── */}
           <section className="teen-character-card">

@@ -6,6 +6,8 @@ import { createServerAdminClient } from '../../../lib/supabase/server';
 import { bumpDailySummary, getFamilyForChild, notifyOnce, recordActivityEvent, type ActivityEventType } from '../../../lib/activity/server';
 import { isStreakEligibleEvent } from '../../../lib/streak/config';
 import { qualifyStreakDay } from '../../../lib/streak/server';
+import { getConcept, resolveConceptId } from '../../../lib/adaptive/concepts';
+import { recordConceptPractice } from '../../../lib/adaptive/server';
 
 const AnalyticsTrackSchema = z.object({
   event: z.string().min(1).max(64),
@@ -14,8 +16,11 @@ const AnalyticsTrackSchema = z.object({
   difficulty: z.string().max(32).optional(),
   category: z.string().max(64).optional(),
   score: z.number().int().min(0).max(1000000).optional(),
+  accuracy: z.number().min(0).max(100).optional(),
   timeSeconds: z.number().int().min(0).max(86400).optional(),
   mistakes: z.number().int().min(0).max(10000).optional(),
+  hintsUsed: z.number().int().min(0).max(100).optional(),
+  attempts: z.number().int().min(0).max(1000).optional(),
   xpEarned: z.number().int().min(0).max(100000).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
   /** Honeypot field for bot detection (must be empty) */
@@ -73,8 +78,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, recorded: false });
     }
 
-    const { event, gameId, activityId, timeSeconds, mistakes, xpEarned } = parseResult.data;
+    const { event, gameId, activityId, category, timeSeconds, mistakes, accuracy, hintsUsed, attempts, xpEarned } = parseResult.data;
     let streakResult: Awaited<ReturnType<typeof qualifyStreakDay>> | null = null;
+    let masteryResult: Awaited<ReturnType<typeof recordConceptPractice>> | null = null;
 
     // 4. Persist to the child's activity log + daily summary, attributed via
     // their signed session cookie (never a client-supplied id).
@@ -106,6 +112,31 @@ export async function POST(req: NextRequest) {
             await bumpDailySummary(admin, session.childId, family.timezone, { achievements_earned: 1, xp_earned: xpEarned || 0 }, { last_activity_at: nowIso });
           } else if (event === 'XP_EARNED') {
             await bumpDailySummary(admin, session.childId, family.timezone, { xp_earned: xpEarned || 0 }, { last_activity_at: nowIso });
+          }
+
+          if (event === 'GAME_COMPLETED' || event === 'LESSON_COMPLETED') {
+            const conceptId = resolveConceptId(gameId, category);
+            if (conceptId) {
+              // LESSON_COMPLETED has no graded accuracy today — fewer attempts
+              // stands in as the correctness signal (first-try = strong, more
+              // retries = still positive but weaker), never a raw fail/pass.
+              const score = accuracy ?? (attempts ? Math.max(40, 100 - (attempts - 1) * 20) : 80);
+              masteryResult = await recordConceptPractice(admin, session.childId, conceptId, { score, hintsUsed });
+
+              if (masteryResult.justMastered) {
+                const { data: child } = await admin.from('children').select('name').eq('id', session.childId).maybeSingle();
+                const label = getConcept(masteryResult.row.concept_id)?.label || masteryResult.row.concept_id;
+                await notifyOnce(admin, {
+                  recipientId: family.ownerId,
+                  childId: session.childId,
+                  type: 'ACHIEVEMENT',
+                  title: `🎉 ${child?.name || 'Your child'} mastered a concept!`,
+                  body: `${child?.name || 'Your child'} has mastered "${label}" through consistent, correct practice.`,
+                  payload: { conceptId: masteryResult.row.concept_id },
+                  dedupeKey: `mastery:${session.childId}:${masteryResult.row.concept_id}`,
+                });
+              }
+            }
           }
 
           if (isStreakEligibleEvent(event)) {
@@ -146,6 +177,9 @@ export async function POST(req: NextRequest) {
             previousStreak: streakResult.previousStreak,
             newMilestone: streakResult.newMilestone,
           }
+        : null,
+      mastery: masteryResult
+        ? { conceptId: masteryResult.row.concept_id, masteryScore: masteryResult.row.mastery_score, status: masteryResult.row.status, justMastered: masteryResult.justMastered }
         : null,
     });
   } catch {

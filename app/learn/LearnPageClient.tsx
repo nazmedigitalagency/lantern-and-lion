@@ -839,7 +839,7 @@ export default function LearnPage() {
           [curriculumModule.id]: { completedIndices, lastCompletedIndex: Math.max(moduleProgress.lastCompletedIndex ?? -1, lessonIndex) },
         };
         localStorage.setItem('lanternLionModuleProgress', JSON.stringify(progressMap));
-        logGameEvent('LESSON_COMPLETED', { userId: activeId, gameId: curriculumModule.id, activityId: activity.slug });
+        logGameEvent('LESSON_COMPLETED', { userId: activeId, gameId: curriculumModule.id, activityId: activity.slug, attempts: attempts + 1 });
       }
     }
 

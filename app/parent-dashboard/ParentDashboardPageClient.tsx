@@ -12,6 +12,9 @@ import { getLevelInfo } from '../lib/xp-levels';
 import { getItem } from '../character/catalog';
 import { getCurrentSeason, getTierProgress } from '../lib/leagues/config';
 import { getSeasonXp, getLeaguePod } from '../lib/leagues/storage';
+import { canonicalRegions } from '../adventure/world-data';
+import { getRegionCompletionPercent, getCurrentRegionId } from '../adventure/progression';
+import { loadWorldContext } from '../adventure/storage';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Family = { familyName: string; country: string; children: Child[]; privateArtwork: boolean; teacherMessages: boolean; progressEmails: boolean };
@@ -55,11 +58,15 @@ type ChildStreak = {
   daysActiveThisWeek: number;
 };
 
+type ConceptRef = { conceptId: string; label: string; masteryScore: number };
+type ChildLearning = { strengths: ConceptRef[]; needsPractice: ConceptRef[]; dueReviewCount: number };
+
 type TodayActivityChild = {
   child: { id: string; name: string; username?: string; age: number; avatar: string };
   summary: DailySummaryRow;
   timeline: { eventType: string; occurredAt: string; metadata?: Record<string, unknown> }[];
   streak: ChildStreak;
+  learning: ChildLearning;
 };
 
 type NotificationItem = {
@@ -394,6 +401,20 @@ export default function ParentDashboardPage() {
                       <p className="parent-streak-note">
                         Longest streak: {active.streak.longestStreak} day{active.streak.longestStreak === 1 ? '' : 's'} · Active {active.streak.daysActiveThisWeek}/7 days this week · 🛡️ {active.streak.graceDays} Grace Day{active.streak.graceDays === 1 ? '' : 's'} remaining
                       </p>
+                      {(active.learning.strengths.length > 0 || active.learning.needsPractice.length > 0) && (
+                        <div className="parent-learning-note">
+                          <strong>{active.child.name}&apos;s learning</strong>
+                          {active.learning.strengths.length > 0 && (
+                            <p>Strong areas: {active.learning.strengths.map((c) => c.label).join(', ')}</p>
+                          )}
+                          {active.learning.needsPractice.length > 0 && (
+                            <p>Needs more practice: {active.learning.needsPractice.map((c) => c.label).join(', ')}</p>
+                          )}
+                          {active.learning.dueReviewCount > 0 && (
+                            <p>🧠 {active.learning.dueReviewCount} concept{active.learning.dueReviewCount === 1 ? '' : 's'} ready for review.</p>
+                          )}
+                        </div>
+                      )}
                       <ul className="parent-activity-timeline">
                         {active.timeline.length === 0 && <li>No activity yet today.</li>}
                         {active.timeline.map((event, i) => (
@@ -673,6 +694,51 @@ export default function ParentDashboardPage() {
                           }}
                         />
                       </div>
+                    </div>
+                  </section>
+                );
+              })()}
+
+              {(() => {
+                const advCtx = loadWorldContext(activeChild.id, activeChild.age >= 13 ? 'teen' : 'child');
+                const currRegId = getCurrentRegionId(advCtx);
+                const currReg = canonicalRegions.find((r) => r.id === currRegId) || canonicalRegions[0];
+
+                return (
+                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem' }}>
+                    <div className="panel-heading">
+                      <div>
+                        <p className="parent-dash-kicker">Bible Adventure World</p>
+                        <h2>{currReg.icon} Current Land: {currReg.name}</h2>
+                      </div>
+                      <Link href="/adventure">Open Adventure Map →</Link>
+                    </div>
+                    <p className="parent-skill-note">
+                      Tracking biblical exploration across the 8 canonical regions from Creation through to the Early Church.
+                    </p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem', marginTop: '1rem' }}>
+                      {canonicalRegions.map((reg) => {
+                        const pct = getRegionCompletionPercent(reg, advCtx);
+                        return (
+                          <div
+                            key={reg.id}
+                            style={{
+                              background: '#f8fafc',
+                              border: reg.id === currRegId ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
+                              borderRadius: '8px',
+                              padding: '0.6rem',
+                              textAlign: 'center',
+                            }}
+                          >
+                            <span style={{ fontSize: '1.25rem' }}>{reg.icon}</span>
+                            <strong style={{ display: 'block', fontSize: '0.75rem', color: '#0f172a' }}>{reg.name}</strong>
+                            <small style={{ fontSize: '0.7rem', color: pct >= 100 ? '#059669' : '#64748b', fontWeight: 600 }}>
+                              {pct >= 100 ? '✓ Mastered' : `${pct}%`}
+                            </small>
+                          </div>
+                        );
+                      })}
                     </div>
                   </section>
                 );

@@ -88,8 +88,11 @@ export function logGameEvent(event: GameAnalyticsEventName, payload: GameAnalyti
         difficulty: payload.difficulty,
         category: payload.category,
         score: payload.score,
+        accuracy: payload.accuracy,
         timeSeconds: payload.timeSeconds,
         mistakes: payload.mistakes,
+        hintsUsed: payload.hintsUsed,
+        attempts: payload.attempts,
         xpEarned: payload.xpEarned,
       }),
     }).catch(() => {

@@ -66,7 +66,7 @@ export const equipmentItems: EquipmentItem[] = [
     rarity: 'epic',
     priceCoins: 450,
     priceGems: 5,
-    unlockRequirement: [{ type: 'region-complete', regionId: 'kingdom-of-israel', minQuestsCompleted: 3 }],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'jerusalem', minQuestsCompleted: 1 }],
   },
   {
     id: 'guardian-halo',
@@ -183,7 +183,7 @@ export const equipmentItems: EquipmentItem[] = [
     emoji: '👟',
     rarity: 'rare',
     priceCoins: 320,
-    unlockRequirement: [{ type: 'region-complete', regionId: 'galilee', minQuestsCompleted: 3 }],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'gospels', minQuestsCompleted: 1 }],
   },
   {
     id: 'high-top-sneakers',
@@ -205,7 +205,7 @@ export const equipmentItems: EquipmentItem[] = [
     emoji: '🍃',
     rarity: 'uncommon',
     priceCoins: 90,
-    unlockRequirement: [{ type: 'quest-complete', questId: 'eden-2' }],
+    unlockRequirement: [{ type: 'quest-complete', questId: 'quest-eden-1' }],
   },
   {
     id: 'shepherd-sling',
@@ -215,7 +215,7 @@ export const equipmentItems: EquipmentItem[] = [
     emoji: '🪨',
     rarity: 'rare',
     priceCoins: 220,
-    unlockRequirement: [{ type: 'quest-complete', questId: 'kingdom-of-israel-2' }],
+    unlockRequirement: [{ type: 'quest-complete', questId: 'quest-jerusalem-1' }],
   },
   {
     id: 'cross-pendant',
@@ -369,7 +369,7 @@ export const equipmentItems: EquipmentItem[] = [
     emoji: '🐑',
     rarity: 'uncommon',
     priceCoins: 250,
-    unlockRequirement: [{ type: 'quest-complete', questId: 'galilee-1' }],
+    unlockRequirement: [{ type: 'quest-complete', questId: 'quest-gospels-1' }],
     isCompanion: true,
   },
   {
@@ -448,7 +448,7 @@ export const equipmentItems: EquipmentItem[] = [
     emoji: '🍞',
     rarity: 'uncommon',
     priceCoins: 100,
-    unlockRequirement: [{ type: 'quest-complete', questId: 'wilderness-2' }],
+    unlockRequirement: [{ type: 'quest-complete', questId: 'quest-wilderness-1' }],
   },
   {
     id: 'tomb-light-halo',
@@ -459,7 +459,7 @@ export const equipmentItems: EquipmentItem[] = [
     rarity: 'legendary',
     priceCoins: 950,
     priceGems: 20,
-    unlockRequirement: [{ type: 'quest-complete', questId: 'jerusalem-3' }],
+    unlockRequirement: [{ type: 'quest-complete', questId: 'quest-gospels-1' }],
   },
   {
     id: 'flame-of-faith-badge',
@@ -469,7 +469,7 @@ export const equipmentItems: EquipmentItem[] = [
     emoji: '🔥',
     rarity: 'rare',
     priceCoins: 300,
-    unlockRequirement: [{ type: 'quest-complete', questId: 'early-church-3' }],
+    unlockRequirement: [{ type: 'quest-complete', questId: 'quest-early-church-1' }],
   },
 ];
 

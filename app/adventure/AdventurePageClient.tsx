@@ -1,314 +1,543 @@
 'use client';
 
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { curriculumModules } from '../curriculum-data';
-import { GameHUD, LevelUpModal, XPToastStack } from '../lib/economy/components';
+import { CharacterAvatar } from '../character/components';
+import { readAppearance, readEquipment } from '../character/storage';
+import type { CharacterAppearance, CharacterEquipment } from '../character/types';
+import { LevelUpModal, XPToastStack } from '../lib/economy/components';
 import { useWalletSync } from '../lib/economy/use-wallet-sync';
-import { useDialogA11y } from '../lib/use-dialog';
-import { DifficultyStars, QuestCard, QuestStatusPill, RegionNode } from './components';
+import {
+  CollectiblesPouchModal,
+  KnowledgeBossArena,
+  MemoryVerseTrainer,
+  QuestCard,
+  StoryChapterReader,
+  WorldMapCanvas,
+} from './components';
 import {
   describeRequirement,
   getCollectedCollectibles,
   getCurrentRegionId,
+  getNextMissionRecommendation,
   getQuestEstimatedMinutes,
   getQuestStatus,
-  getRegionQuestSummary,
+  getRegionCompletionPercent,
   getRegionStatus,
+  isBossDefeated,
+  isChapterCompleted,
   type WorldContext,
 } from './progression';
-import { hasActiveSession, loadWorldContext, markQuestMastered, readActiveProfile, type PlayerProfile } from './storage';
-import { getQuest, getQuestsForRegion, getRegion, getRegions } from './world-data';
-import type { RegionId } from './types';
+import {
+  hasActiveSession,
+  loadWorldContext,
+  markBossCompleted,
+  markChapterCompleted,
+  markSecretDiscovered,
+  readActiveProfile,
+  type PlayerProfile,
+} from './storage';
+import { canonicalRegions, getQuestsForRegion, getRegion, getRegions } from './world-data';
+import type { RegionId, RegionStatus, StoryChapter } from './types';
 
-type View = 'map' | 'region';
+type LocationTab = 'chapters' | 'games' | 'memory-verse' | 'boss' | 'secrets';
 
 export default function AdventurePage() {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
-  const [ctx, setCtx] = useState<WorldContext>({ moduleProgress: {}, masteredQuestIds: [], kind: 'child' });
-  const [view, setView] = useState<View>('map');
-  const [selectedRegionId, setSelectedRegionId] = useState<RegionId | null>(null);
-  const [selectedQuestId, setSelectedQuestId] = useState<string | null>(null);
-  const [notice, setNotice] = useState('');
+  const [appearance, setAppearance] = useState<CharacterAppearance>({ skinTone: 'honey', hairStyle: 'curls', face: 'smile' });
+  const [equipment, setEquipment] = useState<CharacterEquipment>({});
+  const [ctx, setCtx] = useState<WorldContext>({
+    moduleProgress: {},
+    masteredQuestIds: [],
+    completedChapterIds: [],
+    completedBossIds: [],
+    discoveredSecretIds: [],
+    collectedCollectibleIds: [],
+    kind: 'child',
+  });
+
+  const [selectedRegionId, setSelectedRegionId] = useState<RegionId>('creation');
+  const [locationTab, setLocationTab] = useState<LocationTab>('chapters');
+  const [showPouch, setShowPouch] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   function refresh() {
-    const activeProfile = readActiveProfile();
-    setProfile(activeProfile);
-    setCtx(loadWorldContext(activeProfile.id, activeProfile.kind));
+    const active = readActiveProfile();
+    setProfile(active);
+    const loadedCtx = loadWorldContext(active.id, active.kind);
+    setCtx(loadedCtx);
+    const app = readAppearance(active.id);
+    const eq = readEquipment(active.id);
+    setAppearance(app);
+    setEquipment(eq);
+
+    const currentReg = getCurrentRegionId(loadedCtx);
+    setSelectedRegionId(currentReg);
   }
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      // Adventure/Character/Arcade have no login of their own — they only make
-      // sense reached from an already-signed-in dashboard. Without this check,
-      // a signed-out visitor (or a stale identity cursor with no live session)
-      // would still see whichever child's data was last active on this device.
       if (!hasActiveSession()) {
-        router.replace('/');
+        router.replace('/child-access');
         return;
       }
       refresh();
       setHydrated(true);
     }, 0);
-    const onVisible = () => document.visibilityState === 'visible' && hasActiveSession() && refresh();
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
+    return () => window.clearTimeout(timer);
   }, [router]);
 
-  useEffect(() => {
-    if (!notice) return;
-    const timer = window.setTimeout(() => setNotice(''), 3200);
-    return () => window.clearTimeout(timer);
-  }, [notice]);
-
-  const currentRegionId = useMemo(() => getCurrentRegionId(ctx), [ctx]);
+  const regions = useMemo(() => getRegions(), []);
+  const selectedRegion = useMemo(() => getRegion(selectedRegionId) || canonicalRegions[0], [selectedRegionId]);
+  const nextMission = useMemo(() => getNextMissionRecommendation(ctx), [ctx]);
   const collectibles = useMemo(() => getCollectedCollectibles(ctx), [ctx]);
-  const worldRegions = useMemo(() => getRegions(ctx.kind), [ctx.kind]);
+
+  const regionStatuses = useMemo(() => {
+    const map: Record<string, RegionStatus> = {};
+    regions.forEach((r) => {
+      map[r.id] = getRegionStatus(r, ctx);
+    });
+    return map;
+  }, [regions, ctx]);
+
+  const completionPercents = useMemo(() => {
+    const map: Record<string, number> = {};
+    regions.forEach((r) => {
+      map[r.id] = getRegionCompletionPercent(r, ctx);
+    });
+    return map;
+  }, [regions, ctx]);
 
   const { wallet, levelInfo, toasts, dismissToast, levelUpEvent, dismissLevelUp } = useWalletSync(profile?.id ?? null, ctx);
-  const { level, xpToNextLevel } = levelInfo;
-
-  const selectedRegion = selectedRegionId ? getRegion(selectedRegionId, ctx.kind) : undefined;
-  const regionQuests = selectedRegionId ? getQuestsForRegion(selectedRegionId, ctx.kind) : [];
-  const selectedQuest = selectedQuestId ? getQuest(selectedQuestId, ctx.kind) : undefined;
-  const selectedModule = selectedQuest ? curriculumModules.find((m) => m.id === selectedQuest.moduleId) : undefined;
-  const selectedQuestStatus = selectedQuest ? getQuestStatus(selectedQuest, ctx) : undefined;
-  const selectedQuestMinutes = selectedQuest ? getQuestEstimatedMinutes(selectedQuest) : 0;
-
-  function openRegion(regionId: RegionId) {
-    setSelectedRegionId(regionId);
-    setView('region');
-  }
-
-  const questModalRef = useDialogA11y<HTMLElement>(Boolean(selectedQuestId), () => setSelectedQuestId(null));
-
-  function backToMap() {
-    setView('map');
-    setSelectedRegionId(null);
-  }
-
-  function replayForMastery() {
-    if (!profile || !selectedQuest) return;
-    markQuestMastered(profile.id, selectedQuest.id);
-    setCtx((prev) => ({ ...prev, masteredQuestIds: [...prev.masteredQuestIds, selectedQuest.id] }));
-    setNotice('Marked as mastered! Enjoy revisiting the story.');
-    router.push(`/learn?module=${selectedQuest.moduleId}`);
-  }
 
   if (!hydrated || !profile) {
     return (
       <main className="dashboard-loading" aria-live="polite">
-        <span></span>
-        <p>Opening the Adventure World…</p>
+        <span />
+        <p>Entering the Bible Adventure World…</p>
       </main>
     );
   }
 
   const dashboardHref = profile.kind === 'teen' ? '/teen-dashboard' : '/child-dashboard';
+  const regionQuests = getQuestsForRegion(selectedRegion.id);
+  const regionStatus = regionStatuses[selectedRegion.id] || 'available';
+  const isRegionUnlocked = regionStatus !== 'locked';
+
+  function handleCompleteChapter(chapter: StoryChapter) {
+    if (!profile) return;
+    markChapterCompleted(profile.id, chapter.id);
+    setCtx((prev) => ({
+      ...prev,
+      completedChapterIds: [...(prev.completedChapterIds || []), chapter.id],
+    }));
+    setNotice(`🎉 Completed ${chapter.title}! (+40 XP)`);
+    window.setTimeout(() => setNotice(null), 3500);
+  }
+
+  function handleBossVictory() {
+    if (!profile) return;
+    const rewards = selectedRegion.boss.reward;
+    markBossCompleted(profile.id, selectedRegion.boss.id, rewards);
+    setCtx((prev) => ({
+      ...prev,
+      completedBossIds: [...(prev.completedBossIds || []), selectedRegion.boss.id],
+    }));
+    setNotice(`👑 Mastered ${selectedRegion.name}! Next location unlocked!`);
+    window.setTimeout(() => setNotice(null), 4000);
+  }
+
+  function handleDiscoverSecret(secretId: string, coins: number, gems: number) {
+    if (!profile) return;
+    markSecretDiscovered(profile.id, secretId, { coins, gems });
+    setCtx((prev) => ({
+      ...prev,
+      discoveredSecretIds: [...(prev.discoveredSecretIds || []), secretId],
+    }));
+    setNotice(`✨ Discovered a secret! (+${coins} Coins, +${gems} Gems)`);
+    window.setTimeout(() => setNotice(null), 3500);
+  }
 
   return (
-    <main className="adventure-page">
-      <header className="child-topbar adv-topbar">
-        <Link href={dashboardHref} className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Adventure World</strong>
-            <small>Lantern &amp; Lion</small>
-          </span>
+    <main style={{ minHeight: '100vh', background: '#090d16', color: '#f8fafc', paddingBottom: '4rem' }}>
+      {/* Top Header */}
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1rem 1.5rem',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(8px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+        }}
+      >
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#ffffff' }}>
+          <Image src="/lantern-lion-logo.png" alt="" width={42} height={42} priority />
+          <div>
+            <strong style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Lantern &amp; Lion</strong>
+            <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Bible Adventure World</small>
+          </div>
         </Link>
-        <div className="adv-topbar-center">
-          <GameHUD level={level} wallet={wallet} />
-        </div>
-        <div className="child-header-actions">
-          <Link href="/character" className="help-button adv-cross-link">🧑 Character</Link>
-          <Link href={dashboardHref} className="help-button">← Back to dashboard</Link>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setShowPouch(true)}
+            style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
+          >
+            🎒 Collectibles ({collectibles.length})
+          </button>
+          <Link href={dashboardHref} className="button button-secondary" style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}>
+            ← Back to Dashboard
+          </Link>
         </div>
       </header>
 
-      {view === 'map' && (
-        <div className="adv-body">
-          <div className="adv-intro">
-            <p className="child-kicker">Hi, {profile.name}</p>
-            <h1>Explore the Lantern &amp; Lion World</h1>
-            <p>
-              Walk the Bible’s story region by region. Finish quests to light up new places on the map — some places
-              need a little more courage (and a higher level) to reach.
-            </p>
-            {xpToNextLevel !== null && (
-              <p className="adv-level-hint">
-                <b>{xpToNextLevel} XP</b> more to reach Level {level + 1}.
-              </p>
-            )}
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+        {notice && (
+          <div
+            style={{
+              background: '#065f46',
+              color: '#d1fae5',
+              border: '1px solid #059669',
+              padding: '0.85rem 1.25rem',
+              borderRadius: '10px',
+              marginBottom: '1rem',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+            }}
+          >
+            {notice}
           </div>
+        )}
 
-          <section className="adv-map-scene" aria-label="World map">
-            <svg className="adv-map-connectors" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              {worldRegions.flatMap((region) =>
-                region.connectsTo
-                  .filter((targetId) => worldRegions.findIndex((r) => r.id === targetId) > worldRegions.findIndex((r) => r.id === region.id))
-                  .map((targetId) => {
-                    const target = getRegion(targetId, ctx.kind)!;
-                    const targetStatus = getRegionStatus(target, ctx);
-                    return (
-                      <line
-                        key={`${region.id}-${targetId}`}
-                        x1={region.mapPosition.x}
-                        y1={region.mapPosition.y}
-                        x2={target.mapPosition.x}
-                        y2={target.mapPosition.y}
-                        className={targetStatus === 'locked' ? 'adv-path-locked' : 'adv-path-open'}
-                      />
-                    );
-                  })
-              )}
-            </svg>
-            {worldRegions.map((region) => (
-              <RegionNode
-                key={region.id}
-                region={region}
-                status={getRegionStatus(region, ctx)}
-                isCurrent={region.id === currentRegionId}
-                questSummary={getRegionQuestSummary(region, ctx)}
-                onSelect={() => openRegion(region.id)}
-              />
-            ))}
-          </section>
-
-          <section className="adv-sidebar-row">
-            <div className="adv-collectibles-panel">
-              <p className="child-kicker">Collectibles found</p>
-              <div className="adv-collectibles-strip">
-                {collectibles.length === 0 && <p className="adv-empty-note">Complete a quest to find your first collectible.</p>}
-                {collectibles.map((item) => (
-                  <span key={item.id} className="adv-collectible-chip" title={item.name}>
-                    <span aria-hidden="true">{item.emoji}</span>
-                    <small>{item.name}</small>
-                  </span>
-                ))}
-              </div>
+        {/* Hero Mission Bar */}
+        <section
+          style={{
+            background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.5) 0%, rgba(15, 23, 42, 0.85) 100%)',
+            border: '1.5px solid #38bdf8',
+            borderRadius: '18px',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: 56, height: 56, flexShrink: 0 }}>
+              <CharacterAvatar appearance={appearance} equipment={equipment} size="small" showPedestal={false} />
             </div>
-            <div className="adv-legend">
-              <p className="child-kicker">Map key</p>
-              <ul>
-                <li><span className="adv-legend-dot adv-region-available" /> Ready to explore</li>
-                <li><span className="adv-legend-dot adv-region-in-progress" /> In progress</li>
-                <li><span className="adv-legend-dot adv-region-completed" /> Completed</li>
-                <li><span className="adv-legend-dot adv-region-locked" /> Locked</li>
-              </ul>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {view === 'region' && selectedRegion && (
-        <div className="adv-body adv-region-view">
-          <button type="button" className="teen-back adv-back-to-map" onClick={backToMap}>← World map</button>
-          <section className={`adv-region-hero adv-tone-${selectedRegion.tone}`}>
-            <span className="adv-region-hero-icon" aria-hidden="true">{selectedRegion.icon}</span>
             <div>
-              <p className="child-kicker">{REGION_STATUS_COPY[getRegionStatus(selectedRegion, ctx)]}</p>
-              <h1>{selectedRegion.name}</h1>
-              <p>{selectedRegion.tagline}</p>
+              <small style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Active Expedition
+              </small>
+              <h2 style={{ margin: '0 0 0.2rem 0', fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
+                {nextMission.title}
+              </h2>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1' }}>{nextMission.subtitle}</p>
             </div>
-            <div className="adv-region-hero-progress">
-              {(() => {
-                const summary = getRegionQuestSummary(selectedRegion, ctx);
-                return <><b>{summary.completed}/{summary.total}</b><small>quests complete</small></>;
-              })()}
-            </div>
-          </section>
-
-          <div className="adv-quest-grid">
-            {regionQuests.map((quest) => {
-              const mod = curriculumModules.find((m) => m.id === quest.moduleId);
-              return (
-                <QuestCard
-                  key={quest.id}
-                  quest={quest}
-                  status={getQuestStatus(quest, ctx)}
-                  title={mod?.title || 'Quest'}
-                  theme={mod?.theme || ''}
-                  estimatedMinutes={getQuestEstimatedMinutes(quest)}
-                  onSelect={() => setSelectedQuestId(quest.id)}
-                />
-              );
-            })}
           </div>
-        </div>
-      )}
 
-      {selectedQuest && selectedQuestStatus && (
-        <div className="help-overlay" role="presentation" onClick={() => setSelectedQuestId(null)}>
-          <section ref={questModalRef} className="help-dialog adv-quest-modal" role="dialog" aria-modal="true" aria-labelledby="adv-quest-title" onClick={(e) => e.stopPropagation()}>
-            <button className="close-help" aria-label="Close" onClick={() => setSelectedQuestId(null)}>×</button>
-            <span className="adv-quest-modal-icon" aria-hidden="true">{selectedQuest.icon}</span>
-            <p className="child-kicker">{selectedModule?.theme}</p>
-            <h2 id="adv-quest-title">{selectedModule?.title}</h2>
-            <p>{selectedModule?.description}</p>
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={() => {
+              setSelectedRegionId(nextMission.region.id);
+              if (nextMission.type === 'boss') setLocationTab('boss');
+              else setLocationTab('chapters');
+            }}
+            style={{ padding: '0.65rem 1.25rem', fontSize: '0.9rem', fontWeight: 800 }}
+          >
+            ▶ Continue Adventure →
+          </button>
+        </section>
 
-            <div className="adv-quest-modal-meta">
-              <DifficultyStars level={selectedQuest.difficulty} />
-              <span>⏱ {selectedQuestMinutes} minutes</span>
-              <span>✨ +{selectedQuest.reward.xp} XP</span>
-              <QuestStatusPill status={selectedQuestStatus} />
+        {/* 🗺️ Illustrated Interactive World Map */}
+        <section style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800 }}>The Canonical Bible World Map</h2>
+              <small style={{ color: '#94a3b8' }}>Tap any land to explore stories, games, memory verses, and Knowledge Bosses.</small>
+            </div>
+          </div>
+
+          <WorldMapCanvas
+            regions={regions}
+            currentRegionId={selectedRegionId}
+            regionStatuses={regionStatuses}
+            completionPercents={completionPercents}
+            playerAppearance={appearance}
+            playerEquipment={equipment}
+            onSelectRegion={(reg) => {
+              setSelectedRegionId(reg.id);
+              setLocationTab('chapters');
+            }}
+          />
+        </section>
+
+        {/* 📍 Selected Location Detail Explorer */}
+        <section
+          style={{
+            background: 'rgba(30, 41, 59, 0.4)',
+            border: '1.5px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '20px',
+            padding: '1.75rem',
+            boxShadow: '0 15px 35px rgba(0,0,0,0.4)',
+          }}
+        >
+          {/* Location Header */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr auto',
+              gap: '1.25rem',
+              alignItems: 'center',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              paddingBottom: '1.25rem',
+              marginBottom: '1.25rem',
+            }}
+          >
+            <span style={{ fontSize: '3.5rem' }}>{selectedRegion.icon}</span>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', background: '#3b82f6', color: '#ffffff', padding: '0.15rem 0.55rem', borderRadius: '9999px', fontWeight: 700 }}>
+                  {selectedRegion.scriptureRange}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: isRegionUnlocked ? '#34d399' : '#f87171', fontWeight: 600 }}>
+                  {isRegionUnlocked ? '✨ Unlocked Land' : '🔒 Locked Land'}
+                </span>
+              </div>
+              <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1.6rem', fontWeight: 900, color: '#ffffff' }}>
+                {selectedRegion.name}
+              </h2>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1' }}>{selectedRegion.summary}</p>
             </div>
 
-            {selectedQuest.reward.collectible && (
-              <p className="adv-quest-modal-collectible">
-                <span aria-hidden="true">{selectedQuest.reward.collectible.emoji}</span> Find the <b>{selectedQuest.reward.collectible.name}</b> collectible
+            <div style={{ textAlign: 'right' }}>
+              <strong style={{ fontSize: '1.4rem', color: '#fbbf24', display: 'block' }}>
+                {completionPercents[selectedRegion.id] || 0}%
+              </strong>
+              <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Mastery</small>
+            </div>
+          </div>
+
+          {!isRegionUnlocked ? (
+            <div
+              style={{
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px dashed #ef4444',
+                borderRadius: '12px',
+                padding: '2rem',
+                textAlign: 'center',
+                color: '#cbd5e1',
+              }}
+            >
+              <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.5rem' }}>🔒</span>
+              <h3 style={{ color: '#f87171', margin: '0 0 0.5rem 0' }}>This Land is Locked</h3>
+              <p style={{ fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto' }}>
+                Requirements to unlock: {selectedRegion.unlockRequirement.map((req) => describeRequirement(req)).join(' and ')}.
               </p>
-            )}
+            </div>
+          ) : (
+            <>
+              {/* Location Subtabs */}
+              <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.25rem', overflowX: 'auto' }}>
+                <button
+                  type="button"
+                  className={`button ${locationTab === 'chapters' ? 'button-primary' : 'button-secondary'}`}
+                  onClick={() => setLocationTab('chapters')}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                >
+                  📖 Stories ({selectedRegion.chapters.length})
+                </button>
+                <button
+                  type="button"
+                  className={`button ${locationTab === 'games' ? 'button-primary' : 'button-secondary'}`}
+                  onClick={() => setLocationTab('games')}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                >
+                  🎮 Arcade Games ({regionQuests.length})
+                </button>
+                <button
+                  type="button"
+                  className={`button ${locationTab === 'memory-verse' ? 'button-primary' : 'button-secondary'}`}
+                  onClick={() => setLocationTab('memory-verse')}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                >
+                  📜 Memory Verse
+                </button>
+                <button
+                  type="button"
+                  className={`button ${locationTab === 'boss' ? 'button-primary' : 'button-secondary'}`}
+                  onClick={() => setLocationTab('boss')}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                >
+                  👑 Knowledge Boss
+                </button>
+                <button
+                  type="button"
+                  className={`button ${locationTab === 'secrets' ? 'button-primary' : 'button-secondary'}`}
+                  onClick={() => setLocationTab('secrets')}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                >
+                  🎁 Secrets &amp; Collectibles
+                </button>
+              </div>
 
-            {selectedQuestStatus === 'locked' ? (
-              <div className="adv-locked-note">
-                <p><b>Locked.</b> To unlock this quest:</p>
-                <ul>
-                  {selectedQuest.unlockRequirement.map((req, i) => (
-                    <li key={i}>{describeRequirement(req, ctx.kind)}</li>
+              {/* TAB 1: STORIES & CHAPTERS */}
+              {locationTab === 'chapters' && (
+                <div>
+                  {selectedRegion.chapters.map((chapter) => (
+                    <StoryChapterReader
+                      key={chapter.id}
+                      chapter={chapter}
+                      isCompleted={isChapterCompleted(chapter.id, ctx)}
+                      onComplete={() => handleCompleteChapter(chapter)}
+                    />
                   ))}
-                </ul>
-              </div>
-            ) : (
-              <div className="adv-quest-modal-actions">
-                {(selectedQuestStatus === 'available' || selectedQuestStatus === 'in-progress') && (
-                  <Link className="button button-primary" href={`/learn?module=${selectedQuest.moduleId}`}>
-                    {selectedQuestStatus === 'in-progress' ? 'Continue quest' : 'Start quest'}
-                  </Link>
-                )}
-                {selectedQuestStatus === 'completed' && (
-                  <>
-                    <Link className="button button-secondary" href={`/learn?module=${selectedQuest.moduleId}`}>Review quest</Link>
-                    <button type="button" className="button button-primary" onClick={replayForMastery}>✨ Replay for mastery</button>
-                  </>
-                )}
-                {selectedQuestStatus === 'mastered' && (
-                  <>
-                    <p className="adv-mastered-note">⭐ You’ve mastered this quest!</p>
-                    <Link className="button button-secondary" href={`/learn?module=${selectedQuest.moduleId}`}>Review again</Link>
-                  </>
-                )}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
+                </div>
+              )}
 
-      {notice && (
-        <div className="child-help-confirmation" role="status">
-          <span>✓</span>
-          <p>{notice}</p>
-          <button onClick={() => setNotice('')}>Close</button>
-        </div>
-      )}
+              {/* TAB 2: GAMES & QUIZZES */}
+              {locationTab === 'games' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                  {regionQuests.map((quest) => {
+                    const qStatus = getQuestStatus(quest, ctx);
+                    const qMins = getQuestEstimatedMinutes(quest);
 
-      <XPToastStack toasts={toasts} onDismiss={dismissToast} />
+                    return (
+                      <div key={quest.id} style={{ background: 'rgba(30, 41, 59, 0.6)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <QuestCard
+                          quest={quest}
+                          status={qStatus}
+                          title={quest.linkedArcadeGame?.title || 'Bible Quest'}
+                          theme={selectedRegion.tagline}
+                          estimatedMinutes={qMins}
+                          onSelect={() => {
+                            if (quest.linkedArcadeGame) {
+                              router.push(quest.linkedArcadeGame.href);
+                            }
+                          }}
+                        />
+                        {quest.linkedArcadeGame && (
+                          <div style={{ marginTop: '0.75rem', textAlign: 'right' }}>
+                            <Link href={quest.linkedArcadeGame.href} className="button button-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
+                              Launch Game →
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* TAB 3: MEMORY VERSE */}
+              {locationTab === 'memory-verse' && (
+                <MemoryVerseTrainer verse={selectedRegion.memoryVerse} />
+              )}
+
+              {/* TAB 4: KNOWLEDGE BOSS */}
+              {locationTab === 'boss' && (
+                <KnowledgeBossArena
+                  boss={selectedRegion.boss}
+                  isDefeated={isBossDefeated(selectedRegion.boss.id, ctx)}
+                  onVictory={handleBossVictory}
+                />
+              )}
+
+              {/* TAB 5: SECRETS & COLLECTIBLES */}
+              {locationTab === 'secrets' && (
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', color: '#fbbf24', margin: '0 0 0.75rem 0' }}>
+                    Hidden Secrets in {selectedRegion.name}
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                    {selectedRegion.secrets.map((sec) => {
+                      const isDiscovered = ctx.discoveredSecretIds?.includes(sec.id) ?? false;
+                      return (
+                        <div
+                          key={sec.id}
+                          style={{
+                            background: 'rgba(30, 41, 59, 0.5)',
+                            border: isDiscovered ? '1px solid #10b981' : '1px dashed rgba(255,255,255,0.2)',
+                            borderRadius: '12px',
+                            padding: '1rem',
+                          }}
+                        >
+                          <span style={{ fontSize: '2rem' }}>{isDiscovered ? sec.emoji : '❓'}</span>
+                          <strong style={{ display: 'block', fontSize: '0.95rem', color: '#ffffff', margin: '0.25rem 0' }}>
+                            {isDiscovered ? sec.name : 'Undiscovered Secret'}
+                          </strong>
+                          <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0 0 0.75rem 0' }}>
+                            {isDiscovered ? 'Secret unlocked!' : `Hint: ${sec.hint}`}
+                          </p>
+                          {!isDiscovered && (
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              style={{ fontSize: '0.75rem', padding: '0.35rem 0.7rem' }}
+                              onClick={() => handleDiscoverSecret(sec.id, sec.rewardCoins, sec.rewardGems)}
+                            >
+                              🔍 Search Area
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', margin: '0 0 0.75rem 0' }}>
+                    Location Collectibles
+                  </h3>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {selectedRegion.collectibles.map((c) => (
+                      <div
+                        key={c.id}
+                        style={{
+                          background: 'rgba(30, 41, 59, 0.6)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '10px',
+                          padding: '0.75rem 1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                        }}
+                      >
+                        <span style={{ fontSize: '1.8rem' }}>{c.emoji}</span>
+                        <div>
+                          <strong style={{ fontSize: '0.85rem', color: '#ffffff', display: 'block' }}>{c.name}</strong>
+                          <small style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{c.description}</small>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+
+      {showPouch && (
+        <CollectiblesPouchModal
+          collectibles={collectibles}
+          secrets={[]}
+          onClose={() => setShowPouch(false)}
+        />
+      )}
 
       {levelUpEvent && (
         <LevelUpModal
@@ -320,13 +549,7 @@ export default function AdventurePage() {
           onContinue={dismissLevelUp}
         />
       )}
+      <XPToastStack toasts={toasts} onDismiss={dismissToast} />
     </main>
   );
 }
-
-const REGION_STATUS_COPY: Record<string, string> = {
-  locked: 'Locked region',
-  available: 'Ready to explore',
-  'in-progress': 'In progress',
-  completed: 'Fully explored',
-};

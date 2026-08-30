@@ -1,17 +1,19 @@
-// Adventure World data model.
+// Bible Adventure World data model.
 //
-// This module intentionally contains only types + pure data/shape
-// definitions. Nothing here reads localStorage or any storage layer —
-// that keeps the model swappable for a real backend later without
-// touching the shape consumers depend on.
+// Defines the 8 canonical biblical regions, chapters, stories,
+// arcade minigames, memory verses, collectibles, and Knowledge Bosses.
 
 export type RegionId =
+  | 'creation'
   | 'eden'
+  | 'noah'
+  | 'egypt'
   | 'wilderness'
-  | 'kingdom-of-israel'
-  | 'galilee'
   | 'jerusalem'
+  | 'gospels'
   | 'early-church';
+
+export type LocationState = 'locked' | 'unlocked' | 'in-progress' | 'completed' | 'mastered';
 
 /** All conditions in the array must be satisfied ("AND"). */
 export type UnlockRequirement =
@@ -23,30 +25,94 @@ export type UnlockRequirement =
 export type QuestStatus = 'locked' | 'available' | 'in-progress' | 'completed' | 'mastered';
 export type RegionStatus = 'locked' | 'available' | 'in-progress' | 'completed';
 
-export type QuestReward = {
-  xp: number;
-  collectible?: {
-    id: string;
-    name: string;
-    emoji: string;
+export type WorldCollectible = {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  foundInRegion: RegionId;
+};
+
+export type LocationSecret = {
+  id: string;
+  name: string;
+  hint: string;
+  emoji: string;
+  rewardCoins: number;
+  rewardGems: number;
+  discovered: boolean;
+};
+
+export type MemoryVerseChallenge = {
+  reference: string;
+  text: string;
+  translation: string;
+  blanks: string[];
+  theme: string;
+};
+
+export type BossQuestion = {
+  id: string;
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  conceptKey: string;
+};
+
+export type KnowledgeBossChallenge = {
+  id: string;
+  title: string;
+  bossName: string;
+  bossEmoji: string;
+  description: string;
+  requiredScore: number; // e.g. 4 out of 5
+  questions: BossQuestion[];
+  storyReconstruction: {
+    prompt: string;
+    events: string[];
+    correctOrder: number[];
+  };
+  reward: {
+    xp: number;
+    coins: number;
+    gems: number;
+    badgeName: string;
+    badgeEmoji: string;
+    specialCollectible?: WorldCollectible;
   };
 };
 
-/**
- * A quest node maps 1:1 to an existing curriculum module (by `moduleId`),
- * so quest completion, lesson content, and progress tracking reuse the
- * existing lesson engine and localStorage progress store — there is no
- * second copy of lesson content or a competing progress record.
- */
+export type StoryChapter = {
+  id: string;
+  chapterNumber: number;
+  title: string;
+  subtitle: string;
+  scriptureReference: string;
+  bibleText: string;
+  narrativeExplanation: string;
+  takeawayMessage: string;
+  audioDurationSeconds?: number;
+};
+
 export type AdventureQuest = {
   id: string;
   moduleId: string;
   regionId: RegionId;
   order: number;
-  /** 1-5 star difficulty shown as ★★★☆☆ style rating. */
   difficulty: 1 | 2 | 3 | 4 | 5;
   icon: string;
-  reward: QuestReward;
+  linkedArcadeGame?: {
+    href: string;
+    title: string;
+    gameType: string;
+  };
+  reward: {
+    xp: number;
+    coins: number;
+    collectible?: WorldCollectible;
+  };
   unlockRequirement: UnlockRequirement[];
 };
 
@@ -57,12 +123,18 @@ export type Region = {
   name: string;
   tagline: string;
   icon: string;
-  /** Percentage-based position used for the desktop illustrated map. */
   mapPosition: MapPoint;
-  /** Region ids this region has a visible path to on the map. */
   connectsTo: RegionId[];
   unlockRequirement: UnlockRequirement[];
-  tone: 'emerald' | 'amber' | 'navy' | 'teal' | 'coral' | 'gold';
+  tone: 'emerald' | 'amber' | 'navy' | 'teal' | 'coral' | 'gold' | 'purple' | 'ruby';
+  scriptureRange: string;
+  summary: string;
+  environmentDescription: string;
+  chapters: StoryChapter[];
+  memoryVerse: MemoryVerseChallenge;
+  boss: KnowledgeBossChallenge;
+  secrets: LocationSecret[];
+  collectibles: WorldCollectible[];
 };
 
 export type World = {

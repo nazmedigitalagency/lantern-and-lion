@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from '../../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../../lib/supabase/server';
 import { activityDateKey } from '../../../../lib/activity/server';
 import { getStreakCalendar, getStreakStatus } from '../../../../lib/streak/server';
+import { getConceptMasteryForChild } from '../../../../lib/adaptive/server';
+import { getConcept } from '../../../../lib/adaptive/concepts';
 
 /**
  * Class overview + per-student drill-down for the Teacher Dashboard.
@@ -32,7 +34,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   let summaries: Record<string, { active_seconds: number; games_completed: number; lessons_completed: number; quests_completed: number; xp_earned: number }> = {};
   const lastLogins: Record<string, string | null> = {};
   let timezoneByChild = new Map<string, string>();
-  let students: Array<{ id: string; name: string; age: number; needsHelp: boolean; lastLoginAt: string | null; today: { active_seconds: number; games_completed: number; lessons_completed: number; quests_completed: number; xp_earned: number }; currentStreak: number; weeklyConsistency: number }> = [];
+  let students: Array<{ id: string; name: string; age: number; needsHelp: boolean; lastLoginAt: string | null; today: { active_seconds: number; games_completed: number; lessons_completed: number; quests_completed: number; xp_earned: number }; currentStreak: number; weeklyConsistency: number; masteryPercent: number }> = [];
+  const classConceptScores = new Map<string, number[]>();
 
   if (childIds.length > 0) {
     const { data: families } = await admin.from('families').select('id, timezone').in(
@@ -79,6 +82,14 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       ]);
       const weeklyConsistency = calendar.filter((d) => d.state === 'complete' || d.state === 'grace').length;
 
+      const masteryRows = await getConceptMasteryForChild(admin, child.id);
+      for (const row of masteryRows) {
+        const list = classConceptScores.get(row.concept_id) || [];
+        list.push(row.mastery_score);
+        classConceptScores.set(row.concept_id, list);
+      }
+      const masteryPercent = masteryRows.length ? Math.round(masteryRows.reduce((sum, m) => sum + m.mastery_score, 0) / masteryRows.length) : 0;
+
       return {
         id: child.id,
         name: child.name,
@@ -88,9 +99,19 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
         today: summaries[child.id] || { active_seconds: 0, games_completed: 0, lessons_completed: 0, quests_completed: 0, xp_earned: 0 },
         currentStreak: streak.currentStreak,
         weeklyConsistency,
+        masteryPercent,
       };
     }));
   }
+
+  // Classroom-level insight: which concept the class handles best/needs help
+  // with, aggregated from every approved student — never singles out one
+  // child by name as "worst," only the concept itself.
+  const conceptAverages = Array.from(classConceptScores.entries())
+    .map(([conceptId, scores]) => ({ conceptId, label: getConcept(conceptId)?.label || conceptId, avg: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) }))
+    .filter((c) => classConceptScores.get(c.conceptId)!.length >= Math.min(3, students.length || 1));
+  const mostMastered = [...conceptAverages].sort((a, b) => b.avg - a.avg)[0] || null;
+  const needsReinforcement = [...conceptAverages].sort((a, b) => a.avg - b.avg)[0] || null;
 
   const pendingCount = (roster || []).filter((r) => !r.approved).length;
   const activeToday = students.filter((s) => s.today.active_seconds > 0).length;
@@ -106,6 +127,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       lessonsCompletedToday: students.reduce((sum, s) => sum + s.today.lessons_completed, 0),
       pendingApprovals: pendingCount,
     },
+    classInsight: { mostMastered, needsReinforcement },
     students,
   });
 }

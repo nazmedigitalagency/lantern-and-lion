@@ -21,6 +21,9 @@ import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { LeagueCard } from '../lib/leagues/LeagueCard';
 import { getLeaguePod } from '../lib/leagues/storage';
+import { getNextMissionRecommendation } from '../adventure/progression';
+import { loadWorldContext } from '../adventure/storage';
+import { LearningJourneyCard, type LearningPlanResponse } from '../lib/adaptive/LearningJourneyCard';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type View = 'today' | 'library' | 'progress';
@@ -96,8 +99,17 @@ export default function ChildDashboardPage() {
   const [todaySummary, setTodaySummary] = useState<{ active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number } | null>(null);
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
   const [milestoneToast, setMilestoneToast] = useState<{ label: string; coins: number; gems: number } | null>(null);
+  const [learningPlan, setLearningPlan] = useState<LearningPlanResponse | null>(null);
 
   useActivityHeartbeat(hydrated && !isPreview);
+
+  useEffect(() => {
+    if (!hydrated || isPreview) return;
+    fetch('/api/child/learning-plan')
+      .then((res) => (res.ok ? (res.json() as Promise<LearningPlanResponse>) : null))
+      .then((data) => { if (data) setLearningPlan(data); })
+      .catch(() => { /* Offline — widget just stays hidden. */ });
+  }, [hydrated, isPreview]);
 
   useEffect(() => {
     if (!hydrated || isPreview) return;
@@ -387,6 +399,9 @@ export default function ChildDashboardPage() {
         isTeen={teen}
       />
     )}
+    {!isPreview && learningPlan && (
+      <LearningJourneyCard plan={learningPlan} isTeen={teen} />
+    )}
     {todaySummary && (todaySummary.games_played > 0 || todaySummary.quests_completed > 0 || todaySummary.xp_earned > 0 || todaySummary.achievements_earned > 0) && (
       <section className="child-your-day" aria-label="Your day so far">
         <h2>Your day</h2>
@@ -417,14 +432,25 @@ export default function ChildDashboardPage() {
         </Link>
       </section>
 
-      <section className="child-adventure-banner">
-        <span className="child-adventure-banner-icon" aria-hidden="true">🗺️</span>
-        <div className="child-adventure-banner-copy">
-          <strong>The Adventure World is open</strong>
-          <small>Explore Eden, the Wilderness and beyond — every quest you finish lights up more of the map.</small>
-        </div>
-        <Link className="button button-primary" href="/adventure">Enter the world →</Link>
-      </section>
+      {(() => {
+        const advCtx = loadWorldContext(child.id, teen ? 'teen' : 'child');
+        const next = getNextMissionRecommendation(advCtx);
+        return (
+          <section className="child-adventure-banner" style={{ border: '2px solid #38bdf8' }}>
+            <span className="child-adventure-banner-icon" aria-hidden="true">{next.region.icon}</span>
+            <div className="child-adventure-banner-copy">
+              <span style={{ fontSize: '0.72rem', background: '#0284c7', color: '#ffffff', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontWeight: 700, textTransform: 'uppercase' }}>
+                Next Expedition
+              </span>
+              <strong>{next.title}</strong>
+              <small>{next.subtitle} — explore the 8 biblical lands and defeat Knowledge Bosses.</small>
+            </div>
+            <Link className="button button-primary" href={next.actionHref}>
+              ▶ Continue Adventure →
+            </Link>
+          </section>
+        );
+      })()}
 
       {/* ── Illustrated Adventurer & Gear Showcase ── */}
       <section className="child-character-showcase">

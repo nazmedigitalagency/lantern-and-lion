@@ -1,256 +1,1296 @@
+// Canonical World Data for Bible Adventure World
+//
+// Full definitions for the 8 biblical areas with real Scripture passages,
+// chapters, games, memory verses, Knowledge Bosses, and collectibles.
+
 import type { AdventureQuest, Region, RegionId } from './types';
 
 export type WorldKind = 'child' | 'teen';
 
-// ── CHILD/PATHFINDER REGIONS ────────────────────────────────────
-// Positions are percentages within the map scene, hand-placed to read
-// as a winding path from the Garden through to the Early Church.
-export const childRegions: Region[] = [
+export const canonicalRegions: Region[] = [
+  // 1. 🌱 CREATION
+  {
+    id: 'creation',
+    name: 'Creation',
+    tagline: 'In the beginning, God created the heavens and the earth',
+    icon: '🌱',
+    mapPosition: { x: 8, y: 78 },
+    connectsTo: ['eden'],
+    unlockRequirement: [{ type: 'always' }],
+    tone: 'emerald',
+    scriptureRange: 'Genesis 1:1 – 2:3 · Psalm 104',
+    summary: 'Discover how God formed the light, oceans, galaxies, creatures, and humankind by His spoken Word.',
+    environmentDescription: 'Radiant celestial light, blooming flora, untamed rivers, and the dawn of life.',
+    chapters: [
+      {
+        id: 'creation-ch1',
+        chapterNumber: 1,
+        title: 'Let There Be Light',
+        subtitle: 'Days 1 & 2: Light and the Expanse',
+        scriptureReference: 'Genesis 1:1-8',
+        bibleText: 'In the beginning God created the heavens and the earth. The earth was formless and void, and darkness was over the face of the deep... And God said, "Let there be light," and there was light.',
+        narrativeExplanation: 'Before anything existed, God was there. With just a spoken word, light pierced the darkness, separating day from night.',
+        takeawayMessage: 'God brings light into every dark corner of our lives.',
+      },
+      {
+        id: 'creation-ch2',
+        chapterNumber: 2,
+        title: 'Land, Seas & Living Plants',
+        subtitle: 'Days 3 & 4: Earth, Vegetation, Sun & Stars',
+        scriptureReference: 'Genesis 1:9-19',
+        bibleText: 'And God said, "Let the waters under the heavens be gathered into one place, and let the dry land appear." And it was so... God made two great lights and the stars.',
+        narrativeExplanation: 'God carved the oceans, formed towering mountains, painted flowers, and set the stars in their cosmic orbits.',
+        takeawayMessage: 'The beauty of nature reminds us of God’s endless creativity and power.',
+      },
+      {
+        id: 'creation-ch3',
+        chapterNumber: 3,
+        title: 'Creatures of Sky, Sea & Land',
+        subtitle: 'Days 5, 6 & 7: Life and the Sabbath Rest',
+        scriptureReference: 'Genesis 1:20 – 2:3',
+        bibleText: 'So God created man in his own image, in the image of God he created him; male and female he created them. And God saw everything that he had made, and behold, it was very good.',
+        narrativeExplanation: 'From the soaring eagles to the gentle lambs, God made every creature. Then He made people in His own image, and rested on the seventh day.',
+        takeawayMessage: 'You are made in God’s image with immense love, purpose, and dignity.',
+      },
+    ],
+    memoryVerse: {
+      reference: 'Genesis 1:1',
+      text: 'In the beginning, God created the heavens and the earth.',
+      translation: 'ESV',
+      blanks: ['beginning', 'created', 'heavens', 'earth'],
+      theme: 'God the Creator',
+    },
+    boss: {
+      id: 'boss-creation',
+      title: 'The Dawn of Creation Trial',
+      bossName: 'The Genesis Luminary',
+      bossEmoji: '🌟',
+      description: 'Demonstrate your mastery of the seven days of creation, God’s spoken power, and humanity’s unique place in creation.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'cq-1',
+          prompt: 'What did God create on the first day when He spoke?',
+          options: ['Light', 'The Sun and Moon', 'Animals', 'Trees'],
+          correctIndex: 0,
+          explanation: 'Genesis 1:3 says God said "Let there be light," and light was separated from darkness on Day 1.',
+          conceptKey: 'creation_day_1',
+        },
+        {
+          id: 'cq-2',
+          prompt: 'What special distinction did God give when creating human beings?',
+          options: ['They were made in His image', 'They were made first', 'They had wings', 'They lived underwater'],
+          correctIndex: 0,
+          explanation: 'Genesis 1:27 teaches that God created mankind in His own image and likeness.',
+          conceptKey: 'human_dignity',
+        },
+        {
+          id: 'cq-3',
+          prompt: 'What did God do on the seventh day after finishing His work?',
+          options: ['He rested and made it holy', 'He made new galaxies', 'He started over', 'He planted a second world'],
+          correctIndex: 0,
+          explanation: 'Genesis 2:2-3 tells us God rested from all His work and blessed the seventh day.',
+          conceptKey: 'sabbath_rest',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Reconstruct the creation order in the correct biblical sequence:',
+        events: [
+          'God creates Light and separates day from night (Day 1)',
+          'God gathers the waters, forms dry land, and creates plants (Day 3)',
+          'God creates the sun, moon, and stars for signs and seasons (Day 4)',
+          'God creates mankind in His own image and rests on Day 7',
+        ],
+        correctOrder: [0, 1, 2, 3],
+      },
+      reward: {
+        xp: 250,
+        coins: 100,
+        gems: 3,
+        badgeName: 'Creation Explorer',
+        badgeEmoji: '🌱',
+        specialCollectible: {
+          id: 'coll-star-token',
+          name: 'Morning Star Token',
+          emoji: '⭐',
+          description: 'A luminous token commemorating the dawn of creation.',
+          rarity: 'rare',
+          foundInRegion: 'creation',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-creation-1',
+        name: 'Hidden Constellation',
+        hint: 'Inspect the night sky above the waters on Day 4.',
+        emoji: '✨',
+        rewardCoins: 40,
+        rewardGems: 1,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-creation-seed',
+        name: 'Evergreen Seed',
+        emoji: '🌿',
+        description: 'A seed representing the fruitfulness of God’s green earth.',
+        rarity: 'common',
+        foundInRegion: 'creation',
+      },
+    ],
+  },
+
+  // 2. 🌳 EDEN
   {
     id: 'eden',
     name: 'Eden',
-    tagline: 'Where the story begins',
-    icon: '🌿',
-    mapPosition: { x: 12, y: 74 },
-    connectsTo: ['wilderness'],
-    unlockRequirement: [{ type: 'always' }],
-    tone: 'emerald',
+    tagline: 'The Garden of Fellowship, Choices & Grace',
+    icon: '🌳',
+    mapPosition: { x: 20, y: 64 },
+    connectsTo: ['creation', 'noah'],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'creation', minQuestsCompleted: 1 }],
+    tone: 'teal',
+    scriptureRange: 'Genesis 2:4 – 3:24',
+    summary: 'Walk through the lush Garden of Eden, understand the freedom God gives us, and learn how His promise of redemption began.',
+    environmentDescription: 'Gentle rivers, the Tree of Life, whispering olive groves, and golden morning mist.',
+    chapters: [
+      {
+        id: 'eden-ch1',
+        chapterNumber: 1,
+        title: 'The Garden Home',
+        subtitle: 'Living in Harmony with God',
+        scriptureReference: 'Genesis 2:8-15',
+        bibleText: 'And the LORD God planted a garden in Eden, in the east, and there he put the man whom he had formed... The LORD God took the man and put him in the Garden of Eden to work it and keep it.',
+        narrativeExplanation: 'God gave Adam and Eve a bountiful home where they walked closely with Him in perfect peace and friendship.',
+        takeawayMessage: 'God created us for close, trusting relationship with Him.',
+      },
+      {
+        id: 'eden-ch2',
+        chapterNumber: 2,
+        title: 'The Choice & The Promise',
+        subtitle: 'Choices, Consequences and God’s Grace',
+        scriptureReference: 'Genesis 3:1-15',
+        bibleText: 'God called to the man and said to him, "Where are you?" ... And I will put enmity between you and the woman, and between your offspring and hers; he will crush your head, and you will strike his heel.',
+        narrativeExplanation: 'When temptation came, trusting self over God brought sadness. Yet even in judgment, God promised a future Rescuer who would overcome evil.',
+        takeawayMessage: 'Even when we make mistakes, God reaches out in mercy with a plan of salvation.',
+      },
+    ],
+    memoryVerse: {
+      reference: 'Proverbs 3:5',
+      text: 'Trust in the Lord with all your heart, and do not lean on your own understanding.',
+      translation: 'ESV',
+      blanks: ['Trust', 'Lord', 'heart', 'understanding'],
+      theme: 'Trusting God’s Guidance',
+    },
+    boss: {
+      id: 'boss-eden',
+      title: 'The Garden of Wisdom Trial',
+      bossName: 'Guardian of Eden',
+      bossEmoji: '🌺',
+      description: 'Test your understanding of obedience, moral choices, and the eternal promise of God’s rescue.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'eq-1',
+          prompt: 'What task did God give Adam in the Garden of Eden?',
+          options: ['To work and take care of the garden', 'To build a stone fortress', 'To sail the seas', 'To hide the animals'],
+          correctIndex: 0,
+          explanation: 'Genesis 2:15 states God placed Adam in Eden to cultivate and guard it.',
+          conceptKey: 'eden_stewardship',
+        },
+        {
+          id: 'eq-2',
+          prompt: 'When Adam and Eve hid, what did God do?',
+          options: ['He lovingly called out, "Where are you?"', 'He ignored them', 'He destroyed the world', 'He sent a storm'],
+          correctIndex: 0,
+          explanation: 'Genesis 3:9 shows God seeking them out with grace even after their disobedience.',
+          conceptKey: 'gods_pursuing_grace',
+        },
+        {
+          id: 'eq-3',
+          prompt: 'What did God promise in Genesis 3:15?',
+          options: ['A future Rescuer who would crush evil', 'That it would never rain', 'A golden chariot', 'Instant perfection'],
+          correctIndex: 0,
+          explanation: 'Genesis 3:15 is known as the first promise of the Messiah (the Protoevangelium).',
+          conceptKey: 'first_gospel_promise',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Order the events of Eden correctly:',
+        events: [
+          'God places humanity in the Garden to care for creation in fellowship',
+          'Temptation enters and trust is broken through disobedience',
+          'God clothes Adam and Eve and gives the first promise of a future Savior',
+        ],
+        correctOrder: [0, 1, 2],
+      },
+      reward: {
+        xp: 280,
+        coins: 120,
+        gems: 3,
+        badgeName: 'Eden Explorer',
+        badgeEmoji: '🌳',
+        specialCollectible: {
+          id: 'coll-olive-leaf',
+          name: 'Golden Olive Leaf',
+          emoji: '🍃',
+          description: 'A leaf from the quiet groves of Eden representing peace.',
+          rarity: 'rare',
+          foundInRegion: 'eden',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-eden-1',
+        name: 'Hidden Spring',
+        hint: 'Follow the four rivers where Pishon meets Gihon.',
+        emoji: '💧',
+        rewardCoins: 50,
+        rewardGems: 1,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-eden-rose',
+        name: 'Sharon Blossom',
+        emoji: '🌺',
+        description: 'A fragrant bloom from the garden paths.',
+        rarity: 'common',
+        foundInRegion: 'eden',
+      },
+    ],
   },
+
+  // 3. 🛶 NOAH
   {
-    id: 'wilderness',
-    name: 'The Wilderness',
-    tagline: 'A hard road, and a faithful God',
+    id: 'noah',
+    name: 'Noah & The Ark',
+    tagline: 'Faithfulness against the tide and God’s rainbow covenant',
+    icon: '🛶',
+    mapPosition: { x: 34, y: 72 },
+    connectsTo: ['eden', 'egypt'],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'eden', minQuestsCompleted: 1 }],
+    tone: 'coral',
+    scriptureRange: 'Genesis 6–9',
+    summary: 'Build the Ark alongside Noah, gather the animals two by two, ride out the great storm, and witness the rainbow of promise.',
+    environmentDescription: 'Cypress wood scaffolding, gathering herds, stormy waves giving way to brilliant rainbow skies.',
+    chapters: [
+      {
+        id: 'noah-ch1',
+        chapterNumber: 1,
+        title: 'A Man Who Walked with God',
+        subtitle: 'Building the Ark in Obedience',
+        scriptureReference: 'Genesis 6:9-22',
+        bibleText: 'Noah was a righteous man, blameless in his generation. Noah walked with God... Noah did this; he did all that God commanded him.',
+        narrativeExplanation: 'When everyone else turned away, Noah listened to God. He built a massive wooden ark on dry land, trusting God’s word completely.',
+        takeawayMessage: 'Standing up for what is right takes courage, but God is with those who trust Him.',
+      },
+      {
+        id: 'noah-ch2',
+        chapterNumber: 2,
+        title: 'Two by Two & The Great Flood',
+        subtitle: 'Shelter in the Storm',
+        scriptureReference: 'Genesis 7:1-16',
+        bibleText: 'Pairs of clean and unclean animals, of birds and of all creatures that move along the ground, male and female, came to Noah and entered the ark... Then the LORD shut him in.',
+        narrativeExplanation: 'God brought animals of every kind into the safety of the ark, and God Himself sealed the door to protect them.',
+        takeawayMessage: 'God is our secure refuge in every storm.',
+      },
+      {
+        id: 'noah-ch3',
+        chapterNumber: 3,
+        title: 'The Dove & The Rainbow Covenant',
+        subtitle: 'New Beginnings and Eternal Promises',
+        scriptureReference: 'Genesis 8:6 – 9:17',
+        bibleText: 'When the dove returned to him in the evening, there in its beak was a freshly plucked olive leaf!... God said, "I set my rainbow in the cloud, and it will be for a sign of a covenant."',
+        narrativeExplanation: 'The waters receded, the dove returned with hope, and God placed a brilliant rainbow in the clouds as His everlasting covenant of mercy.',
+        takeawayMessage: 'God always keeps His promises.',
+      },
+    ],
+    memoryVerse: {
+      reference: 'Genesis 9:13',
+      text: 'I have set my rainbow in the clouds, and it will be the sign of the covenant between me and the earth.',
+      translation: 'NIV',
+      blanks: ['rainbow', 'clouds', 'covenant', 'earth'],
+      theme: 'God’s Faithful Covenant',
+    },
+    boss: {
+      id: 'boss-noah',
+      title: 'The Deluge & Covenant Trial',
+      bossName: 'The Ark Master',
+      bossEmoji: '🌈',
+      description: 'Face the ultimate Noah challenge: match animals, reconstruct the flood timeline, and master the covenant promise.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'nq-1',
+          prompt: 'What kind of wood did God tell Noah to use to build the ark?',
+          options: ['Gopher wood (Cypress)', 'Cedar of Lebanon', 'Oak', 'Pine'],
+          correctIndex: 0,
+          explanation: 'Genesis 6:14 commands Noah to build the ark of gopher wood.',
+          conceptKey: 'ark_construction',
+        },
+        {
+          id: 'nq-2',
+          prompt: 'What did the dove bring back to Noah in its beak?',
+          options: ['A freshly plucked olive leaf', 'A branch of wheat', 'A golden coin', 'A palm leaf'],
+          correctIndex: 0,
+          explanation: 'Genesis 8:11 notes the dove brought back an olive leaf, showing plant life was reviving.',
+          conceptKey: 'olive_branch_hope',
+        },
+        {
+          id: 'nq-3',
+          prompt: 'What does the rainbow in the sky signify in Scripture?',
+          options: [
+            'God’s covenant promise never to flood the whole earth again',
+            'Good weather tomorrow',
+            'Finding treasure',
+            'The end of winter',
+          ],
+          correctIndex: 0,
+          explanation: 'Genesis 9:13-17 establishes the rainbow as the sign of God’s covenant with all living creatures.',
+          conceptKey: 'rainbow_covenant',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Arrange the timeline of Noah’s voyage:',
+        events: [
+          'Noah obeys God and builds the ark on dry ground',
+          'The animals enter two by two and the Lord seals the door',
+          'The dove returns with an olive leaf as the flood waters recede',
+          'Noah builds an altar of thanksgiving and sees God’s rainbow covenant',
+        ],
+        correctOrder: [0, 1, 2, 3],
+      },
+      reward: {
+        xp: 320,
+        coins: 150,
+        gems: 4,
+        badgeName: 'Ark Explorer',
+        badgeEmoji: '🛶',
+        specialCollectible: {
+          id: 'coll-rainbow-token',
+          name: 'Rainbow Covenant Seal',
+          emoji: '🌈',
+          description: 'A shimmering prism token celebrating God’s faithfulness.',
+          rarity: 'epic',
+          foundInRegion: 'noah',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-noah-1',
+        name: 'Hidden Olive Branch',
+        hint: 'Look near the mountain peak where Mount Ararat rests.',
+        emoji: '🕊️',
+        rewardCoins: 60,
+        rewardGems: 2,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-cypress-plank',
+        name: 'Carved Cypress Plank',
+        emoji: '🪵',
+        description: 'A piece of sturdy gopher wood from the ark.',
+        rarity: 'common',
+        foundInRegion: 'noah',
+      },
+    ],
+  },
+
+  // 4. 🏜️ EGYPT
+  {
+    id: 'egypt',
+    name: 'Egypt & The Exodus',
+    tagline: 'Let My people go — The mighty hand of God delivers',
     icon: '🏜️',
-    mapPosition: { x: 30, y: 50 },
-    connectsTo: ['eden', 'kingdom-of-israel'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'eden', minQuestsCompleted: 2 }],
+    mapPosition: { x: 48, y: 52 },
+    connectsTo: ['noah', 'wilderness'],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'noah', minQuestsCompleted: 1 }],
     tone: 'gold',
-  },
-  {
-    id: 'kingdom-of-israel',
-    name: 'The Kingdom of Israel',
-    tagline: 'Kings, courage, and God’s people',
-    icon: '👑',
-    mapPosition: { x: 50, y: 68 },
-    connectsTo: ['wilderness', 'galilee'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'wilderness', minQuestsCompleted: 2 }],
-    tone: 'amber',
-  },
-  {
-    id: 'galilee',
-    name: 'Galilee',
-    tagline: 'Where Jesus taught and healed',
-    icon: '⛵',
-    mapPosition: { x: 68, y: 42 },
-    connectsTo: ['kingdom-of-israel', 'jerusalem'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'kingdom-of-israel', minQuestsCompleted: 2 }],
-    tone: 'teal',
-  },
-  {
-    id: 'jerusalem',
-    name: 'Jerusalem',
-    tagline: 'The cross, and the empty tomb',
-    icon: '🏛️',
-    mapPosition: { x: 84, y: 64 },
-    connectsTo: ['galilee', 'early-church'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'galilee', minQuestsCompleted: 2 }],
-    tone: 'coral',
-  },
-  {
-    id: 'early-church',
-    name: 'The Early Church',
-    tagline: 'The story keeps going — through you',
-    icon: '🔥',
-    mapPosition: { x: 92, y: 32 },
-    connectsTo: ['jerusalem'],
-    unlockRequirement: [
-      { type: 'region-complete', regionId: 'jerusalem', minQuestsCompleted: 2 },
-      { type: 'level', minLevel: 4 },
+    scriptureRange: 'Exodus 1–14',
+    summary: 'Journey from Pharaoh’s palaces to the burning bush, witness the ten plagues, celebrate Passover, and walk through the parted Red Sea.',
+    environmentDescription: 'Ancient sandstone temples, flowing Nile waters, the fiery burning bush, and parted walls of deep sea.',
+    chapters: [
+      {
+        id: 'egypt-ch1',
+        chapterNumber: 1,
+        title: 'Moses & The Burning Bush',
+        subtitle: 'Called on Holy Ground',
+        scriptureReference: 'Exodus 3:1-14',
+        bibleText: 'The angel of the LORD appeared to him in a flame of fire out of the midst of a bush... God said, "Take off your sandals, for the place where you are standing is holy ground... I AM WHO I AM."',
+        narrativeExplanation: 'Moses saw a bush that burned without being consumed. God spoke to Moses, giving him courage to lead His people out of bondage.',
+        takeawayMessage: 'God hears the cries of His people and equips us for big callings.',
+      },
+      {
+        id: 'egypt-ch2',
+        chapterNumber: 2,
+        title: 'Signs, Plagues & The Passover',
+        subtitle: 'The Lord Overcomes Egypt’s Idols',
+        scriptureReference: 'Exodus 7–12',
+        bibleText: 'For the LORD will pass through to strike the Egyptians, and when he sees the blood on the lintel... the LORD will pass over the door.',
+        narrativeExplanation: 'God showed His power over Pharaoh through signs and wonders. Through the Passover lamb, God protected His people and set them free.',
+        takeawayMessage: 'God delivers His people through His mighty power and sacrificial love.',
+      },
+      {
+        id: 'egypt-ch3',
+        chapterNumber: 3,
+        title: 'Parting of the Red Sea',
+        subtitle: 'Walking on Dry Ground',
+        scriptureReference: 'Exodus 14:13-31',
+        bibleText: 'Moses stretched out his hand over the sea, and the LORD drove the sea back by a strong east wind all night and made the sea dry land, and the waters were divided.',
+        narrativeExplanation: 'Trapped between Pharaoh’s army and the deep sea, God made a miraculous path right through the waters, delivering Israel completely.',
+        takeawayMessage: 'When there seems to be no way forward, God makes a way.',
+      },
     ],
-    tone: 'navy',
+    memoryVerse: {
+      reference: 'Exodus 14:14',
+      text: 'The Lord will fight for you; you need only to be still.',
+      translation: 'NIV',
+      blanks: ['Lord', 'fight', 'need', 'still'],
+      theme: 'God Fights for You',
+    },
+    boss: {
+      id: 'boss-egypt',
+      title: 'The Red Sea Deliverance Trial',
+      bossName: 'The Scribe of the Exodus',
+      bossEmoji: '🏜️',
+      description: 'Prove your knowledge of Moses’ calling, the Passover lamb, and the miraculous crossing of the Red Sea.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'eqp-1',
+          prompt: 'What did God tell Moses to do at the burning bush because the ground was holy?',
+          options: ['Take off his sandals', 'Close his eyes', 'Build an altar', 'Run away'],
+          correctIndex: 0,
+          explanation: 'Exodus 3:5 records God telling Moses to remove his sandals on holy ground.',
+          conceptKey: 'holy_ground',
+        },
+        {
+          id: 'eqp-2',
+          prompt: 'What name did God reveal to Moses when Moses asked who sent him?',
+          options: ['I AM WHO I AM', 'The King of Stars', 'The Desert Guide', 'The Golden Flame'],
+          correctIndex: 0,
+          explanation: 'Exodus 3:14 reveals God’s eternal covenant name: "I AM WHO I AM".',
+          conceptKey: 'divine_name_yahweh',
+        },
+        {
+          id: 'eqp-3',
+          prompt: 'How did the Israelites cross the Red Sea?',
+          options: ['God divided the waters so they walked on dry ground', 'In wooden boats', 'On a floating bridge', 'They swam'],
+          correctIndex: 0,
+          explanation: 'Exodus 14:21-22 records God parting the sea with walls of water on both sides.',
+          conceptKey: 'red_sea_miracle',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Order the Exodus story milestones:',
+        events: [
+          'God calls Moses at the burning bush to speak to Pharaoh',
+          'The Passover lamb protects the families of Israel',
+          'God parts the Red Sea and delivers His people from Pharaoh’s chariots',
+        ],
+        correctOrder: [0, 1, 2],
+      },
+      reward: {
+        xp: 350,
+        coins: 160,
+        gems: 4,
+        badgeName: 'Exodus Explorer',
+        badgeEmoji: '🏜️',
+        specialCollectible: {
+          id: 'coll-clay-pot',
+          name: 'Ancient Clay Jar',
+          emoji: '🏺',
+          description: 'An ancient terracotta jar from the shores of the Red Sea.',
+          rarity: 'rare',
+          foundInRegion: 'egypt',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-egypt-1',
+        name: 'Hidden Papyrus Scroll',
+        hint: 'Search along the reeds near the bend of the Nile.',
+        emoji: '📜',
+        rewardCoins: 75,
+        rewardGems: 2,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-desert-gem',
+        name: 'Nile Lapis Stone',
+        emoji: '💎',
+        description: 'A polished deep-blue stone from ancient lands.',
+        rarity: 'common',
+        foundInRegion: 'egypt',
+      },
+    ],
   },
-];
 
-// ── TEEN / LION'S DEN REGIONS ────────────────────────────────────
-// Same map skeleton (ids, positions, connections) as the child world so
-// every consumer that keys progress off region/quest ids keeps working —
-// but every region is re-themed around the mature, topical Lion's Den
-// curriculum instead of the early-reader Genesis-to-Acts storyline, and
-// unlocks demand more mastery (3 of 4 quests, not 2 of 3) before moving on.
-export const teenRegions: Region[] = [
-  {
-    id: 'eden',
-    name: 'Tested Under Pressure',
-    tagline: 'The courage Israel’s boldest teenagers needed',
-    icon: '🔥',
-    mapPosition: { x: 12, y: 74 },
-    connectsTo: ['wilderness'],
-    unlockRequirement: [{ type: 'always' }],
-    tone: 'coral',
-  },
+  // 5. 🔥 WILDERNESS
   {
     id: 'wilderness',
-    name: 'Everyday Temptations',
-    tagline: 'Integrity when no one is watching',
-    icon: '⚖️',
-    mapPosition: { x: 30, y: 50 },
-    connectsTo: ['eden', 'kingdom-of-israel'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'eden', minQuestsCompleted: 3 }],
-    tone: 'gold',
+    name: 'The Wilderness & Mount Sinai',
+    tagline: 'Bread from heaven, water from the rock, and the Ten Words of Life',
+    icon: '🔥',
+    mapPosition: { x: 62, y: 68 },
+    connectsTo: ['egypt', 'jerusalem'],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'egypt', minQuestsCompleted: 1 }],
+    tone: 'amber',
+    scriptureRange: 'Exodus 15–20 · Deuteronomy 6',
+    summary: 'Travel through the rugged wilderness, gather daily manna from heaven, drink living water from the rock, and receive God’s Ten Commandments at Mount Sinai.',
+    environmentDescription: 'Towering granite mountain peaks, campfire glow, white flakes of manna, and the radiant pillar of cloud and fire.',
+    chapters: [
+      {
+        id: 'wild-ch1',
+        chapterNumber: 1,
+        title: 'Manna & Water in the Desert',
+        subtitle: 'Daily Provision and Daily Trust',
+        scriptureReference: 'Exodus 16:1-18; 17:1-7',
+        bibleText: 'When the dew had gone up, there on the face of the wilderness was a fine, flake-like thing... Moses said to them, "It is the bread that the LORD has given you to eat."',
+        narrativeExplanation: 'In the barren desert with no food or water, God rained down manna from heaven each morning and brought fresh water gushing out of a rock.',
+        takeawayMessage: 'God provides for our needs one day at a time.',
+      },
+      {
+        id: 'wild-ch2',
+        chapterNumber: 2,
+        title: 'Mount Sinai & The Ten Commandments',
+        subtitle: 'God’s Law of Love and Righteousness',
+        scriptureReference: 'Exodus 19–20',
+        bibleText: 'And God spoke all these words, saying, "I am the LORD your God, who brought you out of the land of Egypt... You shall love the LORD your God."',
+        narrativeExplanation: 'At thunderous Mount Sinai, God gave Israel the Ten Commandments to show how to love God with all our heart and love our neighbors as ourselves.',
+        takeawayMessage: 'God’s commandments guide us into life, wisdom, and joy.',
+      },
+    ],
+    memoryVerse: {
+      reference: 'Deuteronomy 6:5',
+      text: 'You shall love the Lord your God with all your heart and with all your soul and with all your might.',
+      translation: 'ESV',
+      blanks: ['love', 'Lord', 'heart', 'might'],
+      theme: 'Loving God Completely',
+    },
+    boss: {
+      id: 'boss-wilderness',
+      title: 'The Sinai Covenant Trial',
+      bossName: 'The Desert Torchbearer',
+      bossEmoji: '⛰️',
+      description: 'Master the lessons of the wilderness: daily bread, the Ten Commandments, and faithful obedience.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'wq-1',
+          prompt: 'How often did the Israelites gather manna in the wilderness?',
+          options: ['Daily each morning (and a double portion before Sabbath)', 'Once a month', 'Only on holidays', 'Once a year'],
+          correctIndex: 0,
+          explanation: 'Exodus 16:4 teaches that God gave daily bread to teach trust in Him each day.',
+          conceptKey: 'daily_manna',
+        },
+        {
+          id: 'wq-2',
+          prompt: 'What did God bring out of the rock at Horeb when the people were thirsty?',
+          options: ['Fresh drinking water', 'Honey', 'Oil', 'Golden stones'],
+          correctIndex: 0,
+          explanation: 'Exodus 17:6 records water flowing from the struck rock to refresh the camp.',
+          conceptKey: 'water_from_rock',
+        },
+        {
+          id: 'wq-3',
+          prompt: 'On which mountain did God give Moses the stone tablets of the Ten Commandments?',
+          options: ['Mount Sinai', 'Mount Carmel', 'Mount Tabor', 'Mount Hermon'],
+          correctIndex: 0,
+          explanation: 'Exodus 19-20 records the giving of the Law at Mount Sinai.',
+          conceptKey: 'mount_sinai',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Order the wilderness journey milestones:',
+        events: [
+          'God provides sweet manna from heaven and water from the rock in the desert',
+          'Moses ascends Mount Sinai wrapped in cloud to receive the Law of God',
+          'Israel builds the Tabernacle where God’s presence dwells among them',
+        ],
+        correctOrder: [0, 1, 2],
+      },
+      reward: {
+        xp: 380,
+        coins: 180,
+        gems: 4,
+        badgeName: 'Wilderness Survivor',
+        badgeEmoji: '🔥',
+        specialCollectible: {
+          id: 'coll-stone-tablet',
+          name: 'Ten Commandment Tablet Replica',
+          emoji: '🪨',
+          description: 'A miniature stone tablet inscribed with the words of life.',
+          rarity: 'epic',
+          foundInRegion: 'wilderness',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-wild-1',
+        name: 'Hidden Manna Jar',
+        hint: 'Check near the base of Mount Sinai where the golden tent stood.',
+        emoji: '🥣',
+        rewardCoins: 80,
+        rewardGems: 2,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-desert-flint',
+        name: 'Sinai Flintstone',
+        emoji: '🪨',
+        description: 'A smooth desert stone carried through the wilderness paths.',
+        rarity: 'common',
+        foundInRegion: 'wilderness',
+      },
+    ],
   },
-  {
-    id: 'kingdom-of-israel',
-    name: 'Guarding the Heart',
-    tagline: 'Boundaries, family trust, and real conflict',
-    icon: '💍',
-    mapPosition: { x: 50, y: 68 },
-    connectsTo: ['wilderness', 'galilee'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'wilderness', minQuestsCompleted: 3 }],
-    tone: 'teal',
-  },
-  {
-    id: 'galilee',
-    name: 'Deeper Identity',
-    tagline: 'Who you are beneath the labels',
-    icon: '🦁',
-    mapPosition: { x: 68, y: 42 },
-    connectsTo: ['kingdom-of-israel', 'jerusalem'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'kingdom-of-israel', minQuestsCompleted: 3 }],
-    tone: 'navy',
-  },
+
+  // 6. 🏛️ JERUSALEM & THE KINGDOM
   {
     id: 'jerusalem',
-    name: 'The Cross & the Case for Faith',
-    tagline: 'Faith you can defend, not just feel',
-    icon: '📜',
-    mapPosition: { x: 84, y: 64 },
-    connectsTo: ['galilee', 'early-church'],
-    unlockRequirement: [{ type: 'region-complete', regionId: 'galilee', minQuestsCompleted: 3 }],
-    tone: 'amber',
+    name: 'Jerusalem & The Kingdom',
+    tagline: 'Kings of courage, the Temple of Praise, and prophetic promises',
+    icon: '🏛️',
+    mapPosition: { x: 74, y: 44 },
+    connectsTo: ['wilderness', 'gospels'],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'wilderness', minQuestsCompleted: 1 }],
+    tone: 'ruby',
+    scriptureRange: '1 & 2 Samuel · 1 Kings · Psalms',
+    summary: 'Stand with young David before Goliath, explore the golden Temple built by Solomon, sing Psalms of praise, and hear the prophets herald the coming King.',
+    environmentDescription: 'Golden stone city walls, cedar-lined Temple courts, harp strings vibrating with Psalms, and olive-clad Judean hills.',
+    chapters: [
+      {
+        id: 'jer-ch1',
+        chapterNumber: 1,
+        title: 'David & Goliath',
+        subtitle: 'The Battle Belongs to the Lord',
+        scriptureReference: '1 Samuel 17:32-50',
+        bibleText: 'David said to the Philistine, "You come against me with sword and spear and javelin, but I come against you in the name of the LORD Almighty... for the battle is the LORD’s."',
+        narrativeExplanation: 'Armed only with a sling, five smooth stones, and unwavering faith in God, young shepherd David defeated the giant warrior Goliath.',
+        takeawayMessage: 'No giant in our life is bigger than our God.',
+      },
+      {
+        id: 'jer-ch2',
+        chapterNumber: 2,
+        title: 'Solomon & The Temple of Glory',
+        subtitle: 'A House of Prayer for All Nations',
+        scriptureReference: '1 Kings 6–8 · Psalm 122',
+        bibleText: 'The priests could not perform their service because of the cloud, for the glory of the LORD filled his temple... I rejoiced with those who said to me, "Let us go to the house of the LORD."',
+        narrativeExplanation: 'King Solomon built a magnificent temple in Jerusalem as a place of worship and prayer where God’s presence dwelt among His people.',
+        takeawayMessage: 'Worshiping God brings reverence, joy, and deep unity.',
+      },
+    ],
+    memoryVerse: {
+      reference: 'Psalm 119:105',
+      text: 'Your word is a lamp to my feet and a light to my path.',
+      translation: 'ESV',
+      blanks: ['word', 'lamp', 'feet', 'light'],
+      theme: 'God’s Word Guides Our Steps',
+    },
+    boss: {
+      id: 'boss-jerusalem',
+      title: 'The Kingdom & Temple Trial',
+      bossName: 'The Royal Herald',
+      bossEmoji: '👑',
+      description: 'Demonstrate your knowledge of David’s courage, Solomon’s wisdom, and the Psalms of Zion.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'jq-1',
+          prompt: 'What weapons did young David take to face Goliath?',
+          options: ['A staff, sling, and 5 smooth stones from the stream', 'A heavy iron sword and bronze shield', 'A chariot and bow', 'A spear and helmet'],
+          correctIndex: 0,
+          explanation: '1 Samuel 17:40 describes David taking his shepherd’s staff, sling, and five smooth stones.',
+          conceptKey: 'david_goliath_faith',
+        },
+        {
+          id: 'jq-2',
+          prompt: 'What did King Solomon ask God for when he became king?',
+          options: ['An understanding heart and wisdom to govern well', 'Vast gold and silver', 'Victory in every battle', 'Long life'],
+          correctIndex: 0,
+          explanation: '1 Kings 3:9 records Solomon asking for wisdom and discernment rather than wealth.',
+          conceptKey: 'solomons_wisdom',
+        },
+        {
+          id: 'jq-3',
+          prompt: 'What instrument did David play to praise the Lord and soothe King Saul?',
+          options: ['A harp (Lyre)', 'A trumpet', 'A flute', 'Drums'],
+          correctIndex: 0,
+          explanation: '1 Samuel 16:23 tells of David playing the lyre with skill.',
+          conceptKey: 'davids_harp',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Order the history of the Kingdom of Israel:',
+        events: [
+          'Shepherd boy David trusts God and defeats Goliath in the Elah valley',
+          'David is crowned King of Israel and makes Jerusalem the City of God',
+          'Solomon constructs the glorious Temple and prays for all nations',
+        ],
+        correctOrder: [0, 1, 2],
+      },
+      reward: {
+        xp: 420,
+        coins: 200,
+        gems: 5,
+        badgeName: 'Jerusalem Explorer',
+        badgeEmoji: '🏛️',
+        specialCollectible: {
+          id: 'coll-shepherd-sling',
+          name: 'Shepherd’s Leather Sling',
+          emoji: '🪨',
+          description: 'A symbol of courageous faith in the Almighty.',
+          rarity: 'epic',
+          foundInRegion: 'jerusalem',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-jer-1',
+        name: 'David’s Golden Harp Key',
+        hint: 'Listen for the melody in the high tower of Zion.',
+        emoji: '🎵',
+        rewardCoins: 90,
+        rewardGems: 2,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-cedar-token',
+        name: 'Lebanon Cedar Wood Inlay',
+        emoji: '🪵',
+        description: 'Fragrant polished cedar used in Temple architecture.',
+        rarity: 'common',
+        foundInRegion: 'jerusalem',
+      },
+    ],
   },
+
+  // 7. ✝️ JESUS & THE GOSPELS
+  {
+    id: 'gospels',
+    name: 'Jesus & The Gospels',
+    tagline: 'The Good News: Love, Miracles, the Cross and the Empty Tomb',
+    icon: '✝️',
+    mapPosition: { x: 86, y: 60 },
+    connectsTo: ['jerusalem', 'early-church'],
+    unlockRequirement: [{ type: 'region-complete', regionId: 'jerusalem', minQuestsCompleted: 1 }],
+    tone: 'purple',
+    scriptureRange: 'Matthew · Mark · Luke · John',
+    summary: 'Walk beside Jesus in Galilee, hear the Sermon on the Mount, see the blind receive sight, witness the sacrifice of the Cross, and celebrate the empty tomb!',
+    environmentDescription: 'Rolling Galilean hills, serene blue waters of Tiberias, the Upper Room, and the radiant garden of the Resurrection.',
+    chapters: [
+      {
+        id: 'gosp-ch1',
+        chapterNumber: 1,
+        title: 'The Savior is Born & Ministry Begins',
+        subtitle: 'Good News of Great Joy',
+        scriptureReference: 'Luke 2 · Matthew 4:18-22',
+        bibleText: 'The angel said to them, "Do not be afraid. I bring you good news that will cause great joy for all the people. Today in the town of David a Savior has been born to you; he is the Messiah, the Lord."',
+        narrativeExplanation: 'Jesus, the Son of God, was born in humble Bethlehem. As He grew, He called fishermen, tax collectors, and everyday people to follow Him.',
+        takeawayMessage: 'Jesus came into the world to bring light, hope, and salvation to all people.',
+      },
+      {
+        id: 'gosp-ch2',
+        chapterNumber: 2,
+        title: 'Parables, Miracles & The Sermon',
+        subtitle: 'Teaching the Kingdom of Heaven',
+        scriptureReference: 'Matthew 5–7 · Mark 4:35-41 · John 6',
+        bibleText: 'Jesus stood up and rebuked the wind and said to the waves, "Quiet! Be still!" Then the wind died down and it was completely calm... "Blessed are the peacemakers, for they will be called children of God."',
+        narrativeExplanation: 'Jesus healed the sick, opened blind eyes, fed 5,000 with a boy’s lunch, calmed raging storms, and taught us how to love our enemies.',
+        takeawayMessage: 'Jesus has all power and authority, and His love reaches everyone.',
+      },
+      {
+        id: 'gosp-ch3',
+        chapterNumber: 3,
+        title: 'The Cross & The Empty Tomb',
+        subtitle: 'He is Risen Indeed!',
+        scriptureReference: 'John 19–20 · Luke 24',
+        bibleText: 'The angel said to the women, "Do not be afraid, for I know that you are looking for Jesus, who was crucified. He is not here; he has risen, just as he said!"',
+        narrativeExplanation: 'Out of immense love for us, Jesus gave His life on the cross to forgive our sins. On the third day, He rose triumphantly from the dead!',
+        takeawayMessage: 'Because Jesus lives, we have eternal hope, joy, and new life.',
+      },
+    ],
+    memoryVerse: {
+      reference: 'John 3:16',
+      text: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
+      translation: 'NIV',
+      blanks: ['loved', 'Son', 'believes', 'eternal'],
+      theme: 'God’s Greatest Gift',
+    },
+    boss: {
+      id: 'boss-gospels',
+      title: 'The Gospel Mastery Trial',
+      bossName: 'The Galilean Shepherd',
+      bossEmoji: '✝️',
+      description: 'Master the central truth of the Christian faith: the life, teachings, sacrifice, and resurrection of Jesus Christ.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'gq-1',
+          prompt: 'Where was Jesus born according to biblical prophecy in Micah and Luke?',
+          options: ['Bethlehem', 'Rome', 'Athens', 'Alexandria'],
+          correctIndex: 0,
+          explanation: 'Luke 2:4-7 tells of Jesus being born in Bethlehem, the city of David.',
+          conceptKey: 'nativity_bethlehem',
+        },
+        {
+          id: 'gq-2',
+          prompt: 'What great miracle did Jesus perform when caught in a storm on the Sea of Galilee with His disciples?',
+          options: ['He commanded the wind and waves to be still', 'He swam to shore alone', 'He built a raft', 'He called a helicopter'],
+          correctIndex: 0,
+          explanation: 'Mark 4:39 records Jesus calming the wind and waves with His voice.',
+          conceptKey: 'calming_the_storm',
+        },
+        {
+          id: 'gq-3',
+          prompt: 'What did the angel announce at the empty tomb on Sunday morning?',
+          options: ['He is not here; He has risen!', 'He has moved to another city', 'Keep sleeping', 'The stone is too heavy'],
+          correctIndex: 0,
+          explanation: 'Matthew 28:6 records the angel proclaiming: "He is not here; He has risen, just as He said!"',
+          conceptKey: 'resurrection_victory',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Order the Gospel milestones in sequence:',
+        events: [
+          'Jesus is born in Bethlehem and angels announce peace to the shepherds',
+          'Jesus ministers across Galilee, healing the sick and teaching the Sermon on the Mount',
+          'Jesus gives His life on the cross and rises victorious from the tomb on the third day',
+        ],
+        correctOrder: [0, 1, 2],
+      },
+      reward: {
+        xp: 500,
+        coins: 250,
+        gems: 6,
+        badgeName: 'Gospel Explorer',
+        badgeEmoji: '✝️',
+        specialCollectible: {
+          id: 'coll-empty-tomb-cross',
+          name: 'Resurrection Cross of Gold',
+          emoji: '✝️',
+          description: 'A radiant golden cross signifying eternal life and victory.',
+          rarity: 'legendary',
+          foundInRegion: 'gospels',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-gosp-1',
+        name: 'Hidden Loaves & Fish Basket',
+        hint: 'Look near the grassy hillside overlooking the Sea of Galilee.',
+        emoji: '🧺',
+        rewardCoins: 100,
+        rewardGems: 3,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-fisherman-net',
+        name: 'Galilean Fisherman’s Knot',
+        emoji: '⚓',
+        description: 'A knot representing the call to be "fishers of people".',
+        rarity: 'rare',
+        foundInRegion: 'gospels',
+      },
+    ],
+  },
+
+  // 8. 🌍 THE EARLY CHURCH & MISSION
   {
     id: 'early-church',
-    name: 'Sent Out to Lead',
-    tagline: 'The story keeps going — through you',
-    icon: '💡',
-    mapPosition: { x: 92, y: 32 },
-    connectsTo: ['jerusalem'],
+    name: 'The Early Church & Mission',
+    tagline: 'Filled with the Holy Spirit: Taking the Light to the ends of the earth',
+    icon: '🌍',
+    mapPosition: { x: 94, y: 32 },
+    connectsTo: ['gospels'],
     unlockRequirement: [
-      { type: 'region-complete', regionId: 'jerusalem', minQuestsCompleted: 3 },
-      { type: 'level', minLevel: 5 },
+      { type: 'region-complete', regionId: 'gospels', minQuestsCompleted: 1 },
+      { type: 'level', minLevel: 3 },
     ],
-    tone: 'emerald',
+    tone: 'navy',
+    scriptureRange: 'Acts · Romans · Ephesians',
+    summary: 'Witness the flames of Pentecost, join Peter and Paul on bold missionary journeys, put on the full Armor of God, and shine your lantern in the world today!',
+    environmentDescription: 'Ancient Roman roads, ships setting sail for distant shores, candlelight gatherings, and the glowing armor of faith.',
+    chapters: [
+      {
+        id: 'ec-ch1',
+        chapterNumber: 1,
+        title: 'The Fire of Pentecost',
+        subtitle: 'Empowered by the Holy Spirit',
+        scriptureReference: 'Acts 2:1-41',
+        bibleText: 'Suddenly a sound like the blowing of a violent wind came from heaven and filled the whole house... They saw what seemed to be tongues of fire that separated and came to rest on each of them.',
+        narrativeExplanation: 'On the day of Pentecost, the Holy Spirit filled the disciples with boldness and joy, empowering them to speak truth in every language.',
+        takeawayMessage: 'The Holy Spirit gives us power and love to live for God every day.',
+      },
+      {
+        id: 'ec-ch2',
+        chapterNumber: 2,
+        title: 'Paul’s Journeys & The Armor of God',
+        subtitle: 'Shining as Lights in the World',
+        scriptureReference: 'Acts 9 · Ephesians 6:10-18',
+        bibleText: 'Put on the full armor of God, so that you can take your stand against the devil’s schemes... with the belt of truth, the breastplate of righteousness, and the shield of faith.',
+        narrativeExplanation: 'Saul met the risen Jesus on the Damascus road and became Paul, preaching across the Roman empire and teaching us to stand firm in the armor of God.',
+        takeawayMessage: 'We are part of God’s unstoppable family, called to love and shine wherever we go.',
+      },
+    ],
+    memoryVerse: {
+      reference: 'Ephesians 6:11',
+      text: 'Put on the full armor of God, so that you can take your stand against the devil’s schemes.',
+      translation: 'NIV',
+      blanks: ['armor', 'God', 'stand', 'schemes'],
+      theme: 'Standing Strong in Faith',
+    },
+    boss: {
+      id: 'boss-early-church',
+      title: 'The Apostle & Torchbearer Trial',
+      bossName: 'The Messenger of the Nations',
+      bossEmoji: '🌍',
+      description: 'Prove your comprehensive understanding of the Early Church, the Holy Spirit’s power, and living out the Gospel today.',
+      requiredScore: 3,
+      questions: [
+        {
+          id: 'ecq-1',
+          prompt: 'What happened on the day of Pentecost in Acts 2?',
+          options: [
+            'The Holy Spirit was poured out with power like wind and fire',
+            'The disciples returned to fishing',
+            'A great earthquake destroyed Rome',
+            'They built a wooden boat',
+          ],
+          correctIndex: 0,
+          explanation: 'Acts 2:1-4 describes the arrival of the promised Holy Spirit on Pentecost.',
+          conceptKey: 'pentecost_power',
+        },
+        {
+          id: 'ecq-2',
+          prompt: 'What piece of the Armor of God extinguishes all the flaming arrows of doubt and fear?',
+          options: ['The Shield of Faith', 'The Belt of Truth', 'The Shoes of Peace', 'The Helmet of Salvation'],
+          correctIndex: 0,
+          explanation: 'Ephesians 6:16 specifies the Shield of Faith to extinguish all the flaming darts of the evil one.',
+          conceptKey: 'shield_of_faith',
+        },
+        {
+          id: 'ecq-3',
+          prompt: 'How did Paul’s life change on the road to Damascus?',
+          options: [
+            'He saw the blinding light of the risen Jesus and became a bold messenger of grace',
+            'He decided to become a Roman senator',
+            'He retired from traveling',
+            'He wrote a book about philosophy',
+          ],
+          correctIndex: 0,
+          explanation: 'Acts 9 records the dramatic conversion of Saul into Paul the apostle of Christ.',
+          conceptKey: 'pauls_calling',
+        },
+      ],
+      storyReconstruction: {
+        prompt: 'Order the Early Church progression:',
+        events: [
+          'The Holy Spirit empowers believers on Pentecost in Jerusalem',
+          'The Gospel spreads across cities, nations, and cultures through the apostles',
+          'Believers put on the full Armor of God to live faithfully in the world',
+        ],
+        correctOrder: [0, 1, 2],
+      },
+      reward: {
+        xp: 600,
+        coins: 300,
+        gems: 8,
+        badgeName: 'Early Church Champion',
+        badgeEmoji: '🌍',
+        specialCollectible: {
+          id: 'coll-celestial-lamp',
+          name: 'Luminary Torch of Zion',
+          emoji: '🏮',
+          description: 'A radiant golden lantern carried by faithful witnesses across generations.',
+          rarity: 'legendary',
+          foundInRegion: 'early-church',
+        },
+      },
+    },
+    secrets: [
+      {
+        id: 'sec-ec-1',
+        name: 'Hidden Ship Compass',
+        hint: 'Inspect the Roman travel road leading to the coast of Antioch.',
+        emoji: '🧭',
+        rewardCoins: 120,
+        rewardGems: 3,
+        discovered: false,
+      },
+    ],
+    collectibles: [
+      {
+        id: 'coll-scroll-parchment',
+        name: 'Ephesian Letter Scroll',
+        emoji: '📜',
+        description: 'An ancient parchment inscribed with words of grace and truth.',
+        rarity: 'epic',
+        foundInRegion: 'early-church',
+      },
+    ],
   },
 ];
 
-// ── QUESTS ───────────────────────────────────────────────────────
-// Each quest maps to a real curriculum module id, so quest content,
-// completion state, and lesson data all come from the existing
-// curriculum + progress system instead of a duplicate one.
-function questChain(regionId: RegionId, entries: Array<Pick<AdventureQuest, 'moduleId' | 'difficulty' | 'icon' | 'reward'>>): AdventureQuest[] {
-  return entries.map((entry, index) => ({
-    id: `${regionId}-${index + 1}`,
-    regionId,
-    order: index + 1,
-    unlockRequirement: index === 0 ? [{ type: 'always' }] : [{ type: 'quest-complete', questId: `${regionId}-${index}` }],
-    ...entry,
-  }));
+/** Get list of regions for world */
+export function getRegions(kind?: WorldKind): Region[] {
+  if (kind) {
+    // Canonical 8 biblical regions for all tracks
+  }
+  return canonicalRegions;
 }
 
-export const childQuests: AdventureQuest[] = [
-  ...questChain('eden', [
-    { moduleId: 'early-creation', difficulty: 1, icon: '🌍', reward: { xp: 60 } },
-    { moduleId: 'early-adam-eve-obey', difficulty: 2, icon: '🍎', reward: { xp: 80, collectible: { id: 'garden-leaf', name: 'Garden Leaf', emoji: '🍃' } } },
-    { moduleId: 'path-cain-abel', difficulty: 3, icon: '⚖️', reward: { xp: 110 } },
-  ]),
-  ...questChain('wilderness', [
-    { moduleId: 'early-baby-moses', difficulty: 1, icon: '🧺', reward: { xp: 70 } },
-    { moduleId: 'path-exodus', difficulty: 3, icon: '🌊', reward: { xp: 120, collectible: { id: 'wilderness-manna', name: 'Manna Basket', emoji: '🍞' } } },
-    { moduleId: 'early-ten-commandments', difficulty: 2, icon: '⛰️', reward: { xp: 90 } },
-  ]),
-  ...questChain('kingdom-of-israel', [
-    { moduleId: 'early-samuel-listens', difficulty: 1, icon: '🕯️', reward: { xp: 70 } },
-    { moduleId: 'path-david-saul', difficulty: 3, icon: '🗡️', reward: { xp: 120, collectible: { id: 'shepherd-sling', name: 'Shepherd’s Sling', emoji: '🪨' } } },
-    { moduleId: 'path-elijah-baal', difficulty: 4, icon: '⚡', reward: { xp: 150 } },
-  ]),
-  ...questChain('galilee', [
-    { moduleId: 'early-lost-sheep', difficulty: 2, icon: '🐑', reward: { xp: 100, collectible: { id: 'lantern-sheep', name: 'Little Lost Sheep', emoji: '🐑' } } },
-    { moduleId: 'path-good-samaritan', difficulty: 3, icon: '❤️', reward: { xp: 120 } },
-    { moduleId: 'path-sermon-mount', difficulty: 3, icon: '🏔️', reward: { xp: 130 } },
-  ]),
-  ...questChain('jerusalem', [
-    { moduleId: 'path-widows-mite', difficulty: 2, icon: '🪙', reward: { xp: 100 } },
-    { moduleId: 'path-peter-denial', difficulty: 4, icon: '🔥', reward: { xp: 140 } },
-    { moduleId: 'teen-resurrection', difficulty: 4, icon: '🌅', reward: { xp: 160, collectible: { id: 'empty-tomb-light', name: 'Light of the Tomb', emoji: '✨' } } },
-  ]),
-  ...questChain('early-church', [
-    { moduleId: 'teen-evangelism-witness', difficulty: 3, icon: '💡', reward: { xp: 130 } },
-    { moduleId: 'family-prayer-life', difficulty: 2, icon: '🙏', reward: { xp: 110 } },
-    { moduleId: 'teen-james-faith', difficulty: 4, icon: '🌿', reward: { xp: 150, collectible: { id: 'flame-of-faith', name: 'Flame of Faith', emoji: '🔥' } } },
-  ]),
+/** Lookup a single region by id */
+export function getRegion(id: RegionId, kind?: WorldKind): Region | undefined {
+  if (kind) {
+    // Canonical 8 biblical regions for all tracks
+  }
+  return canonicalRegions.find((r) => r.id === id);
+}
+
+/** Adventure quests mapped to regions and curriculum modules */
+export const adventureQuests: AdventureQuest[] = [
+  {
+    id: 'quest-creation-1',
+    moduleId: 'early-creation',
+    regionId: 'creation',
+    order: 1,
+    difficulty: 1,
+    icon: '🌱',
+    linkedArcadeGame: {
+      href: '/arcade/build-the-story',
+      title: 'Build the Creation Story',
+      gameType: 'story_reconstruction',
+    },
+    reward: {
+      xp: 60,
+      coins: 25,
+      collectible: {
+        id: 'coll-creation-seed',
+        name: 'Evergreen Seed',
+        emoji: '🌿',
+        description: 'A seed representing the fruitfulness of God’s green earth.',
+        rarity: 'common',
+        foundInRegion: 'creation',
+      },
+    },
+    unlockRequirement: [{ type: 'always' }],
+  },
+  {
+    id: 'quest-eden-1',
+    moduleId: 'early-eden',
+    regionId: 'eden',
+    order: 1,
+    difficulty: 2,
+    icon: '🌳',
+    linkedArcadeGame: {
+      href: '/arcade/memory-match',
+      title: 'Garden Pairs Match',
+      gameType: 'memory_cards',
+    },
+    reward: {
+      xp: 75,
+      coins: 30,
+      collectible: {
+        id: 'coll-eden-rose',
+        name: 'Sharon Blossom',
+        emoji: '🌺',
+        description: 'A fragrant bloom from the garden paths.',
+        rarity: 'common',
+        foundInRegion: 'eden',
+      },
+    },
+    unlockRequirement: [{ type: 'region-complete', regionId: 'creation', minQuestsCompleted: 1 }],
+  },
+  {
+    id: 'quest-noah-1',
+    moduleId: 'early-noah',
+    regionId: 'noah',
+    order: 1,
+    difficulty: 2,
+    icon: '🛶',
+    linkedArcadeGame: {
+      href: '/arcade/scripture-scramble',
+      title: 'Ark Scripture Scramble',
+      gameType: 'scramble',
+    },
+    reward: {
+      xp: 90,
+      coins: 40,
+      collectible: {
+        id: 'coll-cypress-plank',
+        name: 'Carved Cypress Plank',
+        emoji: '🪵',
+        description: 'A piece of sturdy gopher wood from the ark.',
+        rarity: 'common',
+        foundInRegion: 'noah',
+      },
+    },
+    unlockRequirement: [{ type: 'region-complete', regionId: 'eden', minQuestsCompleted: 1 }],
+  },
+  {
+    id: 'quest-egypt-1',
+    moduleId: 'early-egypt',
+    regionId: 'egypt',
+    order: 1,
+    difficulty: 3,
+    icon: '🏜️',
+    linkedArcadeGame: {
+      href: '/arcade/lightning-quiz',
+      title: 'Exodus Lightning Quiz',
+      gameType: 'quiz',
+    },
+    reward: {
+      xp: 100,
+      coins: 45,
+      collectible: {
+        id: 'coll-desert-gem',
+        name: 'Nile Lapis Stone',
+        emoji: '💎',
+        description: 'A polished deep-blue stone from ancient lands.',
+        rarity: 'common',
+        foundInRegion: 'egypt',
+      },
+    },
+    unlockRequirement: [{ type: 'region-complete', regionId: 'noah', minQuestsCompleted: 1 }],
+  },
+  {
+    id: 'quest-wilderness-1',
+    moduleId: 'pathfinder-wilderness',
+    regionId: 'wilderness',
+    order: 1,
+    difficulty: 3,
+    icon: '🔥',
+    linkedArcadeGame: {
+      href: '/arcade/verse-builder',
+      title: 'Sinai Verse Builder',
+      gameType: 'verse',
+    },
+    reward: {
+      xp: 110,
+      coins: 50,
+      collectible: {
+        id: 'coll-desert-flint',
+        name: 'Sinai Flintstone',
+        emoji: '🪨',
+        description: 'A smooth desert stone carried through the wilderness paths.',
+        rarity: 'common',
+        foundInRegion: 'wilderness',
+      },
+    },
+    unlockRequirement: [{ type: 'region-complete', regionId: 'egypt', minQuestsCompleted: 1 }],
+  },
+  {
+    id: 'quest-jerusalem-1',
+    moduleId: 'early-shepherd',
+    regionId: 'jerusalem',
+    order: 1,
+    difficulty: 3,
+    icon: '🏛️',
+    linkedArcadeGame: {
+      href: '/arcade/bible-detective',
+      title: 'Jerusalem Case File',
+      gameType: 'detective',
+    },
+    reward: {
+      xp: 120,
+      coins: 55,
+      collectible: {
+        id: 'coll-cedar-token',
+        name: 'Lebanon Cedar Wood Inlay',
+        emoji: '🪵',
+        description: 'Fragrant polished cedar used in Temple architecture.',
+        rarity: 'common',
+        foundInRegion: 'jerusalem',
+      },
+    },
+    unlockRequirement: [{ type: 'region-complete', regionId: 'wilderness', minQuestsCompleted: 1 }],
+  },
+  {
+    id: 'quest-gospels-1',
+    moduleId: 'early-nativity',
+    regionId: 'gospels',
+    order: 1,
+    difficulty: 4,
+    icon: '✝️',
+    linkedArcadeGame: {
+      href: '/arcade/build-the-story',
+      title: 'Resurrection Story Timeline',
+      gameType: 'story_reconstruction',
+    },
+    reward: {
+      xp: 140,
+      coins: 60,
+      collectible: {
+        id: 'coll-fisherman-net',
+        name: 'Galilean Fisherman’s Knot',
+        emoji: '⚓',
+        description: 'A knot representing the call to be "fishers of people".',
+        rarity: 'rare',
+        foundInRegion: 'gospels',
+      },
+    },
+    unlockRequirement: [{ type: 'region-complete', regionId: 'jerusalem', minQuestsCompleted: 1 }],
+  },
+  {
+    id: 'quest-early-church-1',
+    moduleId: 'pathfinder-armor',
+    regionId: 'early-church',
+    order: 1,
+    difficulty: 5,
+    icon: '🌍',
+    linkedArcadeGame: {
+      href: '/arcade/lightning-quiz',
+      title: 'Armor of God Challenge',
+      gameType: 'quiz',
+    },
+    reward: {
+      xp: 160,
+      coins: 70,
+      collectible: {
+        id: 'coll-scroll-parchment',
+        name: 'Ephesian Letter Scroll',
+        emoji: '📜',
+        description: 'An ancient parchment inscribed with words of grace and truth.',
+        rarity: 'epic',
+        foundInRegion: 'early-church',
+      },
+    },
+    unlockRequirement: [{ type: 'region-complete', regionId: 'gospels', minQuestsCompleted: 1 }],
+  },
 ];
 
-// Every quest here uses a 'teen'-track curriculum module — no early/pathfinder
-// content — and every difficulty is 3+ stars with heavier XP rewards, so the
-// Lion's Den world reads as a harder, more mature step up from the child world
-// rather than a reskin of the same lessons.
-export const teenQuests: AdventureQuest[] = [
-  ...questChain('eden', [
-    { moduleId: 'teen-nehemiah', difficulty: 3, icon: '🧱', reward: { xp: 140 } },
-    { moduleId: 'teen-fiery-furnace', difficulty: 4, icon: '🔥', reward: { xp: 160, collectible: { id: 'fourth-figure', name: 'The Fourth Figure', emoji: '🔥' } } },
-    { moduleId: 'teen-david-youth', difficulty: 3, icon: '👑', reward: { xp: 150 } },
-    { moduleId: 'teen-josiah', difficulty: 4, icon: '📖', reward: { xp: 170 } },
-  ]),
-  ...questChain('wilderness', [
-    { moduleId: 'teen-cheating-exams', difficulty: 4, icon: '📝', reward: { xp: 160 } },
-    { moduleId: 'teen-stealing-teens', difficulty: 3, icon: '🔒', reward: { xp: 150, collectible: { id: 'restitution-scroll', name: 'Restitution Scroll', emoji: '📜' } } },
-    { moduleId: 'teen-bullying', difficulty: 4, icon: '🛡️', reward: { xp: 170 } },
-    { moduleId: 'teen-digital-ethics', difficulty: 4, icon: '📱', reward: { xp: 170 } },
-  ]),
-  ...questChain('kingdom-of-israel', [
-    { moduleId: 'teen-dating-boundaries', difficulty: 4, icon: '💍', reward: { xp: 170 } },
-    { moduleId: 'teen-purity-culture', difficulty: 5, icon: '✨', reward: { xp: 190, collectible: { id: 'guarded-heart', name: 'A Guarded Heart', emoji: '✨' } } },
-    { moduleId: 'teen-respecting-parents', difficulty: 3, icon: '🏡', reward: { xp: 150 } },
-    { moduleId: 'teen-anger-conflict', difficulty: 3, icon: '🌊', reward: { xp: 150 } },
-  ]),
-  ...questChain('galilee', [
-    { moduleId: 'teen-identity-culture', difficulty: 4, icon: '🦁', reward: { xp: 170 } },
-    { moduleId: 'teen-what-god-expects', difficulty: 3, icon: '⚖️', reward: { xp: 150 } },
-    { moduleId: 'teen-mary-yes', difficulty: 4, icon: '🕊️', reward: { xp: 170, collectible: { id: 'bold-yes', name: 'A Bold Yes', emoji: '🕊️' } } },
-    { moduleId: 'teen-romans-eight', difficulty: 5, icon: '⚓', reward: { xp: 190 } },
-  ]),
-  ...questChain('jerusalem', [
-    { moduleId: 'teen-apologetics', difficulty: 4, icon: '📜', reward: { xp: 170 } },
-    { moduleId: 'teen-resurrection', difficulty: 5, icon: '🌅', reward: { xp: 200, collectible: { id: 'empty-tomb-light', name: 'Light of the Tomb', emoji: '✨' } } },
-    { moduleId: 'teen-james-faith', difficulty: 4, icon: '🌿', reward: { xp: 170 } },
-    { moduleId: 'teen-future-purpose', difficulty: 4, icon: '🧭', reward: { xp: 170 } },
-  ]),
-  ...questChain('early-church', [
-    { moduleId: 'teen-money-work', difficulty: 3, icon: '🔨', reward: { xp: 160 } },
-    { moduleId: 'teen-mental-health', difficulty: 3, icon: '🧠', reward: { xp: 160 } },
-    { moduleId: 'teen-timothy-leadership', difficulty: 4, icon: '🕯️', reward: { xp: 180 } },
-    { moduleId: 'teen-evangelism-witness', difficulty: 5, icon: '💡', reward: { xp: 210, collectible: { id: 'ready-answer', name: 'A Ready Answer', emoji: '💡' } } },
-  ]),
-];
-
-export function getRegions(kind: WorldKind): Region[] {
-  return kind === 'teen' ? teenRegions : childRegions;
+export function getQuestsForRegion(regionId: RegionId, kind?: WorldKind): AdventureQuest[] {
+  if (kind) {
+    // Quests mapped for track
+  }
+  return adventureQuests.filter((q) => q.regionId === regionId);
 }
 
-export function getWorldQuests(kind: WorldKind): AdventureQuest[] {
-  return kind === 'teen' ? teenQuests : childQuests;
-}
-
-export function getRegion(regionId: string, kind: WorldKind = 'child'): Region | undefined {
-  return getRegions(kind).find((region) => region.id === regionId);
-}
-
-export function getQuestsForRegion(regionId: string, kind: WorldKind = 'child'): AdventureQuest[] {
-  return getWorldQuests(kind)
-    .filter((quest) => quest.regionId === regionId)
-    .sort((a, b) => a.order - b.order);
-}
-
-export function getQuest(questId: string, kind: WorldKind = 'child'): AdventureQuest | undefined {
-  return getWorldQuests(kind).find((quest) => quest.id === questId);
+export function getQuest(id: string, kind?: WorldKind): AdventureQuest | undefined {
+  if (kind) {
+    // Quest lookup for track
+  }
+  return adventureQuests.find((q) => q.id === id);
 }

@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import { activityDateKey, notifyOnce } from '../../../lib/activity/server';
 import { getStreakCalendar, getStreakStatus } from '../../../lib/streak/server';
+import { getConceptMasteryForChild, summarizeMastery } from '../../../lib/adaptive/server';
 
 function formatActiveTime(seconds: number): string {
   const minutes = Math.round(seconds / 60);
@@ -52,11 +53,14 @@ export async function GET() {
     .limit(150);
 
   const result = await Promise.all(children.map(async (child) => {
-    const [streak, calendar] = await Promise.all([
+    const track = child.age >= 13 ? 'teen' : child.age <= 7 ? 'early' : 'pathfinder';
+    const [streak, calendar, masteryRows] = await Promise.all([
       getStreakStatus(admin, child.id, timezone),
       getStreakCalendar(admin, child.id, timezone, 7),
+      getConceptMasteryForChild(admin, child.id),
     ]);
     const daysActiveThisWeek = calendar.filter((d) => d.state === 'complete' || d.state === 'grace').length;
+    const learning = summarizeMastery(masteryRows, track);
 
     return {
       child: { id: child.id, name: child.name, username: child.username, age: child.age, avatar: child.avatar },
@@ -65,6 +69,7 @@ export async function GET() {
         .filter((e) => e.child_id === child.id && activityDateKey(timezone, new Date(e.occurred_at)) === todayKey)
         .map((e) => ({ eventType: e.event_type, occurredAt: e.occurred_at, metadata: e.metadata })),
       streak: { ...streak, daysActiveThisWeek, weekCalendar: calendar },
+      learning: { strengths: learning.strengths, needsPractice: learning.needsPractice, dueReviewCount: learning.dueReviews.length },
     };
   }));
 
