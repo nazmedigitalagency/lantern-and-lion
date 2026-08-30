@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="hairPonytailGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#451a03" />
+      <stop offset="100%" stopColor="#290e02" />
+    </linearGradient>
+  </defs>
+  <path d="M21 52C20 32 32 23 50 23C68 23 80 32 79 52C76 44 68 36 50 36C32 36 24 44 21 52Z" fill="url(#hairPonytailGrad)" />
+  <circle cx="78" cy="26" r="5" fill="#f59e0b" />
+  <path d="M80 26C95 28 100 48 94 68C90 60 84 46 80 26Z" fill="url(#hairPonytailGrad)" />
+</svg>

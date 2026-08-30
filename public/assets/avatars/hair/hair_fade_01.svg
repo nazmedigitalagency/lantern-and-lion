@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="hairFadeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#451a03" />
+      <stop offset="100%" stopColor="#290e02" />
+    </linearGradient>
+  </defs>
+  <path d="M24 46C24 30 34 24 50 24C66 24 76 30 76 46C72 40 64 34 50 34C36 34 28 40 24 46Z" fill="url(#hairFadeGrad)" />
+  <circle cx="38" cy="27" r="5" fill="#3b1d06" />
+  <circle cx="50" cy="25" r="6" fill="#290e02" />
+  <circle cx="62" cy="27" r="5" fill="#3b1d06" />
+</svg>

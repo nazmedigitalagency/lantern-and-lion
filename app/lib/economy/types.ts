@@ -25,7 +25,8 @@ export type RewardSource =
   | 'memory-verse'
   | 'daily-quest'
   | 'achievement'
-  | 'challenge';
+  | 'challenge'
+  | 'streak';
 
 export type Transaction = {
   id: string;

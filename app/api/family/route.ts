@@ -9,6 +9,7 @@ const ChildSchema = z.object({
   age: z.number().int().min(5).max(17),
   avatar: z.string().max(32),
   pin: z.string().regex(/^\d{4}$/),
+  gender: z.enum(['male', 'female']).optional(),
 });
 
 const FamilySchema = z.object({

@@ -594,6 +594,9 @@ export default function ParentDashboardPage() {
                           <span style={{ fontSize: '0.8rem', background: '#ecfdf5', color: '#065f46', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>🪙 {childWallet.coins.toLocaleString()} Coins</span>
                           <span style={{ fontSize: '0.8rem', background: '#eff6ff', color: '#1e40af', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>💎 {childWallet.gems.toLocaleString()} Gems</span>
                         </div>
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)' }}>
+                          <span>Gear: {getItem(childEq.clothing || 'starter-tunic')?.name} · {getItem(childEq.lantern || 'starter-lantern')?.name}{childEq.pet ? ` · Companion: ${getItem(childEq.pet)?.name}` : ''}</span>
+                        </div>
                       </div>
                       <a href={`/child-dashboard?preview=1&child=${activeChild.id}`}>Preview child dashboard</a>
                     </div>

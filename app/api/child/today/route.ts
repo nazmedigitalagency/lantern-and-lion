@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getChildSessionFromCookies } from '../../../lib/child-session';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import { activityDateKey, getFamilyForChild } from '../../../lib/activity/server';
+import { getStreakStatus } from '../../../lib/streak/server';
 
 /** The child/teen's own "Your Day" summary — never exposes parent, teacher, or family details. */
 export async function GET() {
@@ -24,6 +25,8 @@ export async function GET() {
     .eq('activity_date', todayKey)
     .maybeSingle();
 
+  const streak = await getStreakStatus(admin, session.childId, family.timezone);
+
   return NextResponse.json({
     summary: summary || {
       active_seconds: 0,
@@ -34,5 +37,6 @@ export async function GET() {
       xp_earned: 0,
       achievements_earned: 0,
     },
+    streak,
   });
 }

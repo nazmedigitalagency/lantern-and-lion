@@ -15,7 +15,6 @@ import {
   CharacterAvatar,
   InventoryItemCard,
   ItemIllustration,
-  RarityBadge,
   ShopItemCard,
   SkillStars,
   StatChip,
@@ -28,7 +27,6 @@ import {
   type WorldContext,
 } from './progression';
 import {
-  getOwnedItemIds,
   isItemOwned,
   purchaseItem,
 } from './inventory-service';

@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { checkRateLimit, getClientIp } from '../../../lib/rate-limit';
 import { getChildSessionFromCookies } from '../../../lib/child-session';
 import { createServerAdminClient } from '../../../lib/supabase/server';
-import { bumpDailySummary, getFamilyForChild, recordActivityEvent, type ActivityEventType } from '../../../lib/activity/server';
+import { bumpDailySummary, getFamilyForChild, notifyOnce, recordActivityEvent, type ActivityEventType } from '../../../lib/activity/server';
+import { isStreakEligibleEvent } from '../../../lib/streak/config';
+import { qualifyStreakDay } from '../../../lib/streak/server';
 
 const AnalyticsTrackSchema = z.object({
   event: z.string().min(1).max(64),
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { event, gameId, activityId, timeSeconds, mistakes, xpEarned } = parseResult.data;
+    let streakResult: Awaited<ReturnType<typeof qualifyStreakDay>> | null = null;
 
     // 4. Persist to the child's activity log + daily summary, attributed via
     // their signed session cookie (never a client-supplied id).
@@ -104,6 +107,25 @@ export async function POST(req: NextRequest) {
           } else if (event === 'XP_EARNED') {
             await bumpDailySummary(admin, session.childId, family.timezone, { xp_earned: xpEarned || 0 }, { last_activity_at: nowIso });
           }
+
+          if (isStreakEligibleEvent(event)) {
+            streakResult = await qualifyStreakDay(admin, session.childId, family.timezone);
+            if (streakResult.isNewQualification) {
+              await recordActivityEvent(admin, { childId: session.childId, familyId: family.familyId, sessionId: session.sessionId, eventType: 'STREAK_EXTENDED', metadata: { streakDay: streakResult.streak.current_streak, graceUsed: streakResult.graceUsed } });
+            }
+            if (streakResult.newMilestone) {
+              const { data: child } = await admin.from('children').select('name').eq('id', session.childId).maybeSingle();
+              await notifyOnce(admin, {
+                recipientId: family.ownerId,
+                childId: session.childId,
+                type: 'STREAK',
+                title: `🔥 ${child?.name || 'Your child'} hit a ${streakResult.newMilestone.days}-day streak!`,
+                body: `${child?.name || 'Your child'} has learned consistently for ${streakResult.newMilestone.days} days in a row — "${streakResult.newMilestone.label}".`,
+                payload: { days: streakResult.newMilestone.days, coins: streakResult.newMilestone.coins, gems: streakResult.newMilestone.gems },
+                dedupeKey: `streak:${session.childId}:${streakResult.newMilestone.days}`,
+              });
+            }
+          }
         }
       }
     }
@@ -113,6 +135,18 @@ export async function POST(req: NextRequest) {
       recorded: true,
       event,
       timestamp: new Date().toISOString(),
+      streak: streakResult
+        ? {
+            currentStreak: streakResult.streak.current_streak,
+            longestStreak: streakResult.streak.longest_streak,
+            graceDays: streakResult.streak.grace_days,
+            isNewQualification: streakResult.isNewQualification,
+            graceUsed: streakResult.graceUsed,
+            streakReset: streakResult.streakReset,
+            previousStreak: streakResult.previousStreak,
+            newMilestone: streakResult.newMilestone,
+          }
+        : null,
     });
   } catch {
     return NextResponse.json(

@@ -3,10 +3,8 @@
 // Manages owned items for each child/teen profile, handles purchases with
 // coins or gems from `wallet-service`, and prevents duplicate purchases.
 
-import { awardCoins, awardGems, getWallet, spendCoins } from '../lib/economy/wallet-service';
-import { getItem } from './catalog';
-import { readEquipment, saveEquipment } from './storage';
-import type { CharacterEquipment, EquipmentItem, ItemRarity } from './types';
+import { awardGems, getWallet, spendCoins } from '../lib/economy/wallet-service';
+import type { EquipmentItem } from './types';
 
 const INVENTORY_KEY = 'lanternLionInventory';
 

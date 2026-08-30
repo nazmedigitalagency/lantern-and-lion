@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <defs>
+    <radialGradient id="femaleBackdropGlow" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stopColor="#fef08a" stopOpacity="0.45" />
+      <stop offset="60%" stopColor="#f43f5e" stopOpacity="0.15" />
+      <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="110" r="88" fill="url(#femaleBackdropGlow)" />
+  <ellipse cx="100" cy="216" rx="42" ry="7" fill="#000000" fillOpacity="0.25" />
+  <!-- Legs -->
+  <rect x="83" y="165" width="14" height="42" rx="6" fill="#b87b41" />
+  <rect x="103" y="165" width="14" height="42" rx="6" fill="#b87b41" />
+  <!-- Body Base -->
+  <rect x="91" y="96" width="18" height="18" rx="4" fill="#b87b41" />
+  <path d="M72 112L66 174C66 177 134 177 134 174L128 112H72Z" fill="#0284c7" stroke="#0369a1" strokeWidth="2" />
+  <!-- Arms -->
+  <path d="M72 114L54 144C52 147 54 152 58 152C61 152 64 149 68 142L82 120" fill="#d9a066" stroke="#b87b41" strokeWidth="1.5" />
+  <path d="M128 114L146 140C148 143 152 144 155 141C158 138 156 134 152 130L134 114" fill="#d9a066" stroke="#b87b41" strokeWidth="1.5" />
+  <!-- Head & Ears -->
+  <circle cx="69" cy="74" r="6" fill="#d9a066" stroke="#b87b41" strokeWidth="1.2" />
+  <circle cx="131" cy="74" r="6" fill="#d9a066" stroke="#b87b41" strokeWidth="1.2" />
+  <path d="M72 65C72 40 82 28 100 28C118 28 128 40 128 65C128 88 118 98 100 98C82 98 72 88 72 65Z" fill="#d9a066" stroke="#b87b41" strokeWidth="1.5" />
+  <!-- Cheeks -->
+  <ellipse cx="80" cy="74" rx="5" ry="3.5" fill="#f43f5e" fillOpacity="0.35" />
+  <ellipse cx="120" cy="74" rx="5" ry="3.5" fill="#f43f5e" fillOpacity="0.35" />
+  <!-- Eyes -->
+  <ellipse cx="85" cy="65" rx="5" ry="5.5" fill="#1e293b" />
+  <circle cx="83.5" cy="63" r="2" fill="#ffffff" />
+  <ellipse cx="115" cy="65" rx="5" ry="5.5" fill="#1e293b" />
+  <circle cx="113.5" cy="63" r="2" fill="#ffffff" />
+  <!-- Smile -->
+  <path d="M91 80C94 85 106 85 109 80" stroke="#881337" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+</svg>

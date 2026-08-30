@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="hairWavesGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#451a03" />
+      <stop offset="100%" stopColor="#290e02" />
+    </linearGradient>
+  </defs>
+  <path d="M18 56C14 36 28 20 50 20C72 20 86 36 82 56C88 68 90 85 86 94C82 86 78 78 78 66C74 40 64 32 50 32C36 32 26 40 22 66C22 78 18 86 14 94C10 85 12 68 18 56Z" fill="url(#hairWavesGrad)" />
+  <path d="M34 28C42 24 58 24 66 28" stroke="#92400e" strokeWidth="2" strokeLinecap="round" />
+</svg>

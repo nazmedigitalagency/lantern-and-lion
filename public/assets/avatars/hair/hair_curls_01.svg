@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="hairCurlsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#451a03" />
+      <stop offset="100%" stopColor="#290e02" />
+    </linearGradient>
+  </defs>
+  <circle cx="24" cy="40" r="12" fill="url(#hairCurlsGrad)" />
+  <circle cx="38" cy="28" r="13" fill="url(#hairCurlsGrad)" />
+  <circle cx="52" cy="25" r="14" fill="url(#hairCurlsGrad)" />
+  <circle cx="66" cy="28" r="13" fill="url(#hairCurlsGrad)" />
+  <circle cx="76" cy="40" r="12" fill="url(#hairCurlsGrad)" />
+  <circle cx="18" cy="54" r="10" fill="url(#hairCurlsGrad)" />
+  <circle cx="82" cy="54" r="10" fill="url(#hairCurlsGrad)" />
+  <circle cx="44" cy="33" r="5" fill="#78350f" fillOpacity="0.6" />
+  <circle cx="60" cy="34" r="5" fill="#78350f" fillOpacity="0.6" />
+</svg>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import { activityDateKey, notifyOnce } from '../../../lib/activity/server';
+import { getStreakCalendar, getStreakStatus } from '../../../lib/streak/server';
 
 function formatActiveTime(seconds: number): string {
   const minutes = Math.round(seconds / 60);
@@ -50,12 +51,21 @@ export async function GET() {
     .order('occurred_at', { ascending: false })
     .limit(150);
 
-  const result = children.map((child) => ({
-    child: { id: child.id, name: child.name, username: child.username, age: child.age, avatar: child.avatar },
-    summary: summaries?.find((s) => s.child_id === child.id) || null,
-    timeline: (events || [])
-      .filter((e) => e.child_id === child.id && activityDateKey(timezone, new Date(e.occurred_at)) === todayKey)
-      .map((e) => ({ eventType: e.event_type, occurredAt: e.occurred_at, metadata: e.metadata })),
+  const result = await Promise.all(children.map(async (child) => {
+    const [streak, calendar] = await Promise.all([
+      getStreakStatus(admin, child.id, timezone),
+      getStreakCalendar(admin, child.id, timezone, 7),
+    ]);
+    const daysActiveThisWeek = calendar.filter((d) => d.state === 'complete' || d.state === 'grace').length;
+
+    return {
+      child: { id: child.id, name: child.name, username: child.username, age: child.age, avatar: child.avatar },
+      summary: summaries?.find((s) => s.child_id === child.id) || null,
+      timeline: (events || [])
+        .filter((e) => e.child_id === child.id && activityDateKey(timezone, new Date(e.occurred_at)) === todayKey)
+        .map((e) => ({ eventType: e.event_type, occurredAt: e.occurred_at, metadata: e.metadata })),
+      streak: { ...streak, daysActiveThisWeek, weekCalendar: calendar },
+    };
   }));
 
   // Opportunistically send one "yesterday's learning" summary per child per

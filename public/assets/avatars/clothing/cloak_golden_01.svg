@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="goldCloakGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#fde047" />
+      <stop offset="50%" stopColor="#f59e0b" />
+      <stop offset="100%" stopColor="#b45309" />
+    </linearGradient>
+  </defs>
+  <path d="M22 22L12 84C12 88 88 88 88 84L78 22H22Z" fill="url(#goldCloakGrad)" stroke="#b45309" strokeWidth="3" />
+  <path d="M36 20L50 48L64 20" stroke="#ffffff" strokeWidth="3.5" fill="none" />
+  <circle cx="50" cy="50" r="5" fill="#ef4444" stroke="#991b1b" strokeWidth="2" />
+  <rect x="28" y="66" width="44" height="6" fill="#b45309" />
+</svg>

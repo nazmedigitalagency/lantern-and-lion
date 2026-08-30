@@ -14,7 +14,8 @@ export type ActivityEventType =
   | 'QUEST_STARTED'
   | 'QUEST_COMPLETED'
   | 'ACHIEVEMENT_EARNED'
-  | 'XP_EARNED';
+  | 'XP_EARNED'
+  | 'STREAK_EXTENDED';
 
 /** Returns YYYY-MM-DD for "today" in the given IANA timezone (never the server's own TZ). */
 export function activityDateKey(timezone: string, at: Date = new Date()): string {
@@ -120,7 +121,7 @@ export async function notifyOnce(
   params: {
     recipientId: string;
     childId?: string | null;
-    type: 'LOGIN' | 'DAILY_SUMMARY' | 'ACHIEVEMENT' | 'QUEST' | 'LEARNING';
+    type: 'LOGIN' | 'DAILY_SUMMARY' | 'ACHIEVEMENT' | 'QUEST' | 'LEARNING' | 'STREAK';
     title: string;
     body: string;
     payload?: Record<string, unknown>;

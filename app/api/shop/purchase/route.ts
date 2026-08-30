@@ -30,18 +30,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // In production with authenticated Supabase sessions, we verify wallet balance server-side
+    // Security validation: price cannot be negative
+    const priceCoins = Math.max(0, item.priceCoins ?? 0);
+    const priceGems = Math.max(0, item.priceGems ?? 0);
+
     return NextResponse.json({
       success: true,
-      message: `Successfully verified purchase for ${item.name}`,
+      profileId,
+      message: `Verified purchase of ${item.name}`,
       item: {
         id: item.id,
         name: item.name,
         slot: item.slot,
-        rarity: item.rarity,
-        priceCoins: item.priceCoins,
-        priceGems: item.priceGems,
+        rarity: item.rarity || 'common',
+        priceCoins,
+        priceGems,
       },
+      verifiedAt: new Date().toISOString(),
     });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';

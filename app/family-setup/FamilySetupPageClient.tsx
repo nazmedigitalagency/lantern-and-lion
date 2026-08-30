@@ -174,7 +174,7 @@ export default function FamilySetupPage() {
           familyName: family.familyName,
           country: family.country,
           timezone,
-          children: children.map((c) => ({ name: c.name, username: c.username, age: c.age, avatar: c.avatar, pin: c.pin })),
+          children: children.map((c) => ({ name: c.name, username: c.username, age: c.age, avatar: c.avatar, pin: c.pin, gender: c.gender })),
         }),
       })
         .then((res) => res.json() as Promise<{ error?: string }>)

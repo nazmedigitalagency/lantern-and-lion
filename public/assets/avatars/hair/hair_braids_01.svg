@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="hairBraidsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#3b1d06" />
+      <stop offset="100%" stopColor="#1a0c02" />
+    </linearGradient>
+  </defs>
+  <path d="M22 45C22 26 34 22 50 22C66 22 78 26 78 45C78 48 22 48 22 45Z" fill="url(#hairBraidsGrad)" />
+  <rect x="16" y="44" width="6" height="52" rx="3" fill="#3b1d06" />
+  <rect x="24" y="46" width="6" height="56" rx="3" fill="#290e02" />
+  <rect x="70" y="46" width="6" height="56" rx="3" fill="#290e02" />
+  <rect x="78" y="44" width="6" height="52" rx="3" fill="#3b1d06" />
+  <circle cx="19" cy="92" r="2.5" fill="#f59e0b" />
+  <circle cx="27" cy="98" r="2.5" fill="#f59e0b" />
+  <circle cx="73" cy="98" r="2.5" fill="#f59e0b" />
+  <circle cx="81" cy="92" r="2.5" fill="#f59e0b" />
+</svg>
