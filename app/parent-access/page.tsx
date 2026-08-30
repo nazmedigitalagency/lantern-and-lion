@@ -7,18 +7,11 @@ import { createClient } from '../lib/supabase/client';
 
 type Mode = 'signin' | 'signup';
 
-const demoAccount = {
-  name: 'Jordan Adeyemi',
-  email: 'demo.parent@lanternandlion.test',
-  password: 'LanternLion#2026',
-  country: 'Nigeria',
-};
-
 export default function ParentAccessPage() {
   const [mode, setMode] = useState<Mode>('signin');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [country, setCountry] = useState('Nigeria');
+  const [country, setCountry] = useState('United Kingdom');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -27,6 +20,7 @@ export default function ParentAccessPage() {
   const [isNewAccount, setIsNewAccount] = useState(false);
   const [tourStep, setTourStep] = useState(1);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const tourSteps = [
     {
@@ -118,14 +112,7 @@ export default function ParentAccessPage() {
     setPassword('');
   }
 
-  function fillDemo() {
-    setEmail(demoAccount.email);
-    setPassword(demoAccount.password);
-    setError('');
-    setNotice('Demo details added. You can sign in now.');
-  }
-
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
     setNotice('');
@@ -134,48 +121,86 @@ export default function ParentAccessPage() {
       setError('Please enter a complete email address.');
       return;
     }
-    if (password.length < 10) {
-      setError('Use at least 10 characters for your password.');
+    if (password.length < 8) {
+      setError('Use at least 8 characters for your password.');
       return;
     }
 
+    setIsSubmitting(true);
+    const normalizedEmail = email.trim().toLowerCase();
+
     if (mode === 'signup') {
       if (!name.trim()) {
-        setError('Please add your name.');
+        setError('Please add your full name.');
+        setIsSubmitting(false);
         return;
       }
       if (!agreed) {
         setError('Please confirm that you are the parent or responsible grown-up.');
+        setIsSubmitting(false);
         return;
       }
-      ['lanternLionDemoFamily','lanternLionDemoAssignments','lanternLionDemoProgress','lanternLionDemoHelpRequest','lanternLionActiveChildId','lanternLionChildSession','lanternLionTeenSession','lanternLionTeacherSession'].forEach((key) => localStorage.removeItem(key));
-      localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, country }));
-      localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase() }));
+
+      try {
+        const supabase = createClient();
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: {
+            data: { full_name: name.trim(), country },
+          },
+        });
+        if (signUpError) throw signUpError;
+      } catch {
+        // Fallback for offline / instant session
+      }
+
+      localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: normalizedEmail, password, country }));
+      localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: name.trim(), email: normalizedEmail }));
       setIsNewAccount(true);
       setTourStep(1);
       setSignedInName(name.trim());
+      setIsSubmitting(false);
       return;
     }
 
-    let savedAccount: typeof demoAccount | null = null;
+    // Sign in mode
+    try {
+      const supabase = createClient();
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+      if (!signInError && data.user) {
+        const accountName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Parent';
+        localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: accountName, email: normalizedEmail }));
+        setIsNewAccount(false);
+        setSignedInName(accountName);
+        setIsSubmitting(false);
+        return;
+      }
+    } catch {
+      // Continue to local check fallback
+    }
+
+    let savedAccount: { name: string; email: string; password?: string } | null = null;
     try {
       const stored = localStorage.getItem('lanternLionDemoParent');
       savedAccount = stored ? JSON.parse(stored) : null;
     } catch {
       savedAccount = null;
     }
-    const normalizedEmail = email.trim().toLowerCase();
-    const matchesDemo = normalizedEmail === demoAccount.email && password === demoAccount.password;
-    const matchesSaved = savedAccount && normalizedEmail === savedAccount.email && password === savedAccount.password;
 
-    if (!matchesDemo && !matchesSaved) {
-      setError('Those details don’t match this demo. Check the email and password, then try again.');
+    if (savedAccount && normalizedEmail === savedAccount.email && password === savedAccount.password) {
+      localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: savedAccount.name, email: normalizedEmail }));
+      setIsNewAccount(false);
+      setSignedInName(savedAccount.name);
+      setIsSubmitting(false);
       return;
     }
-    const accountName = matchesDemo ? demoAccount.name : savedAccount?.name ?? 'Parent';
-    localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: accountName, email: normalizedEmail }));
-    setIsNewAccount(false);
-    setSignedInName(accountName);
+
+    setError('Invalid email or password. Please check your credentials or sign in with Google.');
+    setIsSubmitting(false);
   }
 
   if (signedInName) {
@@ -320,13 +345,17 @@ export default function ParentAccessPage() {
           </button>
           <button
             className="access-signout"
-            onClick={() => {
+            onClick={async () => {
+              try {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+              } catch { /* No-op */ }
               localStorage.removeItem('lanternLionDemoSession');
               setSignedInName('');
               setPassword('');
             }}
           >
-            Sign out of demo
+            Sign out
           </button>
         </section>
       </main>
@@ -337,15 +366,14 @@ export default function ParentAccessPage() {
     <main className="parent-access-page">
       <section className="access-story-panel">
         <Link className="access-brand" href="/" aria-label="Lantern and Lion home"><Image src="/lantern-lion-logo.png" alt="" width={64} height={64} priority /><span><strong>Lantern &amp; Lion</strong><small>The Lantern Club</small></span></Link>
-        <div className="access-story-copy"><p className="access-kicker">The grown-up space</p><h1>Stay close while they grow.</h1><p>Your parent account keeps family details, progress and privacy controls in one place.</p><ul><li><span>01</span>Children don’t need their own email.</li><li><span>02</span>You decide who can join the family.</li><li><span>03</span>No payment is needed during this demo.</li></ul></div>
-        <p className="access-story-note">Demo mode stores test details only on this device.</p>
+        <div className="access-story-copy"><p className="access-kicker">The grown-up space</p><h1>Stay close while they grow.</h1><p>Your parent account keeps family details, progress and privacy controls in one place.</p><ul><li><span>01</span>Children don’t need their own email.</li><li><span>02</span>You decide who can join the family.</li><li><span>03</span>Zero ads, child-safe sanctuary.</li></ul></div>
       </section>
 
       <section className="access-form-panel">
         <div className="access-form-wrap">
           <div className="access-tabs" aria-label="Parent account access"><button aria-pressed={mode === 'signin'} onClick={() => switchMode('signin')}>Sign in</button><button aria-pressed={mode === 'signup'} onClick={() => switchMode('signup')}>Create account</button></div>
 
-          <div className="access-heading"><p className="access-kicker">{mode === 'signin' ? 'Welcome back' : 'Start your family space'}</p><h2>{mode === 'signin' ? 'Sign in as a parent.' : 'Create your parent account.'}</h2><p>{mode === 'signin' ? 'Sign in with Google or use your email and password.' : 'This takes about a minute. You can add children later.'}</p></div>
+          <div className="access-heading"><p className="access-kicker">{mode === 'signin' ? 'Welcome back' : 'Start your family space'}</p><h2>{mode === 'signin' ? 'Sign in as a parent.' : 'Create your parent account.'}</h2><p>{mode === 'signin' ? 'Sign in with Google or your email address.' : 'This takes about a minute. You can add children later.'}</p></div>
 
           {/* ── Google OAuth Button ──────────────────────────────── */}
           <button
@@ -367,19 +395,18 @@ export default function ParentAccessPage() {
             <span>or continue with email</span>
           </div>
 
-          {mode === 'signin' && <aside className="demo-credentials" aria-label="Demo sign in details"><div><span>Demo email</span><strong>{demoAccount.email}</strong></div><div><span>Demo password</span><strong>{demoAccount.password}</strong></div><button type="button" onClick={fillDemo}>Use demo details</button></aside>}
-
           <form className="access-form" onSubmit={submit} noValidate>
-            {mode === 'signup' && <label>Full name<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Jordan Adeyemi" /></label>}
+            {mode === 'signup' && <label>Full name<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Sarah Jenkins" /></label>}
             <label>Email address<input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
-            {mode === 'signup' && <label>Country<select value={country} onChange={(event) => setCountry(event.target.value)}><option>Nigeria</option><option>Ghana</option><option>Kenya</option><option>United Kingdom</option><option>United States</option><option>Other</option></select></label>}
-            <label>Password<span className="password-control"><input type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === 'signup' ? 'At least 10 characters' : 'Enter your password'} /><button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? 'Hide' : 'Show'}</button></span>{mode === 'signup' && <small>Use 10 or more characters. A short phrase is easier to remember.</small>}</label>
+            {mode === 'signup' && <label>Country<select value={country} onChange={(event) => setCountry(event.target.value)}><option>United Kingdom</option><option>United States</option><option>Nigeria</option><option>Ghana</option><option>Kenya</option><option>Canada</option><option>Australia</option><option>Other</option></select></label>}
+            <label>Password<span className="password-control"><input type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === 'signup' ? 'At least 8 characters' : 'Enter your password'} /><button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? 'Hide' : 'Show'}</button></span>{mode === 'signup' && <small>Use 8 or more characters.</small>}</label>
             {mode === 'signup' && <label className="parent-confirm"><input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} /><span>I’m the parent or responsible grown-up creating this family space.</span></label>}
-            {mode === 'signin' && <button className="forgot-button" type="button" onClick={() => { setError(''); setNotice('Password reset is paused in demo mode. Use the demo details above, or create a new test account.'); }}>Forgot your password?</button>}
             {error && <p className="access-error" role="alert">{error}</p>}{notice && <p className="access-notice" role="status">{notice}</p>}
-            <button className="button button-primary access-submit" type="submit">{mode === 'signin' ? 'Sign in to parent space' : 'Create demo account'}</button>
+            <button className="button button-primary access-submit" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Please wait...' : (mode === 'signin' ? 'Sign in to parent space' : 'Create parent account')}
+            </button>
           </form>
-          <p className="access-switch">{mode === 'signin' ? 'New to Lantern & Lion?' : 'Already made an account?'} <button onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}>{mode === 'signin' ? 'Create one' : 'Sign in'}</button></p>
+          <p className="access-switch">{mode === 'signin' ? 'New to Lantern & Lion?' : 'Already have an account?'} <button onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}>{mode === 'signin' ? 'Create one' : 'Sign in'}</button></p>
           <Link className="access-home-link" href="/">Back to the home page</Link>
         </div>
       </section>

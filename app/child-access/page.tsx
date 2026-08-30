@@ -8,14 +8,6 @@ import { FormEvent, useEffect, useState } from 'react';
 type Child = { id: number; name: string; username: string; age: number; avatar: string; pin: string };
 type FamilyData = { familyName: string; children: Child[] };
 
-const defaultDemoFamily: FamilyData = {
-  familyName: 'The Adeyemi Family',
-  children: [
-    { id: 1, name: 'Amara', username: 'amara', age: 9, avatar: 'lion', pin: '2468' },
-    { id: 2, name: 'Tobi', username: 'tobi', age: 14, avatar: 'lantern', pin: '1357' },
-  ],
-};
-
 export default function ChildAccessPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
@@ -23,8 +15,8 @@ export default function ChildAccessPage() {
   const [error, setError] = useState('');
   const [successChild, setSuccessChild] = useState<Child | null>(null);
   const [family, setFamily] = useState<FamilyData>({
-    ...defaultDemoFamily,
-    children: defaultDemoFamily.children.filter((c) => c.age < 13),
+    familyName: '',
+    children: [],
   });
   const [hydrated, setHydrated] = useState(false);
 
@@ -123,13 +115,6 @@ export default function ChildAccessPage() {
     validateLogin(username, pin);
   }
 
-  function fillDemoChild(child: Child) {
-    setUsername(child.username);
-    setPin(child.pin);
-    setError('');
-    validateLogin(child.username, child.pin);
-  }
-
   if (!hydrated) {
     return (
       <main className="dashboard-loading" aria-live="polite">
@@ -177,27 +162,8 @@ export default function ChildAccessPage() {
               </div>
               <p className="access-kicker">Lantern Club Sign-in</p>
               <h1>Enter your Club</h1>
-              <p>Type your login name and tap your 4-digit secret PIN.</p>
+              <p>Type your login name and tap your 4-digit secret PIN given by your parent.</p>
             </div>
-
-            {/* Demo Quick Select */}
-            {family.children.length > 0 && (
-              <div className="child-demo-helpers">
-                <span>Demo profiles:</span>
-                <div className="demo-chip-group">
-                  {family.children.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      className="demo-chip"
-                      onClick={() => fillDemoChild(c)}
-                    >
-                      <b>{c.name}</b> (@{c.username} · PIN {c.pin})
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="child-access-form">
               <label className="child-input-label">

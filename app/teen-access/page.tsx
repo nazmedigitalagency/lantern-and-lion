@@ -8,21 +8,13 @@ import { FormEvent, useEffect, useState } from 'react';
 type Teen = { id: number; name: string; username: string; age: number; avatar: string; pin: string };
 type FamilyData = { familyName: string; children: Teen[] };
 
-const defaultDemoFamily: FamilyData = {
-  familyName: 'The Adeyemi Family',
-  children: [
-    { id: 1, name: 'Amara', username: 'amara', age: 9, avatar: 'lion', pin: '2468' },
-    { id: 2, name: 'Tobi', username: 'tobi', age: 14, avatar: 'lantern', pin: '1357' },
-  ],
-};
-
 export default function TeenAccessPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [successTeen, setSuccessTeen] = useState<Teen | null>(null);
-  const [teens, setTeens] = useState<Teen[]>(defaultDemoFamily.children.filter((c) => c.age >= 13));
+  const [teens, setTeens] = useState<Teen[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -85,8 +77,6 @@ export default function TeenAccessPage() {
     validateLogin(username, pin);
   }
 
-  function fillDemoTeen(teen: Teen) { setUsername(teen.username); setPin(teen.pin); setError(''); validateLogin(teen.username, teen.pin); }
-
   if (!hydrated) return <main className="dashboard-loading" aria-live="polite"><span /><p>Opening the Lion’s Den…</p></main>;
 
   return (
@@ -114,21 +104,8 @@ export default function TeenAccessPage() {
               <div className="teen-mark-badge"><span>🦁</span></div>
               <p className="teen-access-kicker">Teen Sign-in · Ages 13–17</p>
               <h1>Enter the Lion’s Den</h1>
-              <p>Type your login name and your 4-digit PIN. Tougher lessons, real questions, no shortcuts.</p>
+              <p>Type your login name and your 4-digit PIN given by your parent. Tougher lessons, real questions, no shortcuts.</p>
             </div>
-
-            {teens.length > 0 && (
-              <div className="teen-demo-helpers">
-                <span>Demo profile:</span>
-                <div className="teen-demo-chip-group">
-                  {teens.map((t) => (
-                    <button key={t.id} type="button" className="teen-demo-chip" onClick={() => fillDemoTeen(t)}>
-                      <b>{t.name}</b> (@{t.username} · PIN {t.pin})
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="teen-access-form">
               <label className="teen-input-label">

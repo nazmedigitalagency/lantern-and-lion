@@ -20,7 +20,7 @@ export default function FamilySetupPage() {
   const [step, setStep] = useState(1);
   const [parentName, setParentName] = useState('Parent');
   const [familyName, setFamilyName] = useState('');
-  const [country, setCountry] = useState('Nigeria');
+  const [country, setCountry] = useState('United Kingdom');
   const [children, setChildren] = useState<Child[]>([]);
   const [childName, setChildName] = useState('');
   const [username, setUsername] = useState('');
