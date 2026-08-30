@@ -374,7 +374,12 @@ export function StoryChapterReader({
         💡 <strong>Life Takeaway:</strong> {chapter.takeawayMessage}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+        {chapter.interactiveStoryId && (
+          <a href={`/stories/${chapter.interactiveStoryId}`} className="button button-primary">
+            🎮 Play the Interactive Story
+          </a>
+        )}
         <button
           type="button"
           className={`button ${isCompleted ? 'button-secondary' : 'button-primary'}`}

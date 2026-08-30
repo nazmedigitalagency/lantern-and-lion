@@ -104,6 +104,24 @@ export function markChapterCompleted(profileId: number, chapterId: string): stri
   return current;
 }
 
+/**
+ * Marks a chapter as read/completed for World Map bookkeeping WITHOUT
+ * awarding the standard "read a chapter" XP/coins — used when a bigger,
+ * already-rewarded activity (an Interactive Bible Story) covers the same
+ * chapter, so the reward isn't paid twice for one accomplishment.
+ */
+export function markChapterCompletedSilently(profileId: number, chapterId: string): string[] {
+  if (typeof window === 'undefined') return [];
+  const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(CHAPTERS_KEY), {});
+  const current = byChild[profileId] || [];
+  if (!current.includes(chapterId)) {
+    byChild[profileId] = [...current, chapterId];
+    localStorage.setItem(CHAPTERS_KEY, JSON.stringify(byChild));
+    return byChild[profileId];
+  }
+  return current;
+}
+
 export function readCompletedBossIds(profileId: number): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(BOSS_KEY), {});

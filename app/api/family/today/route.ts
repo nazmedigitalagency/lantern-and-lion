@@ -4,6 +4,7 @@ import { createServerAdminClient } from '../../../lib/supabase/server';
 import { activityDateKey, notifyOnce } from '../../../lib/activity/server';
 import { getStreakCalendar, getStreakStatus } from '../../../lib/streak/server';
 import { getConceptMasteryForChild, summarizeMastery } from '../../../lib/adaptive/server';
+import { getStory } from '../../../stories/catalog';
 
 function formatActiveTime(seconds: number): string {
   const minutes = Math.round(seconds / 60);
@@ -52,6 +53,11 @@ export async function GET() {
     .order('occurred_at', { ascending: false })
     .limit(150);
 
+  const { data: storyRows } = await admin
+    .from('story_progress')
+    .select('child_id, story_id, status, completed_at')
+    .in('child_id', childIds);
+
   const result = await Promise.all(children.map(async (child) => {
     const track = child.age >= 13 ? 'teen' : child.age <= 7 ? 'early' : 'pathfinder';
     const [streak, calendar, masteryRows] = await Promise.all([
@@ -70,6 +76,10 @@ export async function GET() {
         .map((e) => ({ eventType: e.event_type, occurredAt: e.occurred_at, metadata: e.metadata })),
       streak: { ...streak, daysActiveThisWeek, weekCalendar: calendar },
       learning: { strengths: learning.strengths, needsPractice: learning.needsPractice, dueReviewCount: learning.dueReviews.length },
+      stories: (storyRows || [])
+        .filter((row) => row.child_id === child.id && row.status === 'completed')
+        .map((row) => ({ storyId: row.story_id, title: getStory(row.story_id)?.title || row.story_id, completedAt: row.completed_at }))
+        .sort((a, b) => new Date(b.completedAt || 0).getTime() - new Date(a.completedAt || 0).getTime()),
     };
   }));
 

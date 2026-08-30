@@ -23,6 +23,8 @@ import { LeagueCard } from '../lib/leagues/LeagueCard';
 import { getLeaguePod } from '../lib/leagues/storage';
 import { getNextMissionRecommendation } from '../adventure/progression';
 import { loadWorldContext } from '../adventure/storage';
+import { getStoryDashboardSummary } from '../stories/engine';
+import { STORY_CATALOG } from '../stories/catalog';
 import { LearningJourneyCard, type LearningPlanResponse } from '../lib/adaptive/LearningJourneyCard';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
@@ -387,7 +389,7 @@ export default function ChildDashboardPage() {
         <span>+{milestoneToast.coins} 🪙{milestoneToast.gems > 0 ? ` +${milestoneToast.gems} 💎` : ''}</span>
       </div>
     )}
-    <header className="child-topbar"><Link href="/" className="child-logo"><Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority /><span><strong>{teen ? 'Lion’s Den' : 'The Lantern Club'}</strong><small>Lantern &amp; Lion</small></span></Link><nav className="child-nav" aria-label="Child dashboard"><button aria-pressed={view === 'today'} className={view === 'today' ? 'active' : ''} onClick={() => setView('today')}>Today</button><Link href="/adventure">🗺️ Adventure</Link><Link href="/character">🧑 Character</Link><Link href="/leagues">🏆 Leagues</Link><Link href="/arcade">🎮 Arcade</Link><button aria-pressed={view === 'library'} className={view === 'library' ? 'active' : ''} onClick={() => setView('library')}>Explore</button><button aria-pressed={view === 'progress'} className={view === 'progress' ? 'active' : ''} onClick={() => setView('progress')}>My progress</button></nav><div className="child-header-actions">{!isPreview && <button ref={helpTriggerRef} className="help-button" onClick={() => setShowHelp(true)}>Ask for help</button>}<div className="profile-switch"><button ref={profileButtonRef} className="profile-button" aria-expanded={showProfiles} aria-controls="child-profile-menu" onClick={() => setShowProfiles(!showProfiles)}><span>{child.name.slice(0,1)}</span><b>{child.name}</b></button>{showProfiles && <div className="profile-menu" id="child-profile-menu"><button type="button" className="child-family-summary-btn" onClick={() => { setShowFamilyModal(true); setShowProfiles(false); }}>🌟 Our family summary</button>{!isPreview && <Link href="/child-access" onClick={() => { fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {}); localStorage.removeItem('lanternLionChildSession'); localStorage.removeItem('lanternLionActiveChildId'); }} className="child-signout-link">Sign out of {child.name}</Link>}</div>}</div></div></header>
+    <header className="child-topbar"><Link href="/" className="child-logo"><Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority /><span><strong>{teen ? 'Lion’s Den' : 'The Lantern Club'}</strong><small>Lantern &amp; Lion</small></span></Link><nav className="child-nav" aria-label="Child dashboard"><button aria-pressed={view === 'today'} className={view === 'today' ? 'active' : ''} onClick={() => setView('today')}>Today</button><Link href="/adventure">🗺️ Adventure</Link><Link href="/stories">📖 Stories</Link><Link href="/character">🧑 Character</Link><Link href="/leagues">🏆 Leagues</Link><Link href="/arcade">🎮 Arcade</Link><button aria-pressed={view === 'library'} className={view === 'library' ? 'active' : ''} onClick={() => setView('library')}>Explore</button><button aria-pressed={view === 'progress'} className={view === 'progress' ? 'active' : ''} onClick={() => setView('progress')}>My progress</button></nav><div className="child-header-actions">{!isPreview && <button ref={helpTriggerRef} className="help-button" onClick={() => setShowHelp(true)}>Ask for help</button>}<div className="profile-switch"><button ref={profileButtonRef} className="profile-button" aria-expanded={showProfiles} aria-controls="child-profile-menu" onClick={() => setShowProfiles(!showProfiles)}><span>{child.name.slice(0,1)}</span><b>{child.name}</b></button>{showProfiles && <div className="profile-menu" id="child-profile-menu"><button type="button" className="child-family-summary-btn" onClick={() => { setShowFamilyModal(true); setShowProfiles(false); }}>🌟 Our family summary</button>{!isPreview && <Link href="/child-access" onClick={() => { fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {}); localStorage.removeItem('lanternLionChildSession'); localStorage.removeItem('lanternLionActiveChildId'); }} className="child-signout-link">Sign out of {child.name}</Link>}</div>}</div></div></header>
 
     {view === 'today' && <div className="child-dashboard-body"><section className="child-welcome"><div><p className="child-kicker">{teen ? 'Your weekly practice' : 'Your next light'}</p><h1>Hi, {child.name}. Ready for one good step?</h1><p>{teen ? 'Pick up your courage study, then choose what you want to explore.' : 'Today, David faces something enormous. See what courage looks like before the battle begins.'}</p><div className="daily-stats"><span><b>{goalDone}/5</b> weekly lights</span><span><b>{points}</b> light points</span><span><b>3</b> day return</span></div></div><div className="welcome-lantern" aria-hidden="true"><span></span><i></i><b>{points}</b></div></section>
     {learningStreak && !isPreview && (
@@ -447,6 +449,26 @@ export default function ChildDashboardPage() {
             </div>
             <Link className="button button-primary" href={next.actionHref}>
               ▶ Continue Adventure →
+            </Link>
+          </section>
+        );
+      })()}
+
+      {(() => {
+        const storySummary = getStoryDashboardSummary(child.id, STORY_CATALOG);
+        if (!storySummary) return null;
+        return (
+          <section className="child-adventure-banner" style={{ border: '2px solid #f5c451' }}>
+            <span className="child-adventure-banner-icon" aria-hidden="true">{storySummary.story.heroEmoji}</span>
+            <div className="child-adventure-banner-copy">
+              <span style={{ fontSize: '0.72rem', background: '#dfa91d', color: '#ffffff', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontWeight: 700, textTransform: 'uppercase' }}>
+                {storySummary.resuming ? 'Continue your story' : 'New interactive story'}
+              </span>
+              <strong>{storySummary.story.title}</strong>
+              <small>📖 {storySummary.story.scriptureRange} · ~{storySummary.story.estimatedMinutes} min</small>
+            </div>
+            <Link className="button button-primary" href={`/stories/${storySummary.story.id}`}>
+              {storySummary.resuming ? '▶ Continue Story →' : '▶ Start Story →'}
             </Link>
           </section>
         );

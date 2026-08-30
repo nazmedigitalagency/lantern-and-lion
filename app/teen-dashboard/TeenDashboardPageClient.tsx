@@ -664,6 +664,7 @@ export default function TeenDashboardPage() {
         </nav>
         <div className="teen-header-right">
           <Link href="/adventure" className="teen-world-link">🗺️ World</Link>
+          <Link href="/stories" className="teen-world-link">📖 Stories</Link>
           <Link href="/character" className="teen-world-link">🧑 Character</Link>
           <Link href="/leagues" className="teen-world-link">🏆 Leagues</Link>
           <span className="teen-streak-pill">🔥 {dailyQuestSummary.streak}-day</span>
@@ -901,6 +902,7 @@ export default function TeenDashboardPage() {
               <div className="teen-title"><p className="teen-kicker">Play — tougher than it looks</p><h1>Choose your challenge.</h1><p>These aren’t quizzes with one right tap. Real branching, real evidence, real stakes.</p></div>
               <div className="teen-play-grid">
                 <Link className="teen-play-card teen-play-card-link teen-play-card-world" href="/adventure"><span>🗺️</span><strong>Adventure World</strong><small>Walk the Bible’s story region by region</small></Link>
+                <Link className="teen-play-card teen-play-card-link" href="/stories"><span>📖</span><strong>Interactive Stories</strong><small>Live the Bible’s biggest moments, scene by scene</small></Link>
                 <Link className="teen-play-card teen-play-card-link" href="/arcade"><span>🎮</span><strong>Lantern Arcade</strong><small>Scripture Maze, Scramble, Verse Builder</small></Link>
                 <button className="teen-play-card" onClick={() => setPlayMode('decision')}><span>⚖</span><strong>Decision Lab</strong><small>{DECISION_SCENARIOS.length} branching scenarios · school &amp; online life</small></button>
                 <button className="teen-play-card" onClick={() => setPlayMode('reallife')}><span>🧭</span><strong>Real Life</strong><small>{REAL_LIFE_SCENARIOS.length} scenarios · work, family, courage</small></button>

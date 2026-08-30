@@ -5,6 +5,7 @@ import { activityDateKey } from '../../../../lib/activity/server';
 import { getStreakCalendar, getStreakStatus } from '../../../../lib/streak/server';
 import { getConceptMasteryForChild } from '../../../../lib/adaptive/server';
 import { getConcept } from '../../../../lib/adaptive/concepts';
+import { STORY_CATALOG } from '../../../../stories/catalog';
 
 /**
  * Class overview + per-student drill-down for the Teacher Dashboard.
@@ -113,6 +114,25 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const mostMastered = [...conceptAverages].sort((a, b) => b.avg - a.avg)[0] || null;
   const needsReinforcement = [...conceptAverages].sort((a, b) => a.avg - b.avg)[0] || null;
 
+  let storyInsight: { storyId: string; title: string; completedCount: number; percent: number }[] = [];
+  if (childIds.length > 0) {
+    const { data: storyRows } = await admin
+      .from('story_progress')
+      .select('child_id, story_id')
+      .in('child_id', childIds)
+      .eq('status', 'completed');
+
+    storyInsight = STORY_CATALOG.map((story) => {
+      const completedCount = (storyRows || []).filter((r) => r.story_id === story.id).length;
+      return {
+        storyId: story.id,
+        title: story.title,
+        completedCount,
+        percent: students.length ? Math.round((completedCount / students.length) * 100) : 0,
+      };
+    });
+  }
+
   const pendingCount = (roster || []).filter((r) => !r.approved).length;
   const activeToday = students.filter((s) => s.today.active_seconds > 0).length;
   const avgActiveSeconds = students.length ? Math.round(students.reduce((sum, s) => sum + s.today.active_seconds, 0) / students.length) : 0;
@@ -128,6 +148,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       pendingApprovals: pendingCount,
     },
     classInsight: { mostMastered, needsReinforcement },
+    storyInsight,
     students,
   });
 }

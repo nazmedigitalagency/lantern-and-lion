@@ -94,6 +94,8 @@ export type StoryChapter = {
   narrativeExplanation: string;
   takeawayMessage: string;
   audioDurationSeconds?: number;
+  /** Links to an Interactive Bible Story (app/stories/catalog.ts) for a game-like retelling of this chapter. */
+  interactiveStoryId?: string;
 };
 
 export type AdventureQuest = {

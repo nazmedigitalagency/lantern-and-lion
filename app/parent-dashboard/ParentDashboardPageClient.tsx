@@ -61,12 +61,15 @@ type ChildStreak = {
 type ConceptRef = { conceptId: string; label: string; masteryScore: number };
 type ChildLearning = { strengths: ConceptRef[]; needsPractice: ConceptRef[]; dueReviewCount: number };
 
+type CompletedStory = { storyId: string; title: string; completedAt: string | null };
+
 type TodayActivityChild = {
   child: { id: string; name: string; username?: string; age: number; avatar: string };
   summary: DailySummaryRow;
   timeline: { eventType: string; occurredAt: string; metadata?: Record<string, unknown> }[];
   streak: ChildStreak;
   learning: ChildLearning;
+  stories: CompletedStory[];
 };
 
 type NotificationItem = {
@@ -412,6 +415,18 @@ export default function ParentDashboardPage() {
                           )}
                           {active.learning.dueReviewCount > 0 && (
                             <p>🧠 {active.learning.dueReviewCount} concept{active.learning.dueReviewCount === 1 ? '' : 's'} ready for review.</p>
+                          )}
+                        </div>
+                      )}
+                      {active.stories.length > 0 && (
+                        <div className="parent-learning-note">
+                          <strong>📖 Interactive Bible Stories</strong>
+                          <p>
+                            {active.child.name} completed <b>{active.stories[0].title}</b>
+                            {active.stories[0].completedAt ? ` on ${new Date(active.stories[0].completedAt).toLocaleDateString()}` : ''}.
+                          </p>
+                          {active.stories.length > 1 && (
+                            <p>{active.stories.length} stories completed so far.</p>
                           )}
                         </div>
                       )}
