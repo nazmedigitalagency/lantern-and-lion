@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, recorded: false });
     }
 
-    const { event, gameId, difficulty, score, timeSeconds, xpEarned } = parseResult.data;
+    const { event } = parseResult.data;
 
     // Log securely without leaking PII or database errors
     // If database connection is active, server writes can be processed here via service role

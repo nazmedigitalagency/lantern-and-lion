@@ -143,7 +143,7 @@ export default function ParentAccessPage() {
 
       try {
         const supabase = createClient();
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
           options: {

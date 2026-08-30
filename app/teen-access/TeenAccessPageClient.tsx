@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
 type Teen = { id: number; name: string; username: string; age: number; avatar: string; pin: string };
-type FamilyData = { familyName: string; children: Teen[] };
 
 export default function TeenAccessPage() {
   const router = useRouter();
