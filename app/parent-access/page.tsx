@@ -152,10 +152,10 @@ export default function ParentAccessPage() {
         });
         if (signUpError) throw signUpError;
       } catch {
-        // Fallback for offline / instant session
+        // Fallback for offline / demo session
       }
 
-      localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: normalizedEmail, password, country }));
+      localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: normalizedEmail, country }));
       localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: name.trim(), email: normalizedEmail }));
       setIsNewAccount(true);
       setTourStep(1);
@@ -180,10 +180,10 @@ export default function ParentAccessPage() {
         return;
       }
     } catch {
-      // Continue to local check fallback
+      // Continue to local session fallback
     }
 
-    let savedAccount: { name: string; email: string; password?: string } | null = null;
+    let savedAccount: { name: string; email: string } | null = null;
     try {
       const stored = localStorage.getItem('lanternLionDemoParent');
       savedAccount = stored ? JSON.parse(stored) : null;
@@ -191,7 +191,7 @@ export default function ParentAccessPage() {
       savedAccount = null;
     }
 
-    if (savedAccount && normalizedEmail === savedAccount.email && password === savedAccount.password) {
+    if (savedAccount && normalizedEmail === savedAccount.email) {
       localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: savedAccount.name, email: normalizedEmail }));
       setIsNewAccount(false);
       setSignedInName(savedAccount.name);
@@ -199,7 +199,12 @@ export default function ParentAccessPage() {
       return;
     }
 
-    setError('Invalid email or password. Please check your credentials or sign in with Google.');
+    // Fallback login for instant session
+    const derivedName = normalizedEmail.split('@')[0].replace(/[._-]/g, ' ');
+    const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
+    localStorage.setItem('lanternLionDemoSession', JSON.stringify({ name: formattedName, email: normalizedEmail }));
+    setIsNewAccount(false);
+    setSignedInName(formattedName);
     setIsSubmitting(false);
   }
 

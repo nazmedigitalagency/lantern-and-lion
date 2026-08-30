@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { checkRateLimit, getClientIp } from '../../lib/rate-limit';
 
 // Server in-memory audio cache for instant response without repeating synthesis
 const audioCache = new Map<string, { audioContent: string; timestamp: number }>();
@@ -34,6 +36,13 @@ export const STUDIO_VOICES: TTSVoiceConfig[] = [
   },
 ];
 
+const TTSRequestSchema = z.object({
+  text: z.string().min(1, 'Text parameter is required').max(5000, 'Text exceeds maximum length (5000 chars)'),
+  voiceName: z.string().max(100).default('en-GB-Journey-F'),
+  speakingRate: z.number().min(0.25).max(2.0).default(0.95),
+  pitch: z.number().min(-20.0).max(20.0).default(0.0),
+});
+
 export async function GET() {
   return NextResponse.json({
     status: 'ok',
@@ -44,24 +53,40 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as {
-      text?: string;
-      voiceName?: string;
-      speakingRate?: number;
-      pitch?: number;
-    };
-    const {
-      text,
-      voiceName = 'en-GB-Journey-F',
-      speakingRate = 0.95,
-      pitch = 0.0,
-    } = body;
-
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      return NextResponse.json({ error: 'Text parameter is required' }, { status: 400 });
+    // 1. Rate limiting check (30 requests per minute per IP)
+    const clientIp = getClientIp(req);
+    const rateLimit = checkRateLimit(`tts:${clientIp}`, { maxRequests: 30, windowSeconds: 60 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too Many Requests',
+          message: `Rate limit exceeded. Please retry in ${rateLimit.resetSeconds} seconds.`,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.resetSeconds),
+          },
+        }
+      );
     }
 
-    const cleanText = text.trim().slice(0, 5000); // Safety limit for single synthesis
+    // 2. Validate input schema with Zod
+    const rawBody = await req.json().catch(() => null);
+    const parseResult = TTSRequestSchema.safeParse(rawBody);
+
+    if (!parseResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid request payload',
+          details: parseResult.error.issues.map((i) => i.message),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { text, voiceName, speakingRate, pitch } = parseResult.data;
+    const cleanText = text.trim();
     const cacheKey = `${voiceName}:${speakingRate}:${pitch}:${cleanText}`;
 
     // Return cached audio if available (valid for 24 hours)
@@ -105,8 +130,8 @@ export async function POST(req: NextRequest) {
       },
       audioConfig: {
         audioEncoding: 'MP3',
-        speakingRate: Math.max(0.25, Math.min(speakingRate, 2.0)),
-        pitch: Math.max(-20.0, Math.min(pitch, 20.0)),
+        speakingRate,
+        pitch,
         sampleRateHertz: 24000,
         effectsProfileId: ['small-bluetooth-speaker-class-device', 'headphone-class-device'],
       },
@@ -119,12 +144,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.warn('Google Cloud TTS API error:', response.status, errorText);
+      // Don't leak raw internal error responses or key signatures
       return NextResponse.json(
         {
           fallback: true,
-          error: `Google Cloud TTS error (${response.status})`,
+          error: 'Upstream TTS service error',
           message: 'Fell back to client speech synthesizer',
         },
         { status: 200 }
@@ -155,11 +179,10 @@ export async function POST(req: NextRequest) {
       cached: false,
       source: 'google-cloud-tts',
     });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('TTS Route Exception:', message);
+  } catch {
+    // Mask internal server exceptions to prevent information disclosure
     return NextResponse.json(
-      { fallback: true, error: message, message: 'Fell back to client synthesizer' },
+      { fallback: true, error: 'Internal processing error', message: 'Fell back to client synthesizer' },
       { status: 200 }
     );
   }

@@ -67,6 +67,28 @@ export function logGameEvent(event: GameAnalyticsEventName, payload: GameAnalyti
   const entry: GameAnalyticsEvent = { ...payload, event, timestamp: new Date().toISOString() };
   const existing = safeParse<GameAnalyticsEvent[]>(localStorage.getItem(EVENTS_KEY), []);
   localStorage.setItem(EVENTS_KEY, JSON.stringify([entry, ...existing].slice(0, MAX_STORED_EVENTS)));
+
+  // Send to server endpoint asynchronously for server-side rate-limited tracking
+  try {
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event,
+        gameId: payload.gameId,
+        difficulty: payload.difficulty,
+        category: payload.category,
+        score: payload.score,
+        timeSeconds: payload.timeSeconds,
+        mistakes: payload.mistakes,
+        xpEarned: payload.xpEarned,
+      }),
+    }).catch(() => {
+      // Ignore network/offline failures for analytics
+    });
+  } catch {
+    // Non-blocking
+  }
 }
 
 /** All logged events, optionally filtered to one user — for Parent/Teacher analytics views. */
