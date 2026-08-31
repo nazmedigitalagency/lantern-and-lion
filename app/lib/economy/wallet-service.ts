@@ -49,34 +49,34 @@ function writeAllTransactions(byProfile: Record<string, Transaction[]>): void {
   localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(byProfile));
 }
 
-export function getWallet(profileId: number): Wallet {
+export function getWallet(profileId: number | string): Wallet {
   return readAllWallets()[profileId] || EMPTY_WALLET;
 }
 
 /** Every transaction ever recorded for this profile, newest first. */
-export function getTransactions(profileId: number, limit = 50): Transaction[] {
+export function getTransactions(profileId: number | string, limit = 50): Transaction[] {
   const list = readAllTransactions()[profileId] || [];
   return list.slice(0, limit);
 }
 
 /** Just the XP-type entries — the named function the progression spec asks for. */
-export function getXPHistory(profileId: number, limit = 50): Transaction[] {
+export function getXPHistory(profileId: number | string, limit = 50): Transaction[] {
   return getTransactions(profileId, MAX_STORED_TRANSACTIONS).filter((t) => t.type === 'xp').slice(0, limit);
 }
 
-export function getCurrentLevel(profileId: number): LevelInfo {
+export function getCurrentLevel(profileId: number | string): LevelInfo {
   return getLevelInfo(getWallet(profileId).xp);
 }
 
-export function getXPForNextLevel(profileId: number): number | null {
+export function getXPForNextLevel(profileId: number | string): number | null {
   return getCurrentLevel(profileId).nextLevelXp;
 }
 
-export function getLevelProgress(profileId: number): LevelInfo {
+export function getLevelProgress(profileId: number | string): LevelInfo {
   return getCurrentLevel(profileId);
 }
 
-function record(profileId: number, type: CurrencyType, amount: number, source: RewardSource, description: string): AwardResult {
+function record(profileId: number | string, type: CurrencyType, amount: number, source: RewardSource, description: string): AwardResult {
   // Compare-and-swap the wallet write: re-check right before writing (and retry if another tab
   // wrote in between) so two tabs updating the same profile's wallet don't clobber each other.
   let wallets: Record<string, Wallet>;
@@ -117,20 +117,20 @@ function record(profileId: number, type: CurrencyType, amount: number, source: R
 }
 
 /** Award XP for a meaningful activity. Amount should be positive. */
-export function awardXP(profileId: number, amount: number, source: RewardSource, description: string): AwardResult {
+export function awardXP(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult {
   return record(profileId, 'xp', Math.max(0, Math.round(amount)), source, description);
 }
 
-export function awardCoins(profileId: number, amount: number, source: RewardSource, description: string): AwardResult {
+export function awardCoins(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult {
   return record(profileId, 'coins', Math.max(0, Math.round(amount)), source, description);
 }
 
-export function awardGems(profileId: number, amount: number, source: RewardSource, description: string): AwardResult {
+export function awardGems(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult {
   return record(profileId, 'gems', Math.max(0, Math.round(amount)), source, description);
 }
 
 /** Returns null (and records nothing) if the wallet doesn't have enough coins. */
-export function spendCoins(profileId: number, amount: number, source: RewardSource, description: string): AwardResult | null {
+export function spendCoins(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult | null {
   const wallet = getWallet(profileId);
   const cost = Math.max(0, Math.round(amount));
   if (wallet.coins < cost) return null;

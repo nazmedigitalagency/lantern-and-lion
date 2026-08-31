@@ -25,7 +25,7 @@ export type GameAnalyticsEventName =
   | 'XP_EARNED';
 
 export type GameAnalyticsPayload = {
-  userId: number;
+  userId: number | string;
   gameId: string;
   difficulty?: string;
   /** Identifies the specific lesson, quest, or achievement for those event types. */
@@ -104,7 +104,7 @@ export function logGameEvent(event: GameAnalyticsEventName, payload: GameAnalyti
 }
 
 /** All logged events, optionally filtered to one user — for Parent/Teacher analytics views. */
-export function getGameEvents(userId?: number): GameAnalyticsEvent[] {
+export function getGameEvents(userId?: number | string): GameAnalyticsEvent[] {
   if (typeof window === 'undefined') return [];
   const all = safeParse<GameAnalyticsEvent[]>(localStorage.getItem(EVENTS_KEY), []);
   return userId === undefined ? all : all.filter((e) => e.userId === userId);

@@ -53,7 +53,7 @@ function seededIndex(seed: string, length: number): number {
   return length > 0 ? hash % length : 0;
 }
 
-export function pickTemplateForSlot(category: DailyQuestCategory, profileId: number, dateKey: string): DailyQuestTemplate {
+export function pickTemplateForSlot(category: DailyQuestCategory, profileId: number | string, dateKey: string): DailyQuestTemplate {
   const pool = getTemplatesForCategory(category);
   const index = seededIndex(`${profileId}-${dateKey}-${category}`, pool.length);
   return pool[index];

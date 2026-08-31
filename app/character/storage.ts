@@ -38,18 +38,18 @@ function defaultEquipment(): CharacterEquipment {
   return equipment;
 }
 
-export function readAppearance(profileId: number): CharacterAppearance {
+export function readAppearance(profileId: number | string): CharacterAppearance {
   const byChild = safeParse<Record<string, CharacterAppearance>>(localStorage.getItem(APPEARANCE_KEY), {});
   return byChild[profileId] || DEFAULT_APPEARANCE;
 }
 
-export function saveAppearance(profileId: number, appearance: CharacterAppearance): void {
+export function saveAppearance(profileId: number | string, appearance: CharacterAppearance): void {
   const byChild = safeParse<Record<string, CharacterAppearance>>(localStorage.getItem(APPEARANCE_KEY), {});
   byChild[profileId] = appearance;
   localStorage.setItem(APPEARANCE_KEY, JSON.stringify(byChild));
 }
 
-export function readEquipment(profileId: number): CharacterEquipment {
+export function readEquipment(profileId: number | string): CharacterEquipment {
   const byChild = safeParse<Record<string, CharacterEquipment>>(localStorage.getItem(EQUIPMENT_KEY), {});
   if (!byChild[profileId]) {
     const seeded = defaultEquipment();
@@ -60,18 +60,18 @@ export function readEquipment(profileId: number): CharacterEquipment {
   return byChild[profileId];
 }
 
-export function saveEquipment(profileId: number, equipment: CharacterEquipment): void {
+export function saveEquipment(profileId: number | string, equipment: CharacterEquipment): void {
   const byChild = safeParse<Record<string, CharacterEquipment>>(localStorage.getItem(EQUIPMENT_KEY), {});
   byChild[profileId] = equipment;
   localStorage.setItem(EQUIPMENT_KEY, JSON.stringify(byChild));
 }
 
-export function readCharacterName(profileId: number, fallbackName: string): string {
+export function readCharacterName(profileId: number | string, fallbackName: string): string {
   const byChild = safeParse<Record<string, string>>(localStorage.getItem(NAME_KEY), {});
   return byChild[profileId] || fallbackName;
 }
 
-export function saveCharacterName(profileId: number, name: string): void {
+export function saveCharacterName(profileId: number | string, name: string): void {
   const byChild = safeParse<Record<string, string>>(localStorage.getItem(NAME_KEY), {});
   byChild[profileId] = name;
   localStorage.setItem(NAME_KEY, JSON.stringify(byChild));

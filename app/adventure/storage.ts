@@ -52,7 +52,7 @@ export function readActiveProfile(): PlayerProfile {
   return { id: match.id, name: match.name, age: match.age, kind: match.age >= 13 ? 'teen' : 'child' };
 }
 
-export function readModuleProgress(profileId: number): ModuleProgressMap {
+export function readModuleProgress(profileId: number | string): ModuleProgressMap {
   if (typeof window === 'undefined') return {};
   const progressByChild = safeParse<Record<string, ModuleProgressMap>>(localStorage.getItem('lanternLionModuleProgress'), {});
   return progressByChild[profileId] || {};
@@ -64,13 +64,13 @@ const BOSS_KEY = 'lanternLionAdventureBosses';
 const SECRETS_KEY = 'lanternLionAdventureSecrets';
 const COLLECTIBLES_KEY = 'lanternLionAdventureCollectibles';
 
-export function readMasteredQuestIds(profileId: number): string[] {
+export function readMasteredQuestIds(profileId: number | string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(MASTERY_KEY), {});
   return byChild[profileId] || [];
 }
 
-export function markQuestMastered(profileId: number, questId: string): string[] {
+export function markQuestMastered(profileId: number | string, questId: string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(MASTERY_KEY), {});
   const current = byChild[profileId] || [];
@@ -84,13 +84,13 @@ export function markQuestMastered(profileId: number, questId: string): string[] 
   return current;
 }
 
-export function readCompletedChapterIds(profileId: number): string[] {
+export function readCompletedChapterIds(profileId: number | string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(CHAPTERS_KEY), {});
   return byChild[profileId] || [];
 }
 
-export function markChapterCompleted(profileId: number, chapterId: string): string[] {
+export function markChapterCompleted(profileId: number | string, chapterId: string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(CHAPTERS_KEY), {});
   const current = byChild[profileId] || [];
@@ -110,7 +110,7 @@ export function markChapterCompleted(profileId: number, chapterId: string): stri
  * already-rewarded activity (an Interactive Bible Story) covers the same
  * chapter, so the reward isn't paid twice for one accomplishment.
  */
-export function markChapterCompletedSilently(profileId: number, chapterId: string): string[] {
+export function markChapterCompletedSilently(profileId: number | string, chapterId: string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(CHAPTERS_KEY), {});
   const current = byChild[profileId] || [];
@@ -122,13 +122,13 @@ export function markChapterCompletedSilently(profileId: number, chapterId: strin
   return current;
 }
 
-export function readCompletedBossIds(profileId: number): string[] {
+export function readCompletedBossIds(profileId: number | string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(BOSS_KEY), {});
   return byChild[profileId] || [];
 }
 
-export function markBossCompleted(profileId: number, bossId: string, rewards: { xp: number; coins: number; gems: number }): string[] {
+export function markBossCompleted(profileId: number | string, bossId: string, rewards: { xp: number; coins: number; gems: number }): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(BOSS_KEY), {});
   const current = byChild[profileId] || [];
@@ -143,13 +143,13 @@ export function markBossCompleted(profileId: number, bossId: string, rewards: { 
   return current;
 }
 
-export function readDiscoveredSecretIds(profileId: number): string[] {
+export function readDiscoveredSecretIds(profileId: number | string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(SECRETS_KEY), {});
   return byChild[profileId] || [];
 }
 
-export function markSecretDiscovered(profileId: number, secretId: string, rewards: { coins: number; gems: number }): string[] {
+export function markSecretDiscovered(profileId: number | string, secretId: string, rewards: { coins: number; gems: number }): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(SECRETS_KEY), {});
   const current = byChild[profileId] || [];
@@ -163,13 +163,13 @@ export function markSecretDiscovered(profileId: number, secretId: string, reward
   return current;
 }
 
-export function readCollectedCollectibleIds(profileId: number): string[] {
+export function readCollectedCollectibleIds(profileId: number | string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(COLLECTIBLES_KEY), {});
   return byChild[profileId] || [];
 }
 
-export function markCollectibleCollected(profileId: number, collectibleId: string): string[] {
+export function markCollectibleCollected(profileId: number | string, collectibleId: string): string[] {
   if (typeof window === 'undefined') return [];
   const byChild = safeParse<Record<string, string[]>>(localStorage.getItem(COLLECTIBLES_KEY), {});
   const current = byChild[profileId] || [];
@@ -181,7 +181,7 @@ export function markCollectibleCollected(profileId: number, collectibleId: strin
   return current;
 }
 
-export function loadWorldContext(profileId: number, kind: PlayerProfile['kind'] = 'child'): WorldContext {
+export function loadWorldContext(profileId: number | string, kind: PlayerProfile['kind'] = 'child'): WorldContext {
   return {
     moduleProgress: readModuleProgress(profileId),
     masteredQuestIds: readMasteredQuestIds(profileId),

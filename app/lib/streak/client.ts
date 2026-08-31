@@ -5,7 +5,7 @@ import { awardCoins, awardGems } from '../economy/wallet-service';
 
 const CLAIMED_KEY = 'lanternLionStreakMilestonesClaimed';
 
-function readClaimed(profileId: number): number[] {
+function readClaimed(profileId: number | string): number[] {
   if (typeof window === 'undefined') return [];
   try {
     const all = JSON.parse(localStorage.getItem(CLAIMED_KEY) || '{}');
@@ -15,7 +15,7 @@ function readClaimed(profileId: number): number[] {
   }
 }
 
-function writeClaimed(profileId: number, days: number[]) {
+function writeClaimed(profileId: number | string, days: number[]) {
   try {
     const all = JSON.parse(localStorage.getItem(CLAIMED_KEY) || '{}');
     all[profileId] = days;
@@ -32,7 +32,7 @@ function writeClaimed(profileId: number, days: number[]) {
  * awarding the same milestone twice by remembering which days were already
  * claimed for this profile, so refreshing the dashboard never re-awards it.
  */
-export function claimStreakMilestoneIfNew(profileId: number, currentStreak: number): StreakMilestone | null {
+export function claimStreakMilestoneIfNew(profileId: number | string, currentStreak: number): StreakMilestone | null {
   const milestone = milestoneForDays(currentStreak);
   if (!milestone) return null;
 

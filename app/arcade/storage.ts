@@ -28,7 +28,7 @@ function readAllBests(): Record<string, BestsByGame> {
   return safeParse(localStorage.getItem(BEST_KEY), {});
 }
 
-export function getPersonalBest(profileId: number, gameId: GameId): PersonalBest | null {
+export function getPersonalBest(profileId: number | string, gameId: GameId): PersonalBest | null {
   return readAllBests()[profileId]?.[gameId] ?? null;
 }
 
@@ -37,13 +37,13 @@ function readAllSessions(): Record<string, GameSessionRecord[]> {
 }
 
 /** How many arcade sessions this profile played on a given date (optionally for one game) — Daily Quests' arcade-play detection uses this. */
-export function countSessionsOn(profileId: number, dateKey: string, gameId?: GameId): number {
+export function countSessionsOn(profileId: number | string, dateKey: string, gameId?: GameId): number {
   const list = readAllSessions()[profileId] || [];
   return list.filter((s) => s.date === dateKey && (!gameId || s.gameId === gameId)).length;
 }
 
 /** Every session this profile has ever played, across all games — the raw material `lib/skill-profile.ts` aggregates into per-skill/per-game learning stats. */
-export function getSessionsForProfile(profileId: number): GameSessionRecord[] {
+export function getSessionsForProfile(profileId: number | string): GameSessionRecord[] {
   return readAllSessions()[profileId] || [];
 }
 
@@ -52,7 +52,7 @@ export function getSessionsForProfile(profileId: number): GameSessionRecord[] {
  * updates the personal best if beaten, and logs the session. This is
  * the one function every game calls when it finishes.
  */
-export function recordGameSession(profileId: number, result: GameResult): GameOutcome {
+export function recordGameSession(profileId: number | string, result: GameResult): GameOutcome {
   const previousBest = getPersonalBest(profileId, result.gameId);
   const isNewBest = isBetterThanBest(result, previousBest);
   const { xp, coins } = computeGameReward(result, isNewBest);

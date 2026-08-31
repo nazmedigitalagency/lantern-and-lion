@@ -25,7 +25,9 @@ import type { LevelInfo } from '../lib/xp-levels';
 import { GAME_DEFINITIONS } from '../arcade/catalog';
 import { STORY_CATALOG } from '../stories/catalog';
 
-type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
+// id is a number for a locally-created demo profile, or a UUID string for
+// an account fetched from the real server (see /api/child-auth/login).
+type Child = { id: number | string; name: string; username?: string; age: number; avatar: string; pin: string };
 type DashboardTab = 'today' | 'adventure' | 'stories' | 'arcade' | 'leagues' | 'explore' | 'progress';
 type ModuleFilter = 'All lessons' | 'Not started' | 'In progress' | 'Completed';
 type ModuleProgressEntry = { completedIndices: number[]; lastCompletedIndex: number };
@@ -41,7 +43,7 @@ function trackForAge(age: number): CurriculumModule['track'] {
   return 'teen';
 }
 
-function readModuleProgressForChild(childId: number): Record<string, ModuleProgressEntry> {
+function readModuleProgressForChild(childId: number | string): Record<string, ModuleProgressEntry> {
   try {
     const progressMap = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}');
     return progressMap?.[childId] || {};
@@ -53,7 +55,7 @@ function readModuleProgressForChild(childId: number): Record<string, ModuleProgr
 export default function ChildDashboardPage() {
   const router = useRouter();
   const [children, setChildren] = useState<Child[]>(fallbackChildren);
-  const [activeId, setActiveId] = useState<number>(fallbackChildren[0].id);
+  const [activeId, setActiveId] = useState<number | string>(fallbackChildren[0].id);
   const [activeTab, setActiveTab] = useState<DashboardTab>('today');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [familyData, setFamilyData] = useState({ familyName: 'The Adeyemi Family', parentName: 'Jordan Adeyemi', country: 'Nigeria' });
@@ -126,14 +128,21 @@ export default function ChildDashboardPage() {
         return;
       }
 
-      let activeChildId = fallbackChildren[0].id;
-      if (savedChildSession) {
-        activeChildId = parseInt(savedChildSession, 10);
-      } else if (childSessionJson) {
+      // childSessionJson.childId carries its original type (a number for a
+      // locally-created demo profile, a UUID string for a real server
+      // account) — parseInt/Number() on savedChildSession would truncate a
+      // UUID down to its leading digits and silently match the wrong
+      // child, so prefer the JSON session and only fall back to the loose
+      // legacy key when it's missing.
+      let activeChildId: number | string = fallbackChildren[0].id;
+      if (childSessionJson) {
         try {
           const parsed = JSON.parse(childSessionJson);
-          if (parsed.childId) activeChildId = Number(parsed.childId);
+          if (parsed.childId !== undefined && parsed.childId !== null) activeChildId = parsed.childId;
         } catch { /* Use fallback */ }
+      } else if (savedChildSession) {
+        const n = Number(savedChildSession);
+        activeChildId = Number.isNaN(n) ? savedChildSession : n;
       }
 
       try {

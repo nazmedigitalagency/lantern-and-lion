@@ -30,18 +30,18 @@ function readAllSets(): Record<string, DailyQuestSet> {
   return safeParse(localStorage.getItem(SET_KEY), {});
 }
 
-function writeSet(profileId: number, set: DailyQuestSet): void {
+function writeSet(profileId: number | string, set: DailyQuestSet): void {
   const all = readAllSets();
   all[profileId] = set;
   localStorage.setItem(SET_KEY, JSON.stringify(all));
 }
 
-export function readHistory(profileId: number): HistoryEntry[] {
+export function readHistory(profileId: number | string): HistoryEntry[] {
   const byProfile = safeParse<Record<string, HistoryEntry[]>>(localStorage.getItem(HISTORY_KEY), {});
   return byProfile[profileId] || [];
 }
 
-function upsertHistoryDay(profileId: number, date: string, completed: boolean): void {
+function upsertHistoryDay(profileId: number | string, date: string, completed: boolean): void {
   const byProfile = safeParse<Record<string, HistoryEntry[]>>(localStorage.getItem(HISTORY_KEY), {});
   const list = byProfile[profileId] || [];
   const existingIndex = list.findIndex((entry) => entry.date === date);
@@ -56,7 +56,7 @@ function upsertHistoryDay(profileId: number, date: string, completed: boolean): 
   localStorage.setItem(HISTORY_KEY, JSON.stringify(byProfile));
 }
 
-function buildFreshSet(profileId: number, dateKey: string, ctx: WorldContext): DailyQuestSet {
+function buildFreshSet(profileId: number | string, dateKey: string, ctx: WorldContext): DailyQuestSet {
   return {
     date: dateKey,
     quests: DAILY_SLOT_CATEGORIES.map((category) => ({
@@ -78,7 +78,7 @@ function buildFreshSet(profileId: number, dateKey: string, ctx: WorldContext): D
  * this app has a backend yet — see the note on that function for the
  * swap point once one exists.
  */
-export function getOrCreateTodaySet(profileId: number, ctx: WorldContext): DailyQuestSet {
+export function getOrCreateTodaySet(profileId: number | string, ctx: WorldContext): DailyQuestSet {
   const todayKey = getTodayDateKey();
   const all = readAllSets();
   const existing = all[profileId];
@@ -101,7 +101,7 @@ export function getOrCreateTodaySet(profileId: number, ctx: WorldContext): Daily
 }
 
 /** Auto-detected completion modes newly satisfied get XP/coins the moment they're noticed. */
-export function completeQuestsByMode(profileId: number, set: DailyQuestSet, modes: Set<string>): { set: DailyQuestSet; awards: AwardResult[] } {
+export function completeQuestsByMode(profileId: number | string, set: DailyQuestSet, modes: Set<string>): { set: DailyQuestSet; awards: AwardResult[] } {
   const awards: AwardResult[] = [];
   let changed = false;
   const quests = set.quests.map((instance) => {
@@ -122,7 +122,7 @@ export function completeQuestsByMode(profileId: number, set: DailyQuestSet, mode
 }
 
 /** Used by the in-page memory-verse and word-scramble widgets when the player finishes them correctly. */
-export function completeQuestManually(profileId: number, set: DailyQuestSet, templateId: string): { set: DailyQuestSet; awards: AwardResult[] } {
+export function completeQuestManually(profileId: number | string, set: DailyQuestSet, templateId: string): { set: DailyQuestSet; awards: AwardResult[] } {
   const instance = set.quests.find((q) => q.templateId === templateId);
   const template = getTemplate(templateId);
   if (!instance || !template || instance.completed) return { set, awards: [] };
@@ -138,7 +138,7 @@ export function completeQuestManually(profileId: number, set: DailyQuestSet, tem
   return { set: nextSet, awards };
 }
 
-function randomChestReward(dateKey: string, profileId: number): ChestReward {
+function randomChestReward(dateKey: string, profileId: number | string): ChestReward {
   // Deterministic per player per day — "safely randomized" (always a
   // guaranteed free reward, nothing to purchase, nothing to lose).
   let hash = 0;
@@ -150,7 +150,7 @@ function randomChestReward(dateKey: string, profileId: number): ChestReward {
 }
 
 /** Awards the completion bonus + opens the chest exactly once per day, and records today as a completed day right away. */
-export function claimDailyBonusIfComplete(profileId: number, set: DailyQuestSet): { set: DailyQuestSet; awards: AwardResult[]; chest: ChestReward | null } {
+export function claimDailyBonusIfComplete(profileId: number | string, set: DailyQuestSet): { set: DailyQuestSet; awards: AwardResult[]; chest: ChestReward | null } {
   if (set.bonusClaimed || !isSetFullyComplete(set)) return { set, awards: [], chest: null };
 
   const chest = randomChestReward(set.date, profileId);

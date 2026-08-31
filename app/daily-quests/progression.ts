@@ -36,7 +36,7 @@ function totalLessonSteps(ctx: WorldContext): number {
   return Object.values(ctx.moduleProgress).reduce((sum, entry) => sum + entry.completedIndices.length, 0);
 }
 
-export function computeSnapshot(profileId: number, ctx: WorldContext, todayKey: string): DaySnapshot {
+export function computeSnapshot(profileId: number | string, ctx: WorldContext, todayKey: string): DaySnapshot {
   return {
     questsCompleted: getTotalQuestsCompleted(ctx),
     lessonSteps: totalLessonSteps(ctx),
@@ -46,7 +46,7 @@ export function computeSnapshot(profileId: number, ctx: WorldContext, todayKey: 
 }
 
 /** Which auto-detected completion modes have newly become true, comparing live progress to the day's starting snapshot. */
-export function getNewlyAutoCompletedModes(profileId: number, ctx: WorldContext, snapshot: DaySnapshot, todayKey: string): Set<string> {
+export function getNewlyAutoCompletedModes(profileId: number | string, ctx: WorldContext, snapshot: DaySnapshot, todayKey: string): Set<string> {
   const current = computeSnapshot(profileId, ctx, todayKey);
   const modes = new Set<string>();
   if (current.questsCompleted > snapshot.questsCompleted) modes.add('adventure-progress');
