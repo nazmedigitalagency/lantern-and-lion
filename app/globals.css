@@ -2049,11 +2049,28 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .story-hint-btn{border:0;background:transparent;color:var(--teal-dark);font:800 13px var(--font-nunito),sans-serif;text-decoration:underline;cursor:pointer;margin-top:10px}
 
-.story-library-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px}
-.story-library-card{border:2px solid var(--navy);border-radius:18px;background:var(--white);box-shadow:5px 5px 0 var(--navy);padding:20px;text-decoration:none;color:var(--navy);display:block}
-.story-library-card .story-library-emoji{font-size:40px}
-.story-library-card h3{margin:8px 0 4px;font-size:17px}
-.story-library-card small{color:var(--muted);font-weight:700}
+.story-illustration-container{margin-bottom:18px}
+.story-scene-image-wrapper{position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--navy);box-shadow:0 4px 12px rgba(15,23,42,0.12);background:var(--slate-100)}
+.story-scene-image{width:100%;height:auto;max-height:360px;object-fit:cover;display:block;transition:transform .3s ease}
+.story-scene-image-wrapper:hover .story-scene-image{transform:scale(1.02)}
+.story-scene-badge{position:absolute;bottom:12px;right:12px;width:38px;height:38px;background:rgba(255,255,255,0.92);backdrop-filter:blur(6px);border:1.5px solid var(--navy);border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+
+.story-choice-btn.has-img{display:flex;align-items:center;gap:14px;padding:10px 14px}
+.story-choice-thumbnail{width:56px;height:56px;border-radius:10px;border:1.5px solid var(--navy);object-fit:cover;flex-shrink:0;background:var(--slate-100)}
+.story-choice-text-wrap{flex:1;font-weight:800;font-size:16px;line-height:1.35}
+
+.story-card-cover-wrap{position:relative;height:160px;border-radius:14px 14px 0 0;overflow:hidden;border-bottom:2px solid var(--navy);background:var(--slate-100)}
+.story-card-cover-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.story-library-card:hover .story-card-cover-img{transform:scale(1.05)}
+.story-card-badge{position:absolute;top:10px;right:10px;width:34px;height:34px;background:rgba(255,255,255,0.95);border:1.5px solid var(--navy);border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 4px rgba(0,0,0,0.15)}
+.story-card-body{padding:16px}
+.story-card-ref{margin:4px 0 10px;font-size:13px;font-weight:700;color:var(--muted)}
+.story-card-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.story-reward-pill{padding:4px 10px;background:var(--teal-soft);color:var(--teal-dark);border-radius:999px;font-size:12px;font-weight:900}
+.story-card-cta{margin-left:auto;font-size:13px;font-weight:900;color:var(--teal-dark);text-decoration:underline}
+
+.story-library-card{border:2px solid var(--navy);border-radius:18px;background:var(--white);box-shadow:5px 5px 0 var(--navy);padding:0;text-decoration:none;color:var(--navy);display:block;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
+.story-library-card:hover{transform:translateY(-2px);box-shadow:7px 7px 0 var(--navy)}
 
 /* Teen mode */
 .story-shell.teen .story-scene-card{background:var(--teen-surface);border-color:var(--teen-border);color:var(--teen-text);box-shadow:8px 8px 0 var(--teen-well)}
@@ -2063,9 +2080,13 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .story-shell.teen .story-scripture blockquote{color:var(--teen-text)}
 .story-shell.teen .story-choice-btn{background:var(--teen-surface-alt);border-color:var(--teen-border-alt);color:var(--teen-text);box-shadow:0 4px 0 var(--teen-well)}
 .story-shell.teen .story-choice-btn:hover:not(:disabled){background:var(--teen-surface-hover)}
+.story-shell.teen .story-choice-thumbnail{border-color:var(--teen-border-alt)}
+.story-shell.teen .story-scene-image-wrapper{border-color:var(--teen-border);box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.story-shell.teen .story-scene-badge{background:var(--teen-surface);border-color:var(--teen-border);color:var(--teen-text)}
 .story-shell.teen .story-feedback{background:var(--teen-surface-alt);color:var(--teen-text)}
 .story-shell.teen h1{color:var(--teen-text)}
 .story-shell.teen .story-progress-dot{background:var(--teen-divider)}
 .story-shell.teen .story-progress-dot.filled{background:var(--teen-success)}
+
 
 

@@ -16,6 +16,8 @@ export const davidAndGoliath: InteractiveStory = {
   scriptureRange: '1 Samuel 17',
   estimatedMinutes: 8,
   conceptId: 'early-shepherd',
+  coverImageUrl: '/assets/stories/david-and-goliath/cover.jpg',
+  thumbnailImageUrl: '/assets/stories/david-and-goliath/thumbnail.jpg',
   adventure: { regionId: 'jerusalem', chapterId: 'jer-ch1', collectibleId: 'coll-five-smooth-stones' },
   reward: { xp: 140, coins: 60, gems: 2 },
   characters: [
@@ -31,7 +33,12 @@ export const davidAndGoliath: InteractiveStory = {
       order: 1,
       type: 'NARRATION',
       nextSceneId: 'scene-2',
-      illustration: { emoji: '⛺', background: 'battlefield' },
+      illustration: {
+        emoji: '⛺',
+        background: 'battlefield',
+        imageUrl: '/assets/stories/david-and-goliath/scene-1-camp.jpg',
+        imageAlt: 'David arriving at the Israelite army camp with bread in the sunlit Valley of Elah',
+      },
       text: {
         child: 'David’s brothers were soldiers in King Saul’s army. One day, David’s father sent him to bring them food at the battle camp.',
         teen: 'David’s three oldest brothers had joined King Saul’s army, camped in the Valley of Elah against the Philistines. His father sent him with supplies and instructions to check on them.',
@@ -43,7 +50,12 @@ export const davidAndGoliath: InteractiveStory = {
       type: 'DIALOGUE',
       nextSceneId: 'scene-3',
       speakerId: 'narrator',
-      illustration: { emoji: '😨', background: 'battlefield' },
+      illustration: {
+        emoji: '😨',
+        background: 'battlefield',
+        imageUrl: '/assets/stories/david-and-goliath/scene-2-goliath.jpg',
+        imageAlt: 'Goliath in bronze armor shouting his challenge across the Valley of Elah',
+      },
       scripture: {
         reference: '1 Samuel 17:23-24',
         text: 'Goliath, the Philistine champion... came out and shouted his usual defiance... all the men of Israel ran from him in great fear.',
@@ -59,7 +71,12 @@ export const davidAndGoliath: InteractiveStory = {
       order: 3,
       type: 'CHOICE',
       nextSceneId: 'scene-4',
-      illustration: { emoji: '🤔', background: 'battlefield' },
+      illustration: {
+        emoji: '🤔',
+        background: 'battlefield',
+        imageUrl: '/assets/stories/david-and-goliath/scene-3-david-hears.jpg',
+        imageAlt: 'Young David hearing the challenge with steady faith and courage',
+      },
       prompt: {
         child: 'David hears Goliath’s challenge. In this activity, what should David rely on to face him?',
         teen: 'Every soldier sees the same giant, but David sees something different. What does David’s response suggest he’s relying on?',
@@ -69,6 +86,7 @@ export const davidAndGoliath: InteractiveStory = {
           id: 'own-strength',
           label: { child: '💪 His own strength', teen: 'His own physical strength and skill' },
           isBestChoice: false,
+          imageUrl: '/assets/stories/david-and-goliath/choice-own-strength.jpg',
           feedback: {
             child: 'Good try! But David wasn’t counting on his own strength — he was much smaller than Goliath. Let’s keep going and see what he trusted instead.',
             teen: 'Not quite what the text points to. David was young and had no soldier’s training or armor — his confidence had to come from somewhere else. Let’s continue.',
@@ -78,6 +96,7 @@ export const davidAndGoliath: InteractiveStory = {
           id: 'gods-power',
           label: { child: '🙏 God’s power', teen: 'His trust that God fights for His people' },
           isBestChoice: true,
+          imageUrl: '/assets/stories/david-and-goliath/choice-gods-power.jpg',
           feedback: {
             child: 'Exactly! David trusted that God was with him, even though Goliath was much bigger and stronger.',
             teen: 'Right — David’s courage flows from a conviction that "the battle is the LORD’s," not from any confidence in his own ability.',
@@ -94,6 +113,7 @@ export const davidAndGoliath: InteractiveStory = {
           id: 'run-away',
           label: { child: '🏃 Running away, like the soldiers', teen: 'Avoiding the confrontation entirely' },
           isBestChoice: false,
+          imageUrl: '/assets/stories/david-and-goliath/choice-run-away.jpg',
           feedback: {
             child: 'That’s what the other soldiers did! But David chose something braver. Let’s see what happened.',
             teen: 'That was the army’s response for forty days. David’s response breaks that pattern — worth noticing why.',
@@ -107,7 +127,12 @@ export const davidAndGoliath: InteractiveStory = {
       type: 'DIALOGUE',
       nextSceneId: 'scene-5',
       speakerId: 'saul',
-      illustration: { emoji: '👑', background: 'temple' },
+      illustration: {
+        emoji: '👑',
+        background: 'temple',
+        imageUrl: '/assets/stories/david-and-goliath/scene-4-saul.jpg',
+        imageAlt: 'David speaking with King Saul inside the royal pavilion tent',
+      },
       line: {
         child: 'King Saul told David, "You are too young. Goliath has been a warrior since he was young."',
         teen: 'King Saul objected: "You are not able to go against this Philistine and fight him; you are only a young man, and he has been a warrior from his youth."',
@@ -119,7 +144,12 @@ export const davidAndGoliath: InteractiveStory = {
       type: 'DIALOGUE',
       nextSceneId: 'scene-6',
       speakerId: 'david',
-      illustration: { emoji: '🪨', background: 'day' },
+      illustration: {
+        emoji: '🪨',
+        background: 'day',
+        imageUrl: '/assets/stories/david-and-goliath/scene-5-stones.jpg',
+        imageAlt: 'David picking five smooth stones from the running brook in the valley',
+      },
       scripture: {
         reference: '1 Samuel 17:45',
         text: 'You come against me with sword and spear and javelin, but I come against you in the name of the LORD Almighty, the God of the armies of Israel, whom you have defied.',
@@ -135,7 +165,12 @@ export const davidAndGoliath: InteractiveStory = {
       order: 6,
       type: 'QUIZ',
       nextSceneId: 'scene-7',
-      illustration: { emoji: '❓', background: 'day' },
+      illustration: {
+        emoji: '❓',
+        background: 'day',
+        imageUrl: '/assets/stories/david-and-goliath/scene-6-facing.jpg',
+        imageAlt: 'David standing with his sling facing Goliath on the battlefield in faith',
+      },
       questions: [
         {
           id: 'q1',
@@ -178,7 +213,12 @@ export const davidAndGoliath: InteractiveStory = {
       order: 7,
       type: 'MEMORY',
       nextSceneId: 'scene-8',
-      illustration: { emoji: '📜', background: 'day' },
+      illustration: {
+        emoji: '📜',
+        background: 'day',
+        imageUrl: '/assets/stories/david-and-goliath/scene-7-victory.jpg',
+        imageAlt: 'David praising God for the victory in the Valley of Elah',
+      },
       theme: 'Trusting God in hard moments',
       verse: {
         reference: '1 Samuel 17:47',
@@ -193,7 +233,12 @@ export const davidAndGoliath: InteractiveStory = {
       type: 'FINAL_CHALLENGE',
       nextSceneId: null,
       requiredScore: 2,
-      illustration: { emoji: '🏆', background: 'day' },
+      illustration: {
+        emoji: '🏆',
+        background: 'day',
+        imageUrl: '/assets/stories/david-and-goliath/scene-8-celebration.jpg',
+        imageAlt: 'King Saul, soldiers, and David celebrating God’s deliverance',
+      },
       title: {
         child: 'Final Challenge: What Did You Learn?',
         teen: 'Final Challenge: Understanding David’s Courage',

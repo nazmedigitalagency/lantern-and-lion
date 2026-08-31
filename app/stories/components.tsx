@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import type {
   ChoiceScene,
@@ -42,8 +43,26 @@ export function SceneShell({
       </p>
       <div className="story-scene-card">
         {scene.illustration && (
-          <div className={`story-illustration ${scene.illustration.background ? `bg-${scene.illustration.background}` : ''}`} aria-hidden="true">
-            {scene.illustration.emoji}
+          <div className="story-illustration-container">
+            {scene.illustration.imageUrl ? (
+              <div className="story-scene-image-wrapper">
+                <Image
+                  src={scene.illustration.imageUrl}
+                  alt={scene.illustration.imageAlt || `Scene ${scene.order}`}
+                  width={1280}
+                  height={720}
+                  priority={scene.order === 1}
+                  className="story-scene-image"
+                />
+                <span className="story-scene-badge" aria-hidden="true">
+                  {scene.illustration.emoji}
+                </span>
+              </div>
+            ) : (
+              <div className={`story-illustration ${scene.illustration.background ? `bg-${scene.illustration.background}` : ''}`} aria-hidden="true">
+                {scene.illustration.emoji}
+              </div>
+            )}
           </div>
         )}
         {children}
@@ -138,10 +157,20 @@ export function ChoiceSceneView({
             key={choice.id}
             type="button"
             disabled={Boolean(selectedId)}
-            className={`story-choice-btn ${selectedId === choice.id ? `selected ${choice.isBestChoice ? 'best' : 'not-best'}` : ''}`}
+            className={`story-choice-btn ${choice.imageUrl ? 'has-img' : ''} ${selectedId === choice.id ? `selected ${choice.isBestChoice ? 'best' : 'not-best'}` : ''}`}
             onClick={() => handleSelect(choice.id)}
           >
-            {pick(kind, choice.label)}
+            {choice.imageUrl && (
+              <Image
+                src={choice.imageUrl}
+                alt=""
+                width={56}
+                height={56}
+                className="story-choice-thumbnail"
+                aria-hidden="true"
+              />
+            )}
+            <span className="story-choice-text-wrap">{pick(kind, choice.label)}</span>
           </button>
         ))}
       </div>

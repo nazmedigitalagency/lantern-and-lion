@@ -40,6 +40,8 @@ export type StoryCharacter = {
 export type SceneIllustration = {
   emoji: string;
   background?: 'day' | 'night' | 'battlefield' | 'ark' | 'storm' | 'rainbow' | 'temple';
+  imageUrl?: string;
+  imageAlt?: string;
 };
 
 type BaseScene = {
@@ -69,6 +71,7 @@ export type StoryChoice = {
   feedback: AgeVariantText;
   isBestChoice: boolean;
   bonusContent?: { emoji: string; text: AgeVariantText };
+  imageUrl?: string;
 };
 
 export type ChoiceScene = BaseScene & {
@@ -118,6 +121,8 @@ export type InteractiveStory = {
   heroEmoji: string;
   scriptureRange: string;
   estimatedMinutes: number;
+  coverImageUrl?: string;
+  thumbnailImageUrl?: string;
   characters: StoryCharacter[];
   scenes: StoryScene[];
   firstSceneId: string;
