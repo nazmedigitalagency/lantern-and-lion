@@ -438,10 +438,10 @@ export default function ChildDashboardPage() {
         const advCtx = loadWorldContext(child.id, teen ? 'teen' : 'child');
         const next = getNextMissionRecommendation(advCtx);
         return (
-          <section className="child-adventure-banner" style={{ border: '2px solid #38bdf8' }}>
+          <section className="child-adventure-banner">
             <span className="child-adventure-banner-icon" aria-hidden="true">{next.region.icon}</span>
             <div className="child-adventure-banner-copy">
-              <span style={{ fontSize: '0.72rem', background: '#0284c7', color: '#ffffff', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontWeight: 700, textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '0.72rem', background: '#155eef', color: '#ffffff', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontWeight: 700, textTransform: 'uppercase' }}>
                 Next Expedition
               </span>
               <strong>{next.title}</strong>
@@ -458,10 +458,10 @@ export default function ChildDashboardPage() {
         const storySummary = getStoryDashboardSummary(child.id, STORY_CATALOG);
         if (!storySummary) return null;
         return (
-          <section className="child-adventure-banner" style={{ border: '2px solid #f5c451' }}>
+          <section className="child-adventure-banner" style={{ border: '2.5px solid #ffc83d', background: '#fff8e6', boxShadow: '4px 4px 0 #8b5cf6' }}>
             <span className="child-adventure-banner-icon" aria-hidden="true">{storySummary.story.heroEmoji}</span>
             <div className="child-adventure-banner-copy">
-              <span style={{ fontSize: '0.72rem', background: '#dfa91d', color: '#ffffff', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontWeight: 700, textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '0.72rem', background: '#8b5cf6', color: '#ffffff', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontWeight: 700, textTransform: 'uppercase' }}>
                 {storySummary.resuming ? 'Continue your story' : 'New interactive story'}
               </span>
               <strong>{storySummary.story.title}</strong>
