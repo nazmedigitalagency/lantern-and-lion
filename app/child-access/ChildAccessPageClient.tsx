@@ -8,22 +8,31 @@ import { FormEvent, useEffect, useState } from 'react';
 type Child = { id: number; name: string; username: string; age: number; avatar: string; pin: string };
 type FamilyData = { familyName: string; children: Child[] };
 
+const fallbackFamily: FamilyData = {
+  familyName: 'The Adeyemi Family',
+  children: [
+    { id: 1, name: 'Amara', username: 'amara', age: 9, avatar: 'lion', pin: '2468' },
+    { id: 2, name: 'Tobi', username: 'tobi', age: 14, avatar: 'lantern', pin: '1357' },
+  ],
+};
+
 export default function ChildAccessPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [successChild, setSuccessChild] = useState<Child | null>(null);
-  const [family, setFamily] = useState<FamilyData>({
-    familyName: '',
-    children: [],
-  });
+  const [family, setFamily] = useState<FamilyData>(fallbackFamily);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
-        const storedFamily = JSON.parse(localStorage.getItem('lanternLionDemoFamily') || 'null');
+        const storedFamily = JSON.parse(
+          localStorage.getItem('lanternLionDemoFamily') ||
+          localStorage.getItem('lanternLionFamilyData') ||
+          'null'
+        );
         if (storedFamily?.children?.length) {
           const normalized = {
             ...storedFamily,
@@ -35,9 +44,11 @@ export default function ChildAccessPage() {
               .filter((c: Child) => c.age < 13),
           };
           setFamily(normalized);
+        } else {
+          setFamily(fallbackFamily);
         }
       } catch {
-        /* Use default */
+        setFamily(fallbackFamily);
       }
       setHydrated(true);
     }, 0);
@@ -76,9 +87,10 @@ export default function ChildAccessPage() {
       setSuccessChild(foundChild);
       localStorage.setItem(
         'lanternLionChildSession',
-        JSON.stringify({ childId: foundChild.id, username: foundChild.username, name: foundChild.name })
+        JSON.stringify({ childId: foundChild.id, username: foundChild.username, name: foundChild.name, age: foundChild.age })
       );
       localStorage.setItem('lanternLionActiveChildId', String(foundChild.id));
+      localStorage.setItem('lanternLionActiveChild', String(foundChild.id));
 
       // Establish the real server-side session (cookie) so a parent/teacher
       // can see this login and activity from their own device. Best-effort:

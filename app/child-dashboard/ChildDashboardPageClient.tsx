@@ -117,24 +117,45 @@ export default function ChildDashboardPage() {
     const timer = window.setTimeout(() => {
       const previewFlag = new URLSearchParams(window.location.search).get('preview') === '1';
       setIsPreview(previewFlag);
-      const savedChildSession = localStorage.getItem('lanternLionActiveChild');
-      if (!previewFlag && !savedChildSession && !localStorage.getItem('lanternLionFamilyData')) {
+      const savedChildSession = localStorage.getItem('lanternLionActiveChild') || localStorage.getItem('lanternLionActiveChildId');
+      const childSessionJson = localStorage.getItem('lanternLionChildSession');
+      const storedFamilyRaw = localStorage.getItem('lanternLionDemoFamily') || localStorage.getItem('lanternLionFamilyData');
+
+      if (!previewFlag && !savedChildSession && !childSessionJson && !storedFamilyRaw) {
         router.replace('/child-access');
         return;
       }
+
+      let activeChildId = fallbackChildren[0].id;
+      if (savedChildSession) {
+        activeChildId = parseInt(savedChildSession, 10);
+      } else if (childSessionJson) {
+        try {
+          const parsed = JSON.parse(childSessionJson);
+          if (parsed.childId) activeChildId = Number(parsed.childId);
+        } catch { /* Use fallback */ }
+      }
+
       try {
-        const family = JSON.parse(localStorage.getItem('lanternLionFamilyData') || '{}');
+        const family = JSON.parse(storedFamilyRaw || '{}');
         if (family.children?.length) {
           setChildren(family.children);
-          const currentId = savedChildSession ? parseInt(savedChildSession, 10) : family.children[0].id;
-          setActiveId(currentId);
+          const found = family.children.find((c: Child) => c.id === activeChildId);
+          if (found) {
+            setActiveId(found.id);
+          } else {
+            setActiveId(family.children[0].id);
+          }
+        } else {
+          setActiveId(activeChildId);
         }
         if (family.familyName) setFamilyData(family);
       } catch {
-        // Use fallbacks
+        setActiveId(activeChildId);
       }
+
       const progress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}');
-      setModuleProgress(progress[activeId] || {});
+      setModuleProgress(progress[activeChildId] || {});
 
       try {
         const history = readHistory(activeId);

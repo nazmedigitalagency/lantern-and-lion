@@ -7,26 +7,39 @@ import { FormEvent, useEffect, useState } from 'react';
 
 type Teen = { id: number; name: string; username: string; age: number; avatar: string; pin: string };
 
+const fallbackTeens: Teen[] = [
+  { id: 2, name: 'Tobi', username: 'tobi', age: 14, avatar: 'lantern', pin: '1357' },
+];
+
 export default function TeenAccessPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [successTeen, setSuccessTeen] = useState<Teen | null>(null);
-  const [teens, setTeens] = useState<Teen[]>([]);
+  const [teens, setTeens] = useState<Teen[]>(fallbackTeens);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
-        const storedFamily = JSON.parse(localStorage.getItem('lanternLionDemoFamily') || 'null');
+        const storedFamily = JSON.parse(
+          localStorage.getItem('lanternLionDemoFamily') ||
+          localStorage.getItem('lanternLionFamilyData') ||
+          'null'
+        );
         if (storedFamily?.children?.length) {
           const normalized: Teen[] = storedFamily.children
             .map((c: Teen) => ({ ...c, username: c.username || c.name.toLowerCase().replace(/[^a-z0-9]/g, '') }))
             .filter((c: Teen) => c.age >= 13);
           if (normalized.length) setTeens(normalized);
+          else setTeens(fallbackTeens);
+        } else {
+          setTeens(fallbackTeens);
         }
-      } catch { /* Use default */ }
+      } catch {
+        setTeens(fallbackTeens);
+      }
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
