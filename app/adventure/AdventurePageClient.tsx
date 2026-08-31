@@ -164,7 +164,7 @@ export default function AdventurePage() {
   }
 
   return (
-    <main style={{ minHeight: '100vh', background: '#090d16', color: '#f8fafc', paddingBottom: '4rem' }}>
+    <main style={{ minHeight: '100vh', background: '#FEF9F3', color: '#1E293B', paddingBottom: '4rem' }}>
       {/* Top Header */}
       <header
         style={{
@@ -172,19 +172,19 @@ export default function AdventurePage() {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '1rem 1.5rem',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          background: 'rgba(15, 23, 42, 0.8)',
+          borderBottom: '2px solid #1E293B',
+          background: 'rgba(255, 255, 255, 0.92)',
           backdropFilter: 'blur(8px)',
           position: 'sticky',
           top: 0,
           zIndex: 40,
         }}
       >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#ffffff' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#1E293B' }}>
           <Image src="/lantern-lion-logo.png" alt="" width={42} height={42} priority />
           <div>
             <strong style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Lantern &amp; Lion</strong>
-            <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Bible Adventure World</small>
+            <small style={{ color: '#64748B', fontSize: '0.75rem' }}>Bible Adventure World</small>
           </div>
         </Link>
 
@@ -207,9 +207,9 @@ export default function AdventurePage() {
         {notice && (
           <div
             style={{
-              background: '#065f46',
-              color: '#d1fae5',
-              border: '1px solid #059669',
+              background: '#EFFDF4',
+              color: '#15803D',
+              border: '1.5px solid #15803D',
               padding: '0.85rem 1.25rem',
               borderRadius: '10px',
               marginBottom: '1rem',
@@ -224,8 +224,8 @@ export default function AdventurePage() {
         {/* Hero Mission Bar */}
         <section
           style={{
-            background: 'rgba(21, 94, 239, 0.3)',
-            border: '1.5px solid #38bdf8',
+            background: '#EFF6FF',
+            border: '2px solid #1E293B',
             borderRadius: '18px',
             padding: '1.25rem 1.5rem',
             marginBottom: '1.5rem',
@@ -233,7 +233,7 @@ export default function AdventurePage() {
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '1rem',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+            boxShadow: '5px 5px 0 #3B82F6',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -241,13 +241,13 @@ export default function AdventurePage() {
               <CharacterAvatar appearance={appearance} equipment={equipment} size="small" showPedestal={false} />
             </div>
             <div>
-              <small style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <small style={{ color: '#1D4ED8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Active Expedition
               </small>
-              <h2 style={{ margin: '0 0 0.2rem 0', fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
+              <h2 style={{ margin: '0 0 0.2rem 0', fontSize: '1.2rem', fontWeight: 800, color: '#1E293B' }}>
                 {nextMission.title}
               </h2>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1' }}>{nextMission.subtitle}</p>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B' }}>{nextMission.subtitle}</p>
             </div>
           </div>
 
@@ -271,7 +271,7 @@ export default function AdventurePage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800 }}>The Canonical Bible World Map</h2>
-              <small style={{ color: '#94a3b8' }}>Tap any land to explore stories, games, memory verses, and Knowledge Bosses.</small>
+              <small style={{ color: '#64748B' }}>Tap any land to explore stories, games, memory verses, and Knowledge Bosses.</small>
             </div>
           </div>
 
@@ -304,7 +304,7 @@ export default function AdventurePage() {
             display: 'grid',
             placeItems: 'center',
             padding: '20px',
-            background: 'rgba(2, 6, 15, 0.72)',
+            background: 'rgba(30, 41, 59, 0.55)',
           }}
         >
         <section
@@ -316,11 +316,11 @@ export default function AdventurePage() {
             width: 'min(880px, 100%)',
             maxHeight: '88vh',
             overflowY: 'auto',
-            background: 'rgba(15, 23, 42, 0.98)',
-            border: '1.5px solid rgba(255, 255, 255, 0.1)',
+            background: '#ffffff',
+            border: '2px solid #1E293B',
             borderRadius: '20px',
             padding: '1.75rem',
-            boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
+            boxShadow: '0 15px 35px rgba(16, 42, 67, 0.35)',
           }}
         >
           <button
@@ -336,9 +336,9 @@ export default function AdventurePage() {
               display: 'grid',
               placeItems: 'center',
               borderRadius: '50%',
-              border: '1.5px solid rgba(255, 255, 255, 0.25)',
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: '#fff',
+              border: '1.5px solid #1E293B',
+              background: '#EFF6FF',
+              color: '#1E293B',
               fontSize: '1.1rem',
               cursor: 'pointer',
             }}
@@ -352,7 +352,7 @@ export default function AdventurePage() {
               gridTemplateColumns: 'auto 1fr auto',
               gap: '1.25rem',
               alignItems: 'center',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              borderBottom: '1px solid #e2e8f1',
               paddingBottom: '1.25rem',
               marginBottom: '1.25rem',
             }}
@@ -363,37 +363,37 @@ export default function AdventurePage() {
                 <span style={{ fontSize: '0.75rem', background: '#3b82f6', color: '#ffffff', padding: '0.15rem 0.55rem', borderRadius: '9999px', fontWeight: 700 }}>
                   {selectedRegion.scriptureRange}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: isRegionUnlocked ? '#34d399' : '#f87171', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.75rem', color: isRegionUnlocked ? '#15803D' : '#B91C1C', fontWeight: 600 }}>
                   {isRegionUnlocked ? '✨ Unlocked Land' : '🔒 Locked Land'}
                 </span>
               </div>
-              <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1.6rem', fontWeight: 900, color: '#ffffff' }}>
+              <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1.6rem', fontWeight: 900, color: '#1E293B' }}>
                 {selectedRegion.name}
               </h2>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1' }}>{selectedRegion.summary}</p>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B' }}>{selectedRegion.summary}</p>
             </div>
 
             <div style={{ textAlign: 'right' }}>
-              <strong style={{ fontSize: '1.4rem', color: '#fbbf24', display: 'block' }}>
+              <strong style={{ fontSize: '1.4rem', color: '#D97706', display: 'block' }}>
                 {completionPercents[selectedRegion.id] || 0}%
               </strong>
-              <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Mastery</small>
+              <small style={{ color: '#64748B', fontSize: '0.75rem' }}>Mastery</small>
             </div>
           </div>
 
           {!isRegionUnlocked ? (
             <div
               style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                border: '1px dashed #ef4444',
+                background: '#FEF2F2',
+                border: '1.5px dashed #DC2626',
                 borderRadius: '12px',
                 padding: '2rem',
                 textAlign: 'center',
-                color: '#cbd5e1',
+                color: '#64748B',
               }}
             >
               <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.5rem' }}>🔒</span>
-              <h3 style={{ color: '#f87171', margin: '0 0 0.5rem 0' }}>This Land is Locked</h3>
+              <h3 style={{ color: '#B91C1C', margin: '0 0 0.5rem 0' }}>This Land is Locked</h3>
               <p style={{ fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto' }}>
                 Requirements to unlock: {selectedRegion.unlockRequirement.map((req) => describeRequirement(req)).join(' and ')}.
               </p>
@@ -401,7 +401,7 @@ export default function AdventurePage() {
           ) : (
             <>
               {/* Location Subtabs */}
-              <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.25rem', overflowX: 'auto' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid #e2e8f1', marginBottom: '1.25rem', overflowX: 'auto' }}>
                 <button
                   type="button"
                   className={`button ${locationTab === 'chapters' ? 'button-primary' : 'button-secondary'}`}
@@ -466,7 +466,7 @@ export default function AdventurePage() {
                     const qMins = getQuestEstimatedMinutes(quest);
 
                     return (
-                      <div key={quest.id} style={{ background: 'rgba(30, 41, 59, 0.6)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div key={quest.id} style={{ background: '#EFF6FF', borderRadius: '12px', padding: '1rem', border: '1.5px solid #1E293B' }}>
                         <QuestCard
                           quest={quest}
                           status={qStatus}
@@ -509,7 +509,7 @@ export default function AdventurePage() {
               {/* TAB 5: SECRETS & COLLECTIBLES */}
               {locationTab === 'secrets' && (
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', color: '#fbbf24', margin: '0 0 0.75rem 0' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#D97706', margin: '0 0 0.75rem 0' }}>
                     Hidden Secrets in {selectedRegion.name}
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -519,17 +519,17 @@ export default function AdventurePage() {
                         <div
                           key={sec.id}
                           style={{
-                            background: 'rgba(30, 41, 59, 0.5)',
-                            border: isDiscovered ? '1px solid #10b981' : '1px dashed rgba(255,255,255,0.2)',
+                            background: isDiscovered ? '#EFFDF4' : '#f4f8fc',
+                            border: isDiscovered ? '1.5px solid #15803D' : '1.5px dashed #94a3b8',
                             borderRadius: '12px',
                             padding: '1rem',
                           }}
                         >
                           <span style={{ fontSize: '2rem' }}>{isDiscovered ? sec.emoji : '❓'}</span>
-                          <strong style={{ display: 'block', fontSize: '0.95rem', color: '#ffffff', margin: '0.25rem 0' }}>
+                          <strong style={{ display: 'block', fontSize: '0.95rem', color: '#1E293B', margin: '0.25rem 0' }}>
                             {isDiscovered ? sec.name : 'Undiscovered Secret'}
                           </strong>
-                          <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0 0 0.75rem 0' }}>
+                          <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 0.75rem 0' }}>
                             {isDiscovered ? 'Secret unlocked!' : `Hint: ${sec.hint}`}
                           </p>
                           {!isDiscovered && (
@@ -547,7 +547,7 @@ export default function AdventurePage() {
                     })}
                   </div>
 
-                  <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', margin: '0 0 0.75rem 0' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#1D4ED8', margin: '0 0 0.75rem 0' }}>
                     Location Collectibles
                   </h3>
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -555,8 +555,8 @@ export default function AdventurePage() {
                       <div
                         key={c.id}
                         style={{
-                          background: 'rgba(30, 41, 59, 0.6)',
-                          border: '1px solid rgba(255,255,255,0.1)',
+                          background: '#EFF6FF',
+                          border: '1.5px solid #1E293B',
                           borderRadius: '10px',
                           padding: '0.75rem 1rem',
                           display: 'flex',
@@ -566,8 +566,8 @@ export default function AdventurePage() {
                       >
                         <span style={{ fontSize: '1.8rem' }}>{c.emoji}</span>
                         <div>
-                          <strong style={{ fontSize: '0.85rem', color: '#ffffff', display: 'block' }}>{c.name}</strong>
-                          <small style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{c.description}</small>
+                          <strong style={{ fontSize: '0.85rem', color: '#1E293B', display: 'block' }}>{c.name}</strong>
+                          <small style={{ fontSize: '0.72rem', color: '#64748B' }}>{c.description}</small>
                         </div>
                       </div>
                     ))}

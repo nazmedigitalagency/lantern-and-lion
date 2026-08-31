@@ -72,8 +72,8 @@ export function QuestCard({
       onClick={onSelect}
       aria-label={`${title}. ${QUEST_STATUS_LABEL[status]}.`}
       style={{
-        background: 'rgba(30, 41, 59, 0.6)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: '#ffffff',
+        border: '1.5px solid #1E293B',
         borderRadius: '12px',
         padding: '1rem',
         display: 'flex',
@@ -82,7 +82,7 @@ export function QuestCard({
         textAlign: 'left',
         cursor: status === 'locked' ? 'not-allowed' : 'pointer',
         width: '100%',
-        color: '#f8fafc',
+        color: '#1E293B',
       }}
     >
       <span style={{ fontSize: '2rem' }} aria-hidden="true">
@@ -93,11 +93,11 @@ export function QuestCard({
           <strong style={{ fontSize: '1rem' }}>{title}</strong>
           <QuestStatusPill status={status} />
         </div>
-        <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8' }}>{theme}</p>
-        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.4rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
+        <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>{theme}</p>
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.4rem', fontSize: '0.75rem', color: '#64748B' }}>
           <DifficultyStars level={quest.difficulty} />
           <span>⏱️ ~{estimatedMinutes} min</span>
-          <span style={{ color: '#fbbf24' }}>⭐ +{quest.reward.xp} XP</span>
+          <span style={{ color: '#D97706' }}>⭐ +{quest.reward.xp} XP</span>
         </div>
       </div>
     </button>
@@ -129,11 +129,11 @@ export function WorldMapCanvas({
         position: 'relative',
         width: '100%',
         minHeight: '440px',
-        background: '#0f172a',
+        background: '#EFF6FF',
         borderRadius: '20px',
-        border: '1.5px solid rgba(255, 255, 255, 0.1)',
+        border: '2px solid #1E293B',
         overflow: 'hidden',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+        boxShadow: '6px 6px 0 #8B5CF6',
         padding: '2rem 1rem',
       }}
     >
@@ -148,16 +148,7 @@ export function WorldMapCanvas({
           pointerEvents: 'none',
         }}
       >
-        <defs>
-          <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="30%" stopColor="#06b6d4" />
-            <stop offset="60%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#8b5cf6" />
-          </linearGradient>
-        </defs>
-
-        {/* Dynamic connecting lines */}
+        {/* Dynamic connecting lines — flat navy dotted path, no gradients */}
         {regions.map((r, i) => {
           const next = regions[i + 1];
           if (!next) return null;
@@ -168,10 +159,10 @@ export function WorldMapCanvas({
               y1={`${r.mapPosition.y}%`}
               x2={`${next.mapPosition.x}%`}
               y2={`${next.mapPosition.y}%`}
-              stroke="url(#pathGradient)"
+              stroke="#1E293B"
               strokeWidth="3"
               strokeDasharray="6 6"
-              opacity="0.6"
+              opacity="0.35"
             />
           );
         })}
@@ -208,7 +199,7 @@ export function WorldMapCanvas({
                     width: '54px',
                     height: '54px',
                     zIndex: 30,
-                    filter: 'drop-shadow(0 4px 10px rgba(56, 189, 248, 0.6))',
+                    filter: 'drop-shadow(0 4px 10px rgba(59, 130, 246, 0.5))',
                   }}
                 >
                   <CharacterAvatar
@@ -223,8 +214,8 @@ export function WorldMapCanvas({
                       bottom: '-12px',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      background: '#38bdf8',
-                      color: '#0f172a',
+                      background: '#1D4ED8',
+                      color: '#ffffff',
                       fontSize: '0.65rem',
                       fontWeight: 900,
                       padding: '0.1rem 0.35rem',
@@ -246,26 +237,28 @@ export function WorldMapCanvas({
                   height: '56px',
                   borderRadius: '50%',
                   background: isLocked
-                    ? '#334155'
+                    ? '#eef3f7'
                     : status === 'completed'
-                    ? '#059669'
+                    ? '#22C55E'
                     : isCurrent
-                    ? '#2563eb'
-                    : '#1e293b',
+                    ? '#3B82F6'
+                    : '#FBBF24',
                   border: isCurrent
-                    ? '3px solid #38bdf8'
+                    ? '3px solid #1D4ED8'
                     : status === 'completed'
-                    ? '2px solid #34d399'
-                    : '2px solid rgba(255,255,255,0.2)',
-                  color: '#ffffff',
+                    ? '2px solid #15803D'
+                    : isLocked
+                    ? '2px solid #7c8fa0'
+                    : '2px solid #1E293B',
+                  color: isLocked ? '#7c8fa0' : '#1E293B',
                   fontSize: '1.6rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: isLocked ? 'not-allowed' : 'pointer',
                   boxShadow: isCurrent
-                    ? '0 0 20px rgba(56, 189, 248, 0.8)'
-                    : '0 8px 16px rgba(0,0,0,0.3)',
+                    ? '0 0 0 6px rgba(29, 78, 216, 0.18)'
+                    : '0 4px 10px rgba(30, 41, 59, 0.18)',
                   transition: 'transform 0.2s ease',
                   margin: '0 auto',
                 }}
@@ -280,8 +273,7 @@ export function WorldMapCanvas({
                     display: 'block',
                     fontSize: '0.8rem',
                     fontWeight: 800,
-                    color: isLocked ? '#64748b' : '#f8fafc',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                    color: isLocked ? '#7c8fa0' : '#1E293B',
                     whiteSpace: 'nowrap',
                   }}
                 >
@@ -290,7 +282,7 @@ export function WorldMapCanvas({
                 <small
                   style={{
                     fontSize: '0.68rem',
-                    color: status === 'completed' ? '#34d399' : '#94a3b8',
+                    color: status === 'completed' ? '#15803D' : '#64748B',
                     display: 'block',
                   }}
                 >
@@ -318,8 +310,8 @@ export function StoryChapterReader({
   return (
     <article
       style={{
-        background: 'rgba(30, 41, 59, 0.5)',
-        border: '1.5px solid rgba(255, 255, 255, 0.1)',
+        background: '#ffffff',
+        border: '2px solid #1E293B',
         borderRadius: '16px',
         padding: '1.5rem',
         marginBottom: '1rem',
@@ -329,24 +321,24 @@ export function StoryChapterReader({
         <span style={{ fontSize: '0.75rem', background: '#3b82f6', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 700 }}>
           Chapter {chapter.chapterNumber}
         </span>
-        <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>📖 {chapter.scriptureReference}</small>
+        <small style={{ color: '#64748B', fontSize: '0.75rem' }}>📖 {chapter.scriptureReference}</small>
       </div>
 
-      <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#f8fafc' }}>
+      <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#1E293B' }}>
         {chapter.title}
       </h3>
-      <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#38bdf8' }}>{chapter.subtitle}</p>
+      <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#1D4ED8' }}>{chapter.subtitle}</p>
 
       {/* Scripture Box */}
       <blockquote
         style={{
-          background: 'rgba(15, 23, 42, 0.7)',
-          borderLeft: '4px solid #fbbf24',
+          background: '#FFFBEB',
+          borderLeft: '4px solid #D97706',
           margin: '1rem 0',
           padding: '0.85rem 1.1rem',
           borderRadius: '0 8px 8px 0',
           fontStyle: 'italic',
-          color: '#fef08a',
+          color: '#92400e',
           fontSize: '0.9rem',
           lineHeight: 1.6,
         }}
@@ -355,18 +347,18 @@ export function StoryChapterReader({
       </blockquote>
 
       {/* Narrative Explanation */}
-      <div style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6, margin: '1rem 0' }}>
+      <div style={{ fontSize: '0.9rem', color: '#334155', lineHeight: 1.6, margin: '1rem 0' }}>
         <p>{chapter.narrativeExplanation}</p>
       </div>
 
       {/* Takeaway message */}
       <div
         style={{
-          background: 'rgba(6, 95, 70, 0.3)',
-          border: '1px solid #059669',
+          background: '#EFFDF4',
+          border: '1.5px solid #15803D',
           padding: '0.75rem 1rem',
           borderRadius: '8px',
-          color: '#a7f3d0',
+          color: '#15803D',
           fontSize: '0.85rem',
           marginBottom: '1.25rem',
         }}
@@ -399,25 +391,25 @@ export function MemoryVerseTrainer({ verse }: { verse: MemoryVerseChallenge }) {
   return (
     <div
       style={{
-        background: 'rgba(21, 94, 239, 0.25)',
-        border: '1.5px solid #38bdf8',
+        background: '#EFF6FF',
+        border: '2px solid #1E293B',
         borderRadius: '16px',
         padding: '1.5rem',
         margin: '1rem 0',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-        <span style={{ fontSize: '0.75rem', background: '#0284c7', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 700 }}>
+        <span style={{ fontSize: '0.75rem', background: '#1D4ED8', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 700 }}>
           📜 Memory Verse
         </span>
-        <small style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Theme: {verse.theme}</small>
+        <small style={{ color: '#64748B', fontSize: '0.75rem' }}>Theme: {verse.theme}</small>
       </div>
 
-      <h4 style={{ margin: '0.25rem 0 0.75rem 0', fontSize: '1.1rem', color: '#38bdf8' }}>
+      <h4 style={{ margin: '0.25rem 0 0.75rem 0', fontSize: '1.1rem', color: '#1D4ED8' }}>
         {verse.reference} ({verse.translation})
       </h4>
 
-      <p style={{ fontSize: '1.05rem', lineHeight: 1.6, color: '#ffffff', margin: '0.75rem 0' }}>
+      <p style={{ fontSize: '1.05rem', lineHeight: 1.6, color: '#1E293B', margin: '0.75rem 0' }}>
         {showAnswer
           ? verse.text
           : verse.text.split(' ').map((word, i) => {
@@ -427,11 +419,13 @@ export function MemoryVerseTrainer({ verse }: { verse: MemoryVerseChallenge }) {
                   <span
                     key={i}
                     style={{
-                      background: 'rgba(255,255,255,0.15)',
+                      background: '#FFFBEB',
+                      border: '1px solid #D97706',
                       padding: '0.1rem 0.4rem',
                       borderRadius: '4px',
                       margin: '0 0.15rem',
-                      color: '#fbbf24',
+                      color: '#92400e',
+                      fontWeight: 700,
                     }}
                   >
                     ______
@@ -509,20 +503,20 @@ export function KnowledgeBossArena({
     return (
       <div
         style={{
-          background: 'rgba(18, 143, 118, 0.3)',
-          border: '2px solid #34d399',
+          background: '#EFFDF4',
+          border: '2px solid #15803D',
           borderRadius: '16px',
           padding: '1.75rem',
           textAlign: 'center',
-          color: '#ffffff',
+          color: '#1E293B',
           margin: '1rem 0',
         }}
       >
         <span style={{ fontSize: '3rem' }}>🏆</span>
-        <h3 style={{ margin: '0.5rem 0', fontSize: '1.4rem', color: '#34d399' }}>
+        <h3 style={{ margin: '0.5rem 0', fontSize: '1.4rem', color: '#15803D' }}>
           {boss.title} Mastered!
         </h3>
-        <p style={{ fontSize: '0.9rem', color: '#a7f3d0' }}>
+        <p style={{ fontSize: '0.9rem', color: '#15803D' }}>
           You proved your mastery over this location and claimed the {boss.reward.badgeName}!
         </p>
         <button
@@ -545,20 +539,20 @@ export function KnowledgeBossArena({
     return (
       <div
         style={{
-          background: 'rgba(128, 87, 217, 0.3)',
-          border: '2px solid #a855f7',
+          background: '#F5F3FF',
+          border: '2px solid #8B5CF6',
           borderRadius: '16px',
           padding: '1.75rem',
           textAlign: 'center',
-          color: '#ffffff',
+          color: '#1E293B',
           margin: '1rem 0',
         }}
       >
         <span style={{ fontSize: '3.5rem' }}>{boss.bossEmoji}</span>
-        <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.4rem', color: '#e9d5ff' }}>
+        <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.4rem', color: '#7C3AED' }}>
           {boss.title}
         </h3>
-        <p style={{ fontSize: '0.9rem', color: '#cbd5e1', maxWidth: '520px', margin: '0 auto 1.25rem auto' }}>
+        <p style={{ fontSize: '0.9rem', color: '#334155', maxWidth: '520px', margin: '0 auto 1.25rem auto' }}>
           {boss.description}
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
@@ -588,21 +582,21 @@ export function KnowledgeBossArena({
     return (
       <div
         style={{
-          background: 'rgba(15, 23, 42, 0.85)',
-          border: '2px solid #a855f7',
+          background: '#ffffff',
+          border: '2px solid #8B5CF6',
           borderRadius: '16px',
           padding: '1.75rem',
           margin: '1rem 0',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <span style={{ fontSize: '0.75rem', background: '#7e22ce', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 700 }}>
+          <span style={{ fontSize: '0.75rem', background: '#7C3AED', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 700 }}>
             Question {currentQIndex + 1} of {boss.questions.length}
           </span>
-          <span style={{ color: '#fbbf24', fontSize: '0.85rem', fontWeight: 700 }}>Score: {score}</span>
+          <span style={{ color: '#D97706', fontSize: '0.85rem', fontWeight: 700 }}>Score: {score}</span>
         </div>
 
-        <h4 style={{ margin: '0 0 1.25rem 0', fontSize: '1.15rem', color: '#f8fafc', lineHeight: 1.4 }}>
+        <h4 style={{ margin: '0 0 1.25rem 0', fontSize: '1.15rem', color: '#1E293B', lineHeight: 1.4 }}>
           {q.prompt}
         </h4>
 
@@ -611,13 +605,13 @@ export function KnowledgeBossArena({
             const isSelected = selectedOption === idx;
             const isCorrect = idx === q.correctIndex;
             let btnStyle = {
-              background: 'rgba(30, 41, 59, 0.6)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: '#f8fafc',
+              background: '#f4f8fc',
+              border: '1.5px solid #1E293B',
+              color: '#1E293B',
             };
             if (answered) {
-              if (isCorrect) btnStyle = { background: '#065f46', border: '1px solid #10b981', color: '#ffffff' };
-              else if (isSelected) btnStyle = { background: '#991b1b', border: '1px solid #ef4444', color: '#ffffff' };
+              if (isCorrect) btnStyle = { background: '#EFFDF4', border: '1.5px solid #15803D', color: '#15803D' };
+              else if (isSelected) btnStyle = { background: '#FEF2F2', border: '1.5px solid #DC2626', color: '#B91C1C' };
             }
 
             return (
@@ -643,8 +637,8 @@ export function KnowledgeBossArena({
         </div>
 
         {answered && (
-          <div style={{ marginTop: '1.25rem', padding: '0.85rem', background: 'rgba(30, 41, 59, 0.8)', borderRadius: '8px', borderLeft: '4px solid #38bdf8' }}>
-            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#cbd5e1' }}>{q.explanation}</p>
+          <div style={{ marginTop: '1.25rem', padding: '0.85rem', background: '#EFF6FF', borderRadius: '8px', borderLeft: '4px solid #1D4ED8' }}>
+            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#334155' }}>{q.explanation}</p>
             <button
               type="button"
               className="button button-primary"
@@ -663,17 +657,17 @@ export function KnowledgeBossArena({
     return (
       <div
         style={{
-          background: 'rgba(15, 23, 42, 0.85)',
-          border: '2px solid #a855f7',
+          background: '#ffffff',
+          border: '2px solid #8B5CF6',
           borderRadius: '16px',
           padding: '1.75rem',
           margin: '1rem 0',
         }}
       >
-        <span style={{ fontSize: '0.75rem', background: '#7e22ce', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 700 }}>
+        <span style={{ fontSize: '0.75rem', background: '#7C3AED', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 700 }}>
           Final Challenge Stage
         </span>
-        <h4 style={{ margin: '0.5rem 0 1rem 0', fontSize: '1.15rem', color: '#f8fafc' }}>
+        <h4 style={{ margin: '0.5rem 0 1rem 0', fontSize: '1.15rem', color: '#1E293B' }}>
           {boss.storyReconstruction.prompt}
         </h4>
 
@@ -682,18 +676,18 @@ export function KnowledgeBossArena({
             <div
               key={i}
               style={{
-                background: 'rgba(30, 41, 59, 0.7)',
-                border: '1px solid #38bdf8',
+                background: '#EFF6FF',
+                border: '1.5px solid #1D4ED8',
                 borderRadius: '8px',
                 padding: '0.75rem 1rem',
                 fontSize: '0.85rem',
-                color: '#e2e8f0',
+                color: '#1E293B',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.75rem',
               }}
             >
-              <span style={{ background: '#0284c7', color: '#ffffff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800 }}>
+              <span style={{ background: '#1D4ED8', color: '#ffffff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800 }}>
                 {i + 1}
               </span>
               <span>{ev}</span>
@@ -716,27 +710,27 @@ export function KnowledgeBossArena({
   return (
     <div
       style={{
-        background: '#0f172a',
-        border: '2px solid #34d399',
+        background: '#EFFDF4',
+        border: '2px solid #15803D',
         borderRadius: '16px',
         padding: '2rem',
         textAlign: 'center',
-        color: '#ffffff',
+        color: '#1E293B',
         margin: '1rem 0',
       }}
     >
       <span style={{ fontSize: '3.5rem' }}>🎉</span>
-      <h3 style={{ margin: '0.5rem 0', fontSize: '1.5rem', color: '#34d399' }}>
+      <h3 style={{ margin: '0.5rem 0', fontSize: '1.5rem', color: '#15803D' }}>
         Victory! {boss.title} Complete!
       </h3>
-      <p style={{ fontSize: '0.95rem', color: '#a7f3d0' }}>
+      <p style={{ fontSize: '0.95rem', color: '#15803D' }}>
         You earned the <strong>{boss.reward.badgeName}</strong> badge, +{boss.reward.xp} XP, +{boss.reward.coins} Coins, and +{boss.reward.gems} Gems!
       </p>
       {boss.reward.specialCollectible && (
-        <div style={{ margin: '1rem 0', padding: '0.75rem', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', display: 'inline-block' }}>
+        <div style={{ margin: '1rem 0', padding: '0.75rem', background: '#FFFBEB', borderRadius: '10px', display: 'inline-block' }}>
           <span style={{ fontSize: '2rem' }}>{boss.reward.specialCollectible.emoji}</span>
-          <strong style={{ display: 'block', color: '#fde047' }}>{boss.reward.specialCollectible.name}</strong>
-          <small style={{ color: '#cbd5e1' }}>Added to your collectible pouch!</small>
+          <strong style={{ display: 'block', color: '#92400e' }}>{boss.reward.specialCollectible.name}</strong>
+          <small style={{ color: '#64748B' }}>Added to your collectible pouch!</small>
         </div>
       )}
     </div>
@@ -762,43 +756,43 @@ export function CollectiblesPouchModal({
         style={{
           maxWidth: '560px',
           width: '95%',
-          background: '#0f172a',
-          color: '#f8fafc',
+          background: '#ffffff',
+          color: '#1E293B',
           padding: '2rem',
           borderRadius: '16px',
-          border: '1.5px solid #38bdf8',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+          border: '2px solid #1E293B',
+          boxShadow: '0 20px 40px rgba(16, 42, 67, 0.25)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="pouch-title" style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 0.5rem 0', color: '#38bdf8' }}>
+        <h2 id="pouch-title" style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 0.5rem 0', color: '#1D4ED8' }}>
           🎒 World Collectibles &amp; Secrets
         </h2>
-        <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.25rem 0' }}>
+        <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 1.25rem 0' }}>
           Rare artifacts and hidden treasures discovered across your biblical journeys.
         </p>
 
-        <h3 style={{ fontSize: '1rem', color: '#fbbf24', margin: '1rem 0 0.5rem 0' }}>
+        <h3 style={{ fontSize: '1rem', color: '#D97706', margin: '1rem 0 0.5rem 0' }}>
           Artifacts Collected ({collectibles.length})
         </h3>
         {collectibles.length === 0 ? (
-          <p style={{ fontSize: '0.85rem', color: '#64748b' }}>No collectibles found yet. Explore regions and defeat Knowledge Bosses!</p>
+          <p style={{ fontSize: '0.85rem', color: '#7c8fa0' }}>No collectibles found yet. Explore regions and defeat Knowledge Bosses!</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             {collectibles.map((c) => (
               <div
                 key={c.id}
                 style={{
-                  background: 'rgba(30, 41, 59, 0.6)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: '#EFF6FF',
+                  border: '1.5px solid #1E293B',
                   borderRadius: '10px',
                   padding: '0.75rem',
                   textAlign: 'center',
                 }}
               >
                 <span style={{ fontSize: '2rem' }}>{c.emoji}</span>
-                <strong style={{ display: 'block', fontSize: '0.85rem', color: '#ffffff' }}>{c.name}</strong>
-                <small style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{c.description}</small>
+                <strong style={{ display: 'block', fontSize: '0.85rem', color: '#1E293B' }}>{c.name}</strong>
+                <small style={{ fontSize: '0.72rem', color: '#64748B' }}>{c.description}</small>
               </div>
             ))}
           </div>
