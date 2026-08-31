@@ -658,16 +658,20 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 
 .kid-nav-item {
+  width: 100%;
   min-height: 46px;
   padding: 0 14px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   border: 2px solid transparent;
   border-radius: 14px;
   background: transparent;
   color: var(--navy);
   font: 900 14px var(--font-nunito);
+  text-align: left;
   text-decoration: none;
   cursor: pointer;
   transition: transform 120ms ease, background 120ms ease;
@@ -760,7 +764,15 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 36px;
+}
+
+/* Direct stack of major "Today" cards (hero banner, 3-card row, bottom
+   grid) — was unstyled, so the sections had zero space between them. */
+.kid-dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
 }
 
 .kid-hud-chip.chip-stars {
@@ -1078,7 +1090,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .kid-three-cards-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 24px;
 }
 
 .kid-action-card {
@@ -1176,7 +1188,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .kid-bottom-grid {
   display: grid;
   grid-template-columns: 1.35fr 0.65fr;
-  gap: 16px;
+  gap: 24px;
   align-items: stretch;
 }
 
