@@ -129,7 +129,7 @@ export function WorldMapCanvas({
         position: 'relative',
         width: '100%',
         minHeight: '440px',
-        background: 'radial-gradient(ellipse at center, #1e293b 0%, #090d16 100%)',
+        background: '#0f172a',
         borderRadius: '20px',
         border: '1.5px solid rgba(255, 255, 255, 0.1)',
         overflow: 'hidden',
@@ -399,7 +399,7 @@ export function MemoryVerseTrainer({ verse }: { verse: MemoryVerseChallenge }) {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.7) 100%)',
+        background: 'rgba(21, 94, 239, 0.25)',
         border: '1.5px solid #38bdf8',
         borderRadius: '16px',
         padding: '1.5rem',
@@ -509,7 +509,7 @@ export function KnowledgeBossArena({
     return (
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)',
+          background: 'rgba(18, 143, 118, 0.3)',
           border: '2px solid #34d399',
           borderRadius: '16px',
           padding: '1.75rem',
@@ -545,7 +545,7 @@ export function KnowledgeBossArena({
     return (
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.5) 0%, rgba(15, 23, 42, 0.85) 100%)',
+          background: 'rgba(128, 87, 217, 0.3)',
           border: '2px solid #a855f7',
           borderRadius: '16px',
           padding: '1.75rem',
@@ -716,7 +716,7 @@ export function KnowledgeBossArena({
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #064e3b 0%, #0f172a 100%)',
+        background: '#0f172a',
         border: '2px solid #34d399',
         borderRadius: '16px',
         padding: '2rem',

@@ -38,7 +38,7 @@ export function CertificateModal({ certificate, onClose }: CertificateModalProps
             border: '2px dashed #cbd5e1',
             borderRadius: '12px',
             padding: '2rem 1.5rem',
-            background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+            background: '#ffffff',
           }}
         >
           {/* Header Emblem */}

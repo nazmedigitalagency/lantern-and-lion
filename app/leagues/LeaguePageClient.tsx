@@ -127,7 +127,7 @@ export default function LeaguePageClient() {
         {/* Season Hero Banner */}
         <section
           style={{
-            background: `linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)`,
+            background: '#0f172a',
             border: `2px solid ${progress.currentTier.badgeTone}`,
             borderRadius: '20px',
             padding: '1.75rem',
@@ -172,7 +172,7 @@ export default function LeaguePageClient() {
                     style={{
                       width: `${progress.progressPercent}%`,
                       height: '100%',
-                      background: `linear-gradient(90deg, ${progress.currentTier.badgeTone}, ${progress.nextTier.badgeTone})`,
+                      background: progress.nextTier.badgeTone,
                       borderRadius: '9999px',
                     }}
                   />
@@ -264,7 +264,7 @@ export default function LeaguePageClient() {
                         gap: '0.85rem',
                         alignItems: 'center',
                         background: p.isCurrentUser
-                          ? 'linear-gradient(90deg, rgba(30, 58, 138, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)'
+                          ? 'rgba(21, 94, 239, 0.35)'
                           : 'rgba(30, 41, 59, 0.4)',
                         border: p.isCurrentUser
                           ? '1.5px solid #38bdf8'

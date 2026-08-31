@@ -743,7 +743,7 @@ export default function TeenDashboardPage() {
             const advCtx = loadWorldContext(teen.id, 'teen');
             const next = getNextMissionRecommendation(advCtx);
             return (
-              <section className="teen-daily-card" style={{ border: '1.5px solid #38bdf8', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 58, 138, 0.4) 100%)' }}>
+              <section className="teen-daily-card" style={{ border: '1.5px solid #38bdf8', background: 'rgba(21, 94, 239, 0.25)' }}>
                 <div className="teen-daily-head">
                   <span aria-hidden="true" style={{ fontSize: '1.75rem' }}>{next.region.icon}</span>
                   <div>

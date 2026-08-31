@@ -223,7 +223,7 @@ export default function AdventurePage() {
         {/* Hero Mission Bar */}
         <section
           style={{
-            background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.5) 0%, rgba(15, 23, 42, 0.85) 100%)',
+            background: 'rgba(21, 94, 239, 0.3)',
             border: '1.5px solid #38bdf8',
             borderRadius: '18px',
             padding: '1.25rem 1.5rem',
