@@ -62,6 +62,7 @@ export default function AdventurePage() {
 
   const [selectedRegionId, setSelectedRegionId] = useState<RegionId>('creation');
   const [locationTab, setLocationTab] = useState<LocationTab>('chapters');
+  const [showRegionModal, setShowRegionModal] = useState(false);
   const [showPouch, setShowPouch] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -257,6 +258,7 @@ export default function AdventurePage() {
               setSelectedRegionId(nextMission.region.id);
               if (nextMission.type === 'boss') setLocationTab('boss');
               else setLocationTab('chapters');
+              setShowRegionModal(true);
             }}
             style={{ padding: '0.65rem 1.25rem', fontSize: '0.9rem', fontWeight: 800 }}
           >
@@ -283,20 +285,66 @@ export default function AdventurePage() {
             onSelectRegion={(reg) => {
               setSelectedRegionId(reg.id);
               setLocationTab('chapters');
+              setShowRegionModal(true);
             }}
           />
         </section>
 
-        {/* 📍 Selected Location Detail Explorer */}
-        <section
+        {/* 📍 Selected Location Detail Explorer — a popup over the map instead
+            of a section further down the page, since nothing on the map
+            hinted that scrolling would reveal it. */}
+        {showRegionModal && (
+        <div
+          role="presentation"
+          onClick={() => setShowRegionModal(false)}
           style={{
-            background: 'rgba(30, 41, 59, 0.4)',
+            position: 'fixed',
+            inset: 0,
+            zIndex: 90,
+            display: 'grid',
+            placeItems: 'center',
+            padding: '20px',
+            background: 'rgba(2, 6, 15, 0.72)',
+          }}
+        >
+        <section
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'relative',
+            width: 'min(880px, 100%)',
+            maxHeight: '88vh',
+            overflowY: 'auto',
+            background: 'rgba(15, 23, 42, 0.98)',
             border: '1.5px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '20px',
             padding: '1.75rem',
-            boxShadow: '0 15px 35px rgba(0,0,0,0.4)',
+            boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
           }}
         >
+          <button
+            type="button"
+            onClick={() => setShowRegionModal(false)}
+            aria-label="Close"
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              width: 38,
+              height: 38,
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: '50%',
+              border: '1.5px solid rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#fff',
+              fontSize: '1.1rem',
+              cursor: 'pointer',
+            }}
+          >
+            ✕
+          </button>
           {/* Location Header */}
           <div
             style={{
@@ -529,6 +577,8 @@ export default function AdventurePage() {
             </>
           )}
         </section>
+        </div>
+        )}
       </div>
 
       {showPouch && (
