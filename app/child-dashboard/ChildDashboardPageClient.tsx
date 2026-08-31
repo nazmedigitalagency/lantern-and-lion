@@ -258,8 +258,20 @@ export default function ChildDashboardPage() {
     const modules = curriculumModules.filter((m) => m.track === track);
     const progress = c.id === activeId ? moduleProgress : readModuleProgressForChild(c.id);
     const done = modules.reduce((sum, m) => sum + (progress[m.id]?.completedIndices.length || 0), 0);
-    const childW = getWallet(c.id);
-    return { track, done, points: childW.xp > 0 ? childW.xp : done * 8 };
+    const childW = c.id === activeId ? wallet : getWallet(c.id);
+    const points = childW.xp > 0 ? childW.xp : done * 8;
+    const childLevel = c.id === activeId ? levelInfo : getCurrentLevel(c.id);
+    return {
+      track,
+      done,
+      points,
+      coins: childW.coins,
+      gems: childW.gems,
+      level: childLevel?.level ?? Math.floor(points / 100) + 1,
+      levelTitle: childLevel?.title ?? 'New Explorer',
+      appearance: readAppearance(c.id),
+      equipment: readEquipment(c.id),
+    };
   }
 
   const filteredModules = trackModules.filter((m) => {
@@ -473,24 +485,24 @@ export default function ChildDashboardPage() {
             </Link>
 
             {/* 3. Stories */}
-            <Link
-              href="/stories"
+            <button
+              type="button"
               className={`kid-nav-item ${activeTab === 'stories' ? 'active' : ''}`}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => { setActiveTab('stories'); setMobileMenuOpen(false); }}
             >
               <span className="kid-nav-icon" aria-hidden="true">📖</span>
               <span>Stories</span>
-            </Link>
+            </button>
 
             {/* 4. Arcade */}
-            <Link
-              href="/arcade"
+            <button
+              type="button"
               className={`kid-nav-item ${activeTab === 'arcade' ? 'active' : ''}`}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => { setActiveTab('arcade'); setMobileMenuOpen(false); }}
             >
               <span className="kid-nav-icon" aria-hidden="true">🎮</span>
               <span>Arcade</span>
-            </Link>
+            </button>
 
             {/* 5. Leagues */}
             <Link
@@ -932,23 +944,32 @@ export default function ChildDashboardPage() {
             <div className="family-modal-badge">👨‍👩‍👧</div>
             <p className="child-kicker">Family Account</p>
             <h2>{familyData.familyName}</h2>
+            <p className="family-modal-parent-line">Grown-up: {familyData.parentName}</p>
             <div className="family-modal-child-grid">
               {children.map((c) => {
                 const s = statsForChild(c);
                 return (
                   <div key={c.id} className={`family-score-card ${c.id === activeId ? 'current' : ''}`}>
-                    <div className="fam-card-avatar">{c.name.slice(0, 1)}</div>
+                    <div className="fam-card-avatar-frame">
+                      <CharacterAvatar appearance={s.appearance} equipment={s.equipment} size="small" showPedestal={false} />
+                    </div>
                     <div className="fam-card-info">
                       <strong>{c.name} {c.id === activeId ? '(You)' : ''}</strong>
-                      <small>{c.age} years old · {s.done} lessons</small>
-                    </div>
-                    <div className="fam-card-points">
-                      <b>⭐ {s.points}</b>
+                      <small>{c.age} years old · Level {s.level} {s.levelTitle}</small>
+                      <div className="fam-card-stat-row">
+                        <span className="fam-stat-chip chip-xp">⭐ {s.points} XP</span>
+                        <span className="fam-stat-chip chip-coins">🪙 {s.coins}</span>
+                        <span className="fam-stat-chip chip-gems">💎 {s.gems}</span>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+            <p className="family-modal-privacy-note">
+              🔒 You can see how everyone in your family is doing, but each person’s sign-in stays private —
+              only they can play on their own profile, and grown-up settings aren’t shown here.
+            </p>
             <button type="button" className="family-modal-close-btn" onClick={() => setShowFamilyModal(false)}>
               Close Overview
             </button>
