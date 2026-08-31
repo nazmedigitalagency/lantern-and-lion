@@ -15,6 +15,7 @@ import { getSeasonXp, getLeaguePod } from '../lib/leagues/storage';
 import { canonicalRegions } from '../adventure/world-data';
 import { getRegionCompletionPercent, getCurrentRegionId } from '../adventure/progression';
 import { loadWorldContext } from '../adventure/storage';
+import { signOutOfPersona } from '../lib/session';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Family = { familyName: string; country: string; children: Child[]; privateArtwork: boolean; teacherMessages: boolean; progressEmails: boolean };
@@ -325,7 +326,15 @@ export default function ParentDashboardPage() {
         <div className="parent-sidebar-bottom">
           <a href={`/child-dashboard?preview=1&child=${activeChild.id}`}>Preview child space</a>
           <a href="/family-setup">Edit family &amp; profiles</a>
-          <a href="/parent-access" onClick={() => localStorage.removeItem('lanternLionDemoSession')}>Sign out</a>
+          <a
+            href="/parent-access"
+            onClick={(event) => {
+              event.preventDefault();
+              signOutOfPersona('parent').finally(() => router.push('/parent-access'));
+            }}
+          >
+            Sign out
+          </a>
         </div>
       </aside>
 

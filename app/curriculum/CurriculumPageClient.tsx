@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
 import StudioAudioPlayer from '../components/StudioAudioPlayer';
 import { studioTTS } from '../lib/tts-service';
+import { signOutOfPersona } from '../lib/session';
 
 type ActiveUser = {
   persona: 'child' | 'teen' | 'parent' | 'teacher';
@@ -137,17 +138,7 @@ export default function CurriculumPage() {
   }, []);
 
   function handleSignOut() {
-    if (activeUser?.persona === 'child') {
-      localStorage.removeItem('lanternLionChildSession');
-      localStorage.removeItem('lanternLionActiveChildId');
-    } else if (activeUser?.persona === 'teen') {
-      localStorage.removeItem('lanternLionTeenSession');
-      localStorage.removeItem('lanternLionActiveChildId');
-    } else if (activeUser?.persona === 'parent') {
-      localStorage.removeItem('lanternLionDemoSession');
-    } else if (activeUser?.persona === 'teacher') {
-      localStorage.removeItem('lanternLionTeacherSession');
-    }
+    if (activeUser) void signOutOfPersona(activeUser.persona);
     setActiveUser(null);
     setUserDropdownOpen(false);
     setMenuOpen(false);

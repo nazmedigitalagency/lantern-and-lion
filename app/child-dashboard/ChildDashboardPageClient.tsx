@@ -24,6 +24,7 @@ import type { Wallet } from '../lib/economy/types';
 import type { LevelInfo } from '../lib/xp-levels';
 import { GAME_DEFINITIONS } from '../arcade/catalog';
 import { STORY_CATALOG } from '../stories/catalog';
+import { signOutOfPersona } from '../lib/session';
 
 // id is a number for a locally-created demo profile, or a UUID string for
 // an account fetched from the real server (see /api/child-auth/login).
@@ -428,7 +429,11 @@ export default function ChildDashboardPage() {
                 >
                   👨‍👩‍👧 Family Progress Overview
                 </button>
-                <Link href="/child-access" className="child-signout-link">
+                <Link
+                  href="/child-access"
+                  className="child-signout-link"
+                  onClick={() => { void signOutOfPersona('child'); }}
+                >
                   Sign out / Switch account
                 </Link>
               </div>

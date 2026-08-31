@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { signOutOfPersona } from '../lib/session';
 
 type ActiveUser = {
   persona: 'child' | 'teen' | 'parent' | 'teacher';
@@ -72,15 +73,7 @@ export default function ChurchesPage() {
   }, []);
 
   function handleSignOut() {
-    if (activeUser?.persona === 'child') {
-      localStorage.removeItem('lanternLionChildSession');
-    } else if (activeUser?.persona === 'teen') {
-      localStorage.removeItem('lanternLionTeenSession');
-    } else if (activeUser?.persona === 'parent') {
-      localStorage.removeItem('lanternLionDemoSession');
-    } else if (activeUser?.persona === 'teacher') {
-      localStorage.removeItem('lanternLionTeacherSession');
-    }
+    if (activeUser) void signOutOfPersona(activeUser.persona);
     setActiveUser(null);
     setUserDropdownOpen(false);
     setMenuOpen(false);

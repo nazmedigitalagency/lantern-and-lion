@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getTierForXp, LEAGUE_TIERS } from '../lib/leagues/config';
 import { canonicalRegions } from '../adventure/world-data';
+import { signOutOfPersona } from '../lib/session';
 
 type Page='overview'|'classes'|'assignments'|'messages'|'safety';
 type Student={id:number;name:string;age:number;progress:number;needsHelp:boolean;parent:string;approved:boolean};
@@ -114,7 +115,7 @@ export default function TeacherDashboardPage(){
    else next=[...assignments,{id:nextId(),classId:classroom.id,title:lesson,due,completed:0}];
    setAssignments(next);localStorage.setItem('lanternLionTeacherAssignments',JSON.stringify(next));setNotice(existing?'The due date was updated.':`${lesson} was assigned to ${classroom.name}.`);
  }
- function signOut(){localStorage.removeItem('lanternLionTeacherSession');}
+ function signOut(){void signOutOfPersona('teacher');}
  const nav:Array<[Page,string,string]>=[['overview','O','Overview'],['classes','C','Classes'],['assignments','A','Assignments'],['messages','M','Parent messages'],['safety','S','Safety']];
  if(!hydrated)return <main className="dashboard-loading"><span></span><p>Opening the teacher space…</p></main>;
  if(!classroom)return <main className="dashboard-loading" aria-live="polite"><span></span><p>Create your first class to get started.</p></main>;
