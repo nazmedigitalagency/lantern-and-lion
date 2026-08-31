@@ -651,8 +651,11 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 
 .kid-sidebar-nav {
+  width: 100%;
+  margin: 0;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 6px;
   overflow-y: auto;
 }
@@ -764,7 +767,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 24px;
 }
 
 /* Direct stack of major "Today" cards (hero banner, 3-card row, bottom
@@ -772,7 +775,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .kid-dashboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 24px;
 }
 
 .kid-hud-chip.chip-stars {
