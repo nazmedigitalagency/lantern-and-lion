@@ -743,15 +743,15 @@ export default function TeenDashboardPage() {
             const advCtx = loadWorldContext(teen.id, 'teen');
             const next = getNextMissionRecommendation(advCtx);
             return (
-              <section className="teen-daily-card" style={{ border: '1.5px solid #38bdf8', background: 'rgba(21, 94, 239, 0.25)' }}>
+              <section className="teen-daily-card" style={{ border: '1.5px solid var(--teen-cobalt)', background: 'var(--teen-sky-tint, #ddf4ff)' }}>
                 <div className="teen-daily-head">
                   <span aria-hidden="true" style={{ fontSize: '1.75rem' }}>{next.region.icon}</span>
                   <div>
-                    <span style={{ fontSize: '0.7rem', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--teen-cobalt-dark)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Expedition Portal · {next.region.name}
                     </span>
-                    <strong style={{ display: 'block', color: '#ffffff', fontSize: '1.05rem' }}>{next.title}</strong>
-                    <small style={{ color: '#cbd5e1' }}>{next.subtitle}</small>
+                    <strong style={{ display: 'block', color: 'var(--teen-ink)', fontSize: '1.05rem' }}>{next.title}</strong>
+                    <small style={{ color: 'var(--teen-text-secondary)' }}>{next.subtitle}</small>
                   </div>
                 </div>
                 <Link href={next.actionHref} className="button button-primary">
