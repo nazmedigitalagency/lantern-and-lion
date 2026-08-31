@@ -101,7 +101,7 @@ export default async function CurriculumLessonPage({
         </div>
       </header>
 
-      <section style={{ padding: '24px max(24px,calc((100vw - 1192px)/2)) 0', fontSize: 14, color: '#52687a' }}>
+      <section style={{ padding: '24px max(24px,calc((100vw - 1192px)/2)) 0', fontSize: 14, color: '#64748B' }}>
         <Link href="/curriculum">Curriculum</Link>
         {' › '}
         <span>{mod.title}</span>

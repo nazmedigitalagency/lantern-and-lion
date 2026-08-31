@@ -38,7 +38,7 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
           borderRadius: '16px',
           padding: '1.25rem 1.5rem',
           margin: '1.25rem 0',
-          color: '#132d46',
+          color: '#1E293B',
           boxShadow: '0 1px 2px rgba(19,45,70,.05), 0 16px 36px rgba(19,45,70,.06)',
         }}
       >
@@ -54,12 +54,12 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   fontWeight: 800,
-                  color: '#6640ad',
+                  color: '#6D28D9',
                 }}
               >
                 {season.name}
               </span>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#132d46' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#1E293B' }}>
                 {progress.currentTier.name}
               </h3>
             </div>
@@ -74,7 +74,7 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
                 padding: '0.25rem 0.6rem',
                 borderRadius: '10px',
                 fontWeight: 700,
-                color: '#52677d',
+                color: '#64748B',
               }}
             >
               ⏱️ {diffDays} {diffDays === 1 ? 'day' : 'days'} left
@@ -87,30 +87,30 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
             gap: '0.75rem',
-            background: '#f4f0fd',
-            border: '1px solid #8057d9',
+            background: '#F5F3FF',
+            border: '1px solid #7C3AED',
             padding: '0.85rem',
             borderRadius: '12px',
             margin: '0.75rem 0',
           }}
         >
           <div>
-            <small style={{ color: '#52677d', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Your Rank</small>
-            <strong style={{ fontSize: '1.2rem', color: '#2864f0' }}>
-              #{userRank} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#52677d' }}>of {pod.participants.length}</span>
+            <small style={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Your Rank</small>
+            <strong style={{ fontSize: '1.2rem', color: '#3B82F6' }}>
+              #{userRank} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>of {pod.participants.length}</span>
             </strong>
           </div>
 
           <div>
-            <small style={{ color: '#52677d', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Season XP</small>
-            <strong style={{ fontSize: '1.2rem', color: '#8c6300' }}>
+            <small style={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Season XP</small>
+            <strong style={{ fontSize: '1.2rem', color: '#D97706' }}>
               ⭐ {seasonXp.toLocaleString()}
             </strong>
           </div>
 
           <div>
-            <small style={{ color: '#52677d', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Status</small>
-            <strong style={{ fontSize: '0.95rem', color: isPromotionZone ? '#0b7a65' : '#132d46' }}>
+            <small style={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Status</small>
+            <strong style={{ fontSize: '0.95rem', color: isPromotionZone ? '#15803D' : '#1E293B' }}>
               {isPromotionZone ? '🚀 Promotion Zone' : '🛡️ Safe Zone'}
             </strong>
           </div>
@@ -122,14 +122,14 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
               🔥 <strong>+{xpDeltaToAhead} XP</strong> to pass <em>{aheadCompetitor.displayName}</em> for <strong>#{userRank - 1}</strong>!
             </p>
           ) : (
-            <p style={{ margin: '0 0 0.5rem 0', color: '#8c6300', fontWeight: 700 }}>
+            <p style={{ margin: '0 0 0.5rem 0', color: '#D97706', fontWeight: 700 }}>
               👑 You are currently in <strong>1st place</strong> in your league pod! Keep shining!
             </p>
           )}
 
           {progress.nextTier && (
             <div style={{ marginTop: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem', fontWeight: 700, color: '#132d46' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem', fontWeight: 700, color: '#1E293B' }}>
                 <span>Progress to {progress.nextTier.name}</span>
                 <span>{seasonXp.toLocaleString()} / {progress.nextTier.minXp.toLocaleString()} XP</span>
               </div>
@@ -146,7 +146,7 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
                   style={{
                     width: `${progress.progressPercent}%`,
                     height: '100%',
-                    background: '#2864f0',
+                    background: '#3B82F6',
                     borderRadius: '9999px',
                     transition: 'width 0.4s ease',
                   }}
@@ -174,11 +174,11 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
       className="ll-league-card"
       style={{
         background: '#ffffff',
-        border: '2.5px solid #102a43',
+        border: '2.5px solid #1E293B',
         borderRadius: '18px',
         padding: '1.25rem 1.5rem',
         margin: '1.25rem 0',
-        color: '#102a43',
+        color: '#1E293B',
         boxShadow: '5px 5px 0 #8b5cf6',
       }}
     >
@@ -194,12 +194,12 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 fontWeight: 800,
-                color: '#5b32c9',
+                color: '#6D28D9',
               }}
             >
               {season.name}
             </span>
-            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#102a43' }}>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#1E293B' }}>
               {progress.currentTier.name}
             </h3>
           </div>
@@ -208,12 +208,12 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
         <span
           style={{
             fontSize: '0.8rem',
-            background: '#ddf4ff',
-            border: '1.5px solid #102a43',
+            background: '#EFF6FF',
+            border: '1.5px solid #1E293B',
             padding: '0.25rem 0.6rem',
             borderRadius: '9999px',
             fontWeight: 700,
-            color: '#102a43',
+            color: '#1E293B',
           }}
         >
           ⏱️ {diffDays} {diffDays === 1 ? 'day' : 'days'} left
@@ -226,7 +226,7 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
           gap: '0.75rem',
-          background: '#f3ebff',
+          background: '#F5F3FF',
           border: '1.5px solid #8b5cf6',
           padding: '0.85rem',
           borderRadius: '12px',
@@ -234,22 +234,22 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
         }}
       >
         <div>
-          <small style={{ color: '#52687a', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Your Rank</small>
-          <strong style={{ fontSize: '1.2rem', color: '#0e3fa8' }}>
-            #{userRank} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#52687a' }}>of {pod.participants.length}</span>
+          <small style={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Your Rank</small>
+          <strong style={{ fontSize: '1.2rem', color: '#1D4ED8' }}>
+            #{userRank} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>of {pod.participants.length}</span>
           </strong>
         </div>
 
         <div>
-          <small style={{ color: '#52687a', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Season XP</small>
-          <strong style={{ fontSize: '1.2rem', color: '#c98600' }}>
+          <small style={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Season XP</small>
+          <strong style={{ fontSize: '1.2rem', color: '#D97706' }}>
             ⭐ {seasonXp.toLocaleString()}
           </strong>
         </div>
 
         <div>
-          <small style={{ color: '#52687a', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Status</small>
-          <strong style={{ fontSize: '0.95rem', color: isPromotionZone ? '#1a9e5c' : '#102a43' }}>
+          <small style={{ color: '#64748B', fontSize: '0.75rem', display: 'block', fontWeight: 700 }}>Status</small>
+          <strong style={{ fontSize: '0.95rem', color: isPromotionZone ? '#15803D' : '#1E293B' }}>
             {isPromotionZone ? '🚀 Promotion Zone' : '🛡️ Safe Zone'}
           </strong>
         </div>
@@ -262,14 +262,14 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
             🔥 <strong>+{xpDeltaToAhead} XP</strong> to pass <em>{aheadCompetitor.displayName}</em> for <strong>#{userRank - 1}</strong>!
           </p>
         ) : (
-          <p style={{ margin: '0 0 0.5rem 0', color: '#c98600', fontWeight: 700 }}>
+          <p style={{ margin: '0 0 0.5rem 0', color: '#D97706', fontWeight: 700 }}>
             👑 You are currently in <strong>1st place</strong> in your league pod! Keep shining!
           </p>
         )}
 
         {progress.nextTier && (
           <div style={{ marginTop: '0.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem', fontWeight: 700, color: '#102a43' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem', fontWeight: 700, color: '#1E293B' }}>
               <span>Progress to {progress.nextTier.name}</span>
               <span>{seasonXp.toLocaleString()} / {progress.nextTier.minXp.toLocaleString()} XP</span>
             </div>
@@ -278,7 +278,7 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
                 width: '100%',
                 height: '10px',
                 background: '#eef3f7',
-                border: '1.5px solid #102a43',
+                border: '1.5px solid #1E293B',
                 borderRadius: '9999px',
                 overflow: 'hidden',
               }}
@@ -287,7 +287,7 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
                 style={{
                   width: `${progress.progressPercent}%`,
                   height: '100%',
-                  background: '#ffc83d',
+                  background: '#FBBF24',
                   borderRadius: '9999px',
                   transition: 'width 0.4s ease',
                 }}

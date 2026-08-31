@@ -15,7 +15,7 @@ function launchConfetti(source: Element) {
   burst.className = 'motion-confetti';
   burst.style.left = `${Math.min(window.innerWidth - 50, Math.max(50, rect.left + rect.width / 2))}px`;
   burst.style.top = `${Math.max(70, rect.top + Math.min(rect.height / 2, 100))}px`;
-  const colours = ['#f5c451', '#168c7a', '#f05a67', '#102a43', '#e7f4fa'];
+  const colours = ['#FBBF24', '#22C55E', '#8B5CF6', '#1E293B', '#EFF6FF'];
   for (let index = 0; index < 18; index += 1) {
     const piece = document.createElement('i');
     piece.style.setProperty('--confetti-x', `${(index % 2 ? 1 : -1) * (28 + (index * 17) % 105)}px`);
