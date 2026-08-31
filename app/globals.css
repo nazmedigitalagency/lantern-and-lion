@@ -3897,36 +3897,42 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .bd-case-body h3{margin:0 0 6px;font-size:18px}
 .bd-case-body p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.4;flex:1}
 
-/* The investigation shell gets its own moody "case file" palette — distinct from the brighter arcade look, using the app's existing dark teen tokens. */
-.bd-case-shell{margin-top:18px;max-width:720px;margin-left:auto;margin-right:auto;padding:26px 28px;border-radius:20px;background:var(--teen-bg);color:var(--teen-text);box-shadow:6px 6px 0 var(--navy)}
+/* The investigation shell gets its own moody "case file" palette — distinct
+   from the brighter arcade look. This used to borrow the app's --teen-*
+   tokens, but those got repurposed into a bright light theme for the Lion's
+   Den redesign, which silently turned this dark "detective noir" card into
+   a washed-out, low-contrast white-on-white mess. Hardcoded to its own
+   dark navy palette so it can't be knocked over by an unrelated page's
+   token changes again. */
+.bd-case-shell{margin-top:18px;max-width:720px;margin-left:auto;margin-right:auto;padding:26px 28px;border-radius:20px;background:#0a1f33;color:#f5f9fc;box-shadow:6px 6px 0 var(--navy)}
 .bd-case-header{margin-bottom:18px;text-align:center}
 .bd-case-kicker{margin:0 0 4px;color:var(--gold);font:900 12px var(--font-nunito);text-transform:uppercase;letter-spacing:.08em}
-.bd-case-header h1{margin:0 0 8px;color:var(--teen-text)}
-.bd-case-intro{margin:0;color:var(--teen-text-secondary);font-size:14px;line-height:1.5}
+.bd-case-header h1{margin:0 0 8px;color:#f5f9fc}
+.bd-case-intro{margin:0;color:#c7d8e6;font-size:14px;line-height:1.5}
 
-.bd-section-heading{margin:0 0 14px;color:var(--teen-text-light);font-size:15px;text-align:center}
+.bd-section-heading{margin:0 0 14px;color:#eef5fa;font-size:15px;text-align:center}
 
 .bd-clue-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px}
-.bd-clue-card{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border:2px solid var(--teen-border-alt);border-radius:14px;background:var(--teen-surface);color:var(--teen-text);cursor:pointer;text-align:left}
+.bd-clue-card{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border:2px solid #3a5c7d;border-radius:14px;background:#122d47;color:#f5f9fc;cursor:pointer;text-align:left}
 .bd-clue-card.viewed{border-color:var(--teal)}
-.bd-clue-card.expanded{background:var(--teen-surface-raised);grid-column:1/-1}
+.bd-clue-card.expanded{background:#1e4568;grid-column:1/-1}
 .bd-clue-icon{font-size:22px}
 .bd-clue-title{font-weight:800;font-size:14px}
-.bd-clue-type{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--teen-text-muted);font-weight:800}
-.bd-clue-content{margin-top:8px;padding-top:8px;border-top:1px solid var(--teen-divider);color:var(--teen-text-light);font-size:14px;line-height:1.5;display:flex;align-items:flex-start;gap:10px;justify-content:space-between;width:100%}
+.bd-clue-type{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#9db2c6;font-weight:800}
+.bd-clue-content{margin-top:8px;padding-top:8px;border-top:1px solid #1c3752;color:#eef5fa;font-size:14px;line-height:1.5;display:flex;align-items:flex-start;gap:10px;justify-content:space-between;width:100%}
 .bd-audio-btn{flex-shrink:0}
 
-.bd-question-prompt{color:var(--teen-text-light)}
-.bd-choices .lq-choice{background:var(--teen-surface);border-color:var(--teen-border-alt);color:var(--teen-text)}
-.bd-choices .lq-choice:hover:not(:disabled){background:var(--teen-surface-hover)}
-.bd-choices .lq-choice.correct{background:var(--teen-success-bg);border-color:var(--teen-success);color:var(--teen-success-text)}
-.bd-choices .lq-choice.incorrect{background:var(--teen-error-bg);border-color:var(--error);color:var(--teen-error-text)}
+.bd-question-prompt{color:#eef5fa}
+.bd-choices .lq-choice{background:#122d47;border-color:#3a5c7d;color:#f5f9fc}
+.bd-choices .lq-choice:hover:not(:disabled){background:#285677}
+.bd-choices .lq-choice.correct{background:#123c34;border-color:#2bb894;color:#7fe7cc}
+.bd-choices .lq-choice.incorrect{background:#3a1512;border-color:var(--error);color:#ff9086}
 
 .bd-hint-row{margin-top:14px;text-align:center}
 .bd-hint-btn{background:transparent;color:var(--gold);border-color:var(--gold)}
-.bd-hint-banner{background:var(--teen-warning-bg);text-align:left}
+.bd-hint-banner{background:#3d3013;text-align:left}
 .bd-hint-banner strong{color:var(--gold)}
-.bd-hint-banner p{color:var(--teen-text-light)}
+.bd-hint-banner p{color:#eef5fa}
 
 .bd-badge-earned{margin:10px 0;padding:10px;border-radius:12px;background:#fff8e3;color:var(--gold-dark);font-weight:900;text-align:center}
 
