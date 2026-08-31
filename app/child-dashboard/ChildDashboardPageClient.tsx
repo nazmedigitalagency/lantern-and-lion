@@ -742,9 +742,9 @@ export default function ChildDashboardPage() {
                     </div>
                   </div>
                   <div className="kid-mascot-action-row">
-                    <Link href="/arcade" className="kid-mascot-arcade-btn">
+                    <button type="button" className="kid-mascot-arcade-btn" onClick={() => setActiveTab('arcade')}>
                       🎮 Play Arcade Games
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </section>
@@ -785,7 +785,7 @@ export default function ChildDashboardPage() {
                       </div>
                       <h3>{mod.title}</h3>
                       <p>{mod.description}</p>
-                      <Link href={`/curriculum/${mod.id}`} className="game-play-btn">
+                      <Link href={`/learn?module=${mod.id}`} className="game-play-btn">
                         {isDone ? 'Review Chapter ✓' : done > 0 ? 'Continue Chapter →' : 'Start Chapter →'}
                       </Link>
                     </article>
