@@ -7,34 +7,25 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ChatAssistant from '../chat-assistant';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
 import { getModuleLessons } from '../curriculum-lessons';
-import StudioAudioPlayer from '../components/StudioAudioPlayer';
 import { computeStreak, getCompletedCount } from '../daily-quests/progression';
 import { getOrCreateTodaySet, readHistory } from '../daily-quests/storage';
 import { getTemplate } from '../daily-quests/catalog';
 import type { DailyQuestSet } from '../daily-quests/types';
-import { CharacterAvatar } from '../character/components';
-import { ItemIllustration } from '../character/item-icons';
-import { readAppearance, readEquipment, readCharacterName } from '../character/storage';
-import type { CharacterAppearance, CharacterEquipment } from '../character/types';
+import { readCharacterName } from '../character/storage';
 import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
-import { LeagueCard } from '../lib/leagues/LeagueCard';
-import { getLeaguePod } from '../lib/leagues/storage';
-import { getNextMissionRecommendation, getRegionStatus } from '../adventure/progression';
+import { getNextMissionRecommendation } from '../adventure/progression';
 import { canonicalRegions } from '../adventure/world-data';
 import { loadWorldContext } from '../adventure/storage';
-import { getStoryDashboardSummary } from '../stories/engine';
-import { STORY_CATALOG } from '../stories/catalog';
-import { LearningJourneyCard, type LearningPlanResponse } from '../lib/adaptive/LearningJourneyCard';
 import { getWallet, getCurrentLevel } from '../lib/economy/wallet-service';
 import type { Wallet } from '../lib/economy/types';
 import type { LevelInfo } from '../lib/xp-levels';
 import { GAME_DEFINITIONS } from '../arcade/catalog';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
-type View = 'today' | 'library' | 'progress';
+type DashboardTab = 'dashboard' | 'lessons' | 'quests' | 'rewards' | 'progress' | 'arcade';
 type ModuleFilter = 'All lessons' | 'Not started' | 'In progress' | 'Completed';
 type ModuleProgressEntry = { completedIndices: number[]; lastCompletedIndex: number };
 
@@ -49,27 +40,6 @@ function trackForAge(age: number): CurriculumModule['track'] {
   return 'teen';
 }
 
-const trackLabel: Record<CurriculumModule['track'], string> = {
-  early: 'Lantern Explorers',
-  pathfinder: 'Brave Pathfinders',
-  teen: 'The Lion’s Den',
-  family: 'All-Age Family Quest',
-};
-
-const toneForTrack: Record<CurriculumModule['track'], string> = {
-  early: 'gold',
-  pathfinder: 'teal',
-  teen: 'coral',
-  family: 'sky',
-};
-
-const trackEmoji: Record<CurriculumModule['track'], string> = {
-  early: '🏮',
-  pathfinder: '🧭',
-  teen: '🦁',
-  family: '🌟',
-};
-
 function readModuleProgressForChild(childId: number): Record<string, ModuleProgressEntry> {
   try {
     const progressMap = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}');
@@ -83,7 +53,8 @@ export default function ChildDashboardPage() {
   const router = useRouter();
   const [children, setChildren] = useState<Child[]>(fallbackChildren);
   const [activeId, setActiveId] = useState<number>(fallbackChildren[0].id);
-  const [view, setView] = useState<View>('today');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [familyData, setFamilyData] = useState({ familyName: 'The Adeyemi Family', parentName: 'Jordan Adeyemi', country: 'Nigeria' });
   const [showHelp, setShowHelp] = useState(false);
   const [showProfiles, setShowProfiles] = useState(false);
@@ -94,33 +65,17 @@ export default function ChildDashboardPage() {
   const [moduleProgress, setModuleProgress] = useState<Record<string, ModuleProgressEntry>>({});
   const [dailySummary, setDailySummary] = useState({ completed: 0, total: 4, streak: 0 });
   const [todayQuestSet, setTodayQuestSet] = useState<DailyQuestSet | null>(null);
-  const [charAppearance, setCharAppearance] = useState<CharacterAppearance>({ skinTone: 'honey', hairStyle: 'curls', face: 'smile' });
-  const [charEquipment, setCharEquipment] = useState<CharacterEquipment>({});
   const [charDisplayName, setCharDisplayName] = useState<string>('Amara');
   const [wallet, setWallet] = useState<Wallet>({ xp: 0, coins: 0, gems: 0 });
   const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
   const helpTriggerRef = useRef<HTMLButtonElement>(null);
   const closeHelpRef = useRef<HTMLButtonElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
-  const [showClassModal, setShowClassModal] = useState(false);
-  const [classCodeInput, setClassCodeInput] = useState('');
-  const [classError, setClassError] = useState('');
-  const [connectedClass, setConnectedClass] = useState<{ id: number; name: string; ageBand: string; code: string; teacher: string } | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   type TodaySummaryData = { active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number };
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
-  const [milestoneToast, setMilestoneToast] = useState<{ label: string; coins: number; gems: number } | null>(null);
-  const [learningPlan, setLearningPlan] = useState<LearningPlanResponse | null>(null);
 
   useActivityHeartbeat(hydrated && !isPreview);
-
-  useEffect(() => {
-    if (!hydrated || isPreview) return;
-    fetch('/api/child/learning-plan')
-      .then((res) => (res.ok ? (res.json() as Promise<LearningPlanResponse>) : null))
-      .then((data) => { if (data) setLearningPlan(data); })
-      .catch(() => { /* Offline — widget just stays hidden. */ });
-  }, [hydrated, isPreview]);
 
   useEffect(() => {
     if (!hydrated || isPreview) return;
@@ -139,14 +94,10 @@ export default function ChildDashboardPage() {
             ...prev,
             streak: Math.max(prev.streak, data.streak.currentStreak),
           }));
-          const milestone = claimStreakMilestoneIfNew(activeId, data.streak.currentStreak);
-          if (milestone) {
-            setMilestoneToast(milestone);
-            window.setTimeout(() => setMilestoneToast(null), 5000);
-          }
+          claimStreakMilestoneIfNew(activeId, data.streak.currentStreak);
         }
       })
-      .catch(() => { /* Offline — widget just stays hidden. */ });
+      .catch(() => { /* Offline — widget stays hidden. */ });
   }, [hydrated, isPreview, activeId]);
 
   async function fetchStreakCalendar() {
@@ -162,69 +113,55 @@ export default function ChildDashboardPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      const previewFlag = new URLSearchParams(window.location.search).get('preview') === '1';
+      setIsPreview(previewFlag);
+      const savedChildSession = localStorage.getItem('lanternLionActiveChild');
+      if (!previewFlag && !savedChildSession && !localStorage.getItem('lanternLionFamilyData')) {
+        router.replace('/child-access');
+        return;
+      }
       try {
-        const params = new URLSearchParams(window.location.search);
-        const parentSession = JSON.parse(localStorage.getItem('lanternLionDemoSession') || 'null');
-        const previewMode = params.get('preview') === '1' && Boolean(parentSession);
-        const previewChildId = Number(params.get('child'));
-        setIsPreview(previewMode);
-
-        const family = JSON.parse(localStorage.getItem('lanternLionDemoFamily') || 'null');
-        const childSession = JSON.parse(localStorage.getItem('lanternLionChildSession') || 'null');
-        const savedClass = JSON.parse(localStorage.getItem('lanternLionConnectedClass') || 'null');
-
-        if (savedClass) setConnectedClass(savedClass);
-
-        if (family) {
-          setFamilyData({
-            familyName: family.familyName || 'The Adeyemi Family',
-            parentName: parentSession?.name || 'Jordan Adeyemi',
-            country: family.country || 'Nigeria',
-          });
-        }
-
-        let currentId: number | null = null;
-        if (previewMode && previewChildId) {
-          if (family?.children?.length) {
-            setChildren(family.children);
-            currentId = family.children.some((item: Child) => item.id === previewChildId) ? previewChildId : family.children[0].id;
-          }
-        } else if (childSession?.childId && family?.children?.some((item: Child) => item.id === childSession.childId)) {
+        const family = JSON.parse(localStorage.getItem('lanternLionFamilyData') || '{}');
+        if (family.children?.length) {
           setChildren(family.children);
-          currentId = childSession.childId;
+          const currentId = savedChildSession ? parseInt(savedChildSession, 10) : family.children[0].id;
+          setActiveId(currentId);
         }
+        if (family.familyName) setFamilyData(family);
+      } catch {
+        // Use fallbacks
+      }
+      const progress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}');
+      setModuleProgress(progress[activeId] || {});
 
-        if (currentId === null) {
-          router.replace('/child-access');
-          return;
-        }
-
-        const progressForCurrent = readModuleProgressForChild(currentId);
-        setActiveId(currentId);
-        setModuleProgress(progressForCurrent);
-        setCharAppearance(readAppearance(currentId));
-        setCharEquipment(readEquipment(currentId));
-        const matchedChild = (family?.children || fallbackChildren).find((c: Child) => c.id === currentId);
-        setCharDisplayName(readCharacterName(currentId, matchedChild?.name || 'Adventurer'));
-
-        // Load economy wallet and level info
-        const childWallet = getWallet(currentId);
-        setWallet(childWallet);
-        setLevelInfo(getCurrentLevel(currentId));
-
-        const isTeenAge = (matchedChild?.age ?? 9) >= 13;
-        const todaySet = getOrCreateTodaySet(currentId, { moduleProgress: progressForCurrent, masteredQuestIds: [], kind: isTeenAge ? 'teen' : 'child' });
+      try {
+        const history = readHistory(activeId);
+        const streakInfo = computeStreak(history);
+        const streak = streakInfo.current;
+        const questsCtx = {
+          moduleProgress: progress[activeId] || {},
+          masteredQuestIds: [],
+          arcadeHighScores: {},
+          kind: 'child' as const,
+        };
+        const todaySet = getOrCreateTodaySet(activeId, questsCtx);
         setTodayQuestSet(todaySet);
-        setDailySummary({
-          completed: getCompletedCount(todaySet),
-          total: todaySet.quests.length,
-          streak: computeStreak(readHistory(currentId)).current,
-        });
-      } catch { /* Keep demo content available. */ }
+        const completed = getCompletedCount(todaySet);
+        setDailySummary({ completed, total: todaySet.quests.length || 4, streak });
+      } catch {
+        setDailySummary({ completed: 0, total: 4, streak: 0 });
+      }
+
+      setCharDisplayName(readCharacterName(activeId, children.find((c) => c.id === activeId)?.name || 'Amara'));
+
+      const w = getWallet(activeId);
+      setWallet(w);
+      setLevelInfo(getCurrentLevel(activeId));
+
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [router]);
+  }, [router, activeId, children]);
 
   useEffect(() => {
     if (!showHelp) return;
@@ -278,18 +215,10 @@ export default function ChildDashboardPage() {
   }
 
   const totalSubLessonsCompleted = trackModules.reduce((sum, m) => sum + doneCountFor(m.id), 0);
-  const completedModulesCount = trackModules.filter((m) => isModuleComplete(m.id)).length;
-  const goalDone = Math.min(5, completedModulesCount);
-  const points = wallet.xp > 0 ? wallet.xp : totalSubLessonsCompleted * 8;
-
-  const continueModule = trackModules.find((m) => !isModuleComplete(m.id)) || trackModules[0];
-  const continueLessons = continueModule ? getModuleLessons(continueModule) : [];
-  const continueDoneCount = continueModule ? doneCountFor(continueModule.id) : 0;
-  const continueModuleComplete = continueModule ? isModuleComplete(continueModule.id) : false;
+  const starsEarned = wallet.xp > 0 ? wallet.xp : totalSubLessonsCompleted * 8;
 
   const adventureCtx = useMemo(() => loadWorldContext(child.id, teen ? 'teen' : 'child'), [child.id, teen]);
   const nextExpedition = useMemo(() => getNextMissionRecommendation(adventureCtx), [adventureCtx]);
-  const storySummary = useMemo(() => getStoryDashboardSummary(child.id, STORY_CATALOG), [child.id]);
 
   function statsForChild(c: Child) {
     const track = trackForAge(c.age);
@@ -316,903 +245,707 @@ export default function ChildDashboardPage() {
 
   function handleChatSafetyFlag(message: string) {
     const report = { child: child.name, kind: 'Chat: please check in', message, time: new Date().toISOString() };
-    localStorage.setItem('lanternLionDemoHelpRequest', JSON.stringify(report));
-    setHelpNotice('Your grown-up has been quietly told about your chat, so they can check in with you.');
+    localStorage.setItem('lanternLionSafetyAlert', JSON.stringify(report));
+    setHelpNotice('A note has been shared with your family.');
   }
 
-  // ── Classroom Connection ──────────────────────────────────────
-  function connectClassroom() {
-    setClassError('');
-    const cleanCode = classCodeInput.trim().toUpperCase();
-    if (!cleanCode) {
-      setClassError('Please enter the code provided by your teacher.');
-      return;
-    }
-
-    fetch('/api/classrooms/join', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: cleanCode }),
-    }).catch(() => { /* Offline/local-only class connection. */ });
-
-    type TeacherClassroom = { id: number; name: string; ageBand: string; code: string; teacherEmail?: string; teacherName?: string; students?: Array<{ id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean }> };
-    const starterClasses: TeacherClassroom[] = [
-      { id: 1, name: 'Wednesday Explorers', ageBand: 'Ages 8–11', code: 'LION-482', teacherEmail: 'grace@lantern.demo', teacherName: 'Grace Okafor', students: [] },
-      { id: 2, name: 'Friday Teen Circle', ageBand: 'Ages 13–16', code: 'LAMP-731', teacherEmail: 'grace@lantern.demo', teacherName: 'Grace Okafor', students: [] },
-    ];
-    let classList = starterClasses;
-    let hasStoredClasses = false;
-    try {
-      const stored = JSON.parse(localStorage.getItem('lanternLionTeacherClasses') || 'null');
-      if (Array.isArray(stored) && stored.length) {
-        classList = stored;
-        hasStoredClasses = true;
-      }
-    } catch { /* use starter */ }
-
-    const match = classList.find((c) => c.code.toUpperCase() === cleanCode);
-    if (match) {
-      const teacherName = match.teacherName || 'the teacher';
-      if (hasStoredClasses) {
-        try {
-          const nextClassList = classList.map((item) => {
-            if (item.id !== match.id) return item;
-            const roster = item.students || [];
-            if (roster.some((s) => s.id === child.id)) return item;
-            return { ...item, students: [...roster, { id: child.id, name: child.name, age: child.age, progress: 0, needsHelp: false, parent: familyData.parentName, approved: true }] };
-          });
-          localStorage.setItem('lanternLionTeacherClasses', JSON.stringify(nextClassList));
-        } catch { /* Roster registration is best-effort in this demo. */ }
-      }
-
-      setConnectedClass({ id: match.id, name: match.name, ageBand: match.ageBand, code: match.code, teacher: teacherName });
-      localStorage.setItem('lanternLionConnectedClass', JSON.stringify({ id: match.id, name: match.name, ageBand: match.ageBand, code: match.code, teacher: teacherName }));
-      setShowClassModal(false);
-      setClassCodeInput('');
-      setHelpNotice(`Connected to ${match.name} (Teacher ${teacherName})!`);
-    } else {
-      setClassError('That code didn’t match any open classroom. Check with your teacher or try LION-482.');
-    }
+  if (!hydrated) {
+    return (
+      <main className="dashboard-loading" aria-live="polite">
+        <span></span>
+        <p>Opening your Lantern &amp; Lion world…</p>
+      </main>
+    );
   }
 
-  function disconnectClassroom() {
-    setConnectedClass(null);
-    localStorage.removeItem('lanternLionConnectedClass');
-    setHelpNotice('Disconnected from classroom.');
-  }
-
-  if (!hydrated) return <main className="dashboard-loading" aria-live="polite"><span></span><p>Opening the child space…</p></main>;
-
-  const currentLvl = levelInfo?.level || 1;
-  const currentTitle = levelInfo?.title || 'New Explorer';
-  const xpInto = levelInfo?.xpIntoLevel || 0;
-  const xpRequiredForNext = levelInfo?.nextLevelXp ? levelInfo.nextLevelXp - levelInfo.currentLevelXp : 100;
-  const xpPct = levelInfo?.progressPercent || Math.min(100, Math.round((xpInto / Math.max(xpRequiredForNext, 1)) * 100));
+  const currentLevelNum = levelInfo?.level ?? Math.floor(starsEarned / 100) + 1;
+  const currentLevelTitle = levelInfo?.title ?? (currentLevelNum === 1 ? 'New Explorer' : currentLevelNum === 2 ? 'Lantern Seeker' : 'Level 3 Explorer');
+  const nextLevelRequirement = levelInfo?.nextLevelXp ?? (currentLevelNum * 100);
 
   return (
-    <main className={`child-dashboard ${teen ? 'child-dashboard-teen' : ''}`}>
+    <div className={`kid-app-layout ${teen ? 'child-dashboard-teen' : ''}`}>
+      {/* PREVIEW BANNER */}
       {isPreview && (
         <div className="preview-mode-banner" role="status">
-          <span aria-hidden="true">👁️</span>
-          <p>You’re viewing a read-only preview of {child.name}’s space. Nothing you do here is saved or sent as {child.name}.</p>
-          <Link href="/parent-dashboard" className="button button-secondary">Exit preview</Link>
+          <p>
+            <strong>Preview Mode:</strong> You are viewing the children’s interactive learning dashboard.
+          </p>
+          <button type="button" className="button button-secondary" onClick={() => router.push('/onboarding')}>
+            Create your account
+          </button>
         </div>
       )}
 
-      {milestoneToast && (
-        <div className="streak-milestone-toast" role="status" aria-live="polite">
-          <strong>🔥 {milestoneToast.label}!</strong>
-          <span>+{milestoneToast.coins} 🪙{milestoneToast.gems > 0 ? ` +${milestoneToast.gems} 💎` : ''}</span>
+      {/* ── LEFT DESKTOP SIDEBAR / MOBILE DRAWER ── */}
+      <aside className={`kid-sidebar ${mobileMenuOpen ? 'kid-sidebar-open' : ''}`}>
+        <div className="kid-sidebar-header">
+          <Link href="/child-dashboard" className="kid-sidebar-logo" onClick={() => setMobileMenuOpen(false)}>
+            <div className="kid-logo-bubble">
+              <Image src="/lantern-lion-logo.png" alt="Lantern & Lion" width={48} height={48} priority />
+            </div>
+            <div className="kid-logo-copy">
+              <strong>Learn &amp; Play</strong>
+              <small>Learn smart, be a star!</small>
+            </div>
+          </Link>
+          <button
+            type="button"
+            className="kid-sidebar-close-btn"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
         </div>
-      )}
 
-      {/* ── TOPBAR & GAME HUD ── */}
-      <header className="child-topbar">
-        <Link href="/" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={52} height={52} priority />
-          <span>
-            <strong>{teen ? 'Lion’s Den' : 'The Lantern Club'}</strong>
-            <small>Lantern &amp; Lion</small>
-          </span>
-        </Link>
+        <nav className="kid-sidebar-nav" aria-label="Dashboard Navigation">
+          <button
+            type="button"
+            className={`kid-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}
+          >
+            <span className="kid-nav-icon">🏠</span>
+            <span>Dashboard</span>
+          </button>
 
-        <nav className="child-nav" aria-label="Child dashboard navigation">
           <button
             type="button"
-            aria-pressed={view === 'today'}
-            className={view === 'today' ? 'active' : ''}
-            onClick={() => setView('today')}
+            className={`kid-nav-item ${activeTab === 'lessons' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('lessons'); setMobileMenuOpen(false); }}
           >
-            🌟 Today
+            <span className="kid-nav-icon">📖</span>
+            <span>Lessons</span>
           </button>
-          <Link href="/adventure">🗺️ Adventure</Link>
-          <Link href="/stories">📖 Stories</Link>
-          <Link href="/character">🧑 Character</Link>
-          <Link href="/arcade">🎮 Arcade</Link>
-          <Link href="/leagues">🏆 Leagues</Link>
+
           <button
             type="button"
-            aria-pressed={view === 'library'}
-            className={view === 'library' ? 'active' : ''}
-            onClick={() => setView('library')}
+            className={`kid-nav-item ${activeTab === 'quests' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('quests'); setMobileMenuOpen(false); }}
           >
-            🧭 Explore
+            <span className="kid-nav-icon">⚔️</span>
+            <span>Quests</span>
+            {dailySummary.completed < dailySummary.total && (
+              <span className="kid-nav-badge">{dailySummary.total - dailySummary.completed}</span>
+            )}
           </button>
+
           <button
             type="button"
-            aria-pressed={view === 'progress'}
-            className={view === 'progress' ? 'active' : ''}
-            onClick={() => setView('progress')}
+            className={`kid-nav-item ${activeTab === 'rewards' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('rewards'); setMobileMenuOpen(false); }}
           >
-            📊 Progress
+            <span className="kid-nav-icon">⭐</span>
+            <span>Rewards</span>
           </button>
+
+          <button
+            type="button"
+            className={`kid-nav-item ${activeTab === 'progress' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('progress'); setMobileMenuOpen(false); }}
+          >
+            <span className="kid-nav-icon">📊</span>
+            <span>Progress</span>
+          </button>
+
+          <button
+            type="button"
+            className={`kid-nav-item ${activeTab === 'arcade' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('arcade'); setMobileMenuOpen(false); }}
+          >
+            <span className="kid-nav-icon">🎮</span>
+            <span>Arcade</span>
+          </button>
+
+          <Link
+            href="/character"
+            className="kid-nav-item"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <span className="kid-nav-icon">🎨</span>
+            <span>Character</span>
+          </Link>
         </nav>
 
-        <div className="child-header-actions">
-          {/* Real-Time Game HUD */}
-          <div className="child-hud" role="group" aria-label="Player stats HUD">
-            <span className="child-hud-pill hud-level" title={`Level ${currentLvl}: ${currentTitle}`}>
-              🧭 Lvl {currentLvl}
-            </span>
-            <span className="child-hud-pill hud-xp" title="Total Light XP earned">
-              ⭐ {wallet.xp.toLocaleString()} XP
-            </span>
-            <span className="child-hud-pill hud-coins" title="Lantern Coins">
-              🪙 {wallet.coins.toLocaleString()}
-            </span>
-            <span className="child-hud-pill hud-gems" title="Gems">
-              💎 {wallet.gems.toLocaleString()}
-            </span>
-          </div>
-
-          {!isPreview && (
-            <button ref={helpTriggerRef} className="help-button" onClick={() => setShowHelp(true)}>
-              Ask for help
-            </button>
-          )}
-
-          <div className="profile-switch">
-            <button
-              ref={profileButtonRef}
-              className="profile-button"
-              aria-expanded={showProfiles}
-              aria-controls="child-profile-menu"
-              onClick={() => setShowProfiles(!showProfiles)}
-              aria-label={`Profile menu for ${child.name}`}
-            >
-              <span>{child.name.slice(0, 1)}</span>
-              <b>{child.name}</b>
-            </button>
-            {showProfiles && (
-              <div className="profile-menu" id="child-profile-menu">
-                <button
-                  type="button"
-                  className="child-family-summary-btn"
-                  onClick={() => { setShowFamilyModal(true); setShowProfiles(false); }}
-                >
-                  🌟 Our family summary
-                </button>
-                {!isPreview && (
-                  <Link
-                    href="/child-access"
-                    onClick={() => {
-                      fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {});
-                      localStorage.removeItem('lanternLionChildSession');
-                      localStorage.removeItem('lanternLionActiveChildId');
-                    }}
-                    className="child-signout-link"
-                  >
-                    Sign out of {child.name}
-                  </Link>
-                )}
-              </div>
-            )}
+        {/* BOTTOM ENCOURAGEMENT CARD */}
+        <div className="kid-sidebar-bottom-widget">
+          <div className="kid-sprout-badge" aria-hidden="true">🌱</div>
+          <div className="kid-sprout-copy">
+            <strong>You’re doing amazing!</strong>
+            <p>Keep going and collect more stars today!</p>
           </div>
         </div>
-      </header>
+      </aside>
 
-      {/* ── TODAY VIEW ── */}
-      {view === 'today' && (
-        <div className="child-dashboard-body">
-          {/* Welcome Hero & Character Game Profile */}
-          <section className="child-welcome-hero" aria-label="Welcome and adventurer profile">
-            <div className="child-hero-char-box">
-              <div className="child-hero-avatar-wrap">
-                <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="large" showPedestal={true} />
+      {/* BACKDROP FOR MOBILE DRAWER */}
+      {mobileMenuOpen && (
+        <div className="kid-mobile-backdrop" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
+      )}
+
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="kid-main-area">
+        {/* TOPBAR */}
+        <header className="kid-topbar">
+          <div className="kid-topbar-left">
+            <button
+              type="button"
+              className="kid-hamburger-btn"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+            <div className="kid-topbar-greeting">
+              <h1>Lantern &amp; Lion</h1>
+              <p>Learn smart, play more, be a star!</p>
+            </div>
+          </div>
+
+          <div className="kid-topbar-right">
+            {/* HUD Currency Pills */}
+            <div className="kid-hud-pills-row">
+              <Link href="/adventure" className="kid-hud-chip chip-stars" title="Stars and XP">
+                <span aria-hidden="true">⭐</span>
+                <strong>{starsEarned.toLocaleString()} Stars</strong>
+                <span className="chip-plus-badge" aria-hidden="true">+</span>
+              </Link>
+              <div className="kid-hud-chip chip-coins" title="Lantern Coins">
+                <span aria-hidden="true">🪙</span>
+                <strong>{wallet.coins.toLocaleString()}</strong>
               </div>
-              <div className="child-hero-char-meta">
-                <div className="child-hero-level-chip">
-                  <span className="hero-lvl-badge">🧭 Level {currentLvl}</span>
-                  <span className="hero-lvl-title">{currentTitle}</span>
-                </div>
-                <div className="child-hero-xp-bar" title={`${xpInto} / ${xpRequiredForNext} XP to Level ${currentLvl + 1}`}>
-                  <div className="hero-xp-track">
-                    <div className="hero-xp-fill" style={{ width: `${xpPct}%` }} />
-                  </div>
-                  <span className="hero-xp-text">{xpInto} / {xpRequiredForNext} XP to next level</span>
-                </div>
-
-                <div className="child-hero-gear-preview" aria-label="Equipped items">
-                  <span className="hero-gear-bubble" title="Headwear">
-                    <ItemIllustration itemId={charEquipment.headwear || 'starter-cap'} size={24} />
-                  </span>
-                  <span className="hero-gear-bubble" title="Tunic / Robe">
-                    <ItemIllustration itemId={charEquipment.clothing || 'starter-tunic'} size={24} />
-                  </span>
-                  <span className="hero-gear-bubble" title="Sandals">
-                    <ItemIllustration itemId={charEquipment.shoes || 'starter-sandals'} size={24} />
-                  </span>
-                  {charEquipment.accessory && (
-                    <span className="hero-gear-bubble" title="Accessory">
-                      <ItemIllustration itemId={charEquipment.accessory} size={24} />
-                    </span>
-                  )}
-                  {charEquipment.special && (
-                    <span className="hero-gear-bubble hero-gear-special" title="Special Companion">
-                      <ItemIllustration itemId={charEquipment.special} size={24} />
-                    </span>
-                  )}
-                </div>
-
-                <Link href="/character" className="child-hero-customise-btn">
-                  🎨 Customise Character →
-                </Link>
+              <div className="kid-hud-chip chip-gems" title="Gems">
+                <span aria-hidden="true">💎</span>
+                <strong>{wallet.gems.toLocaleString()}</strong>
               </div>
             </div>
 
-            <div className="child-hero-welcome-box">
-              <p className="child-kicker">{teen ? '🦁 Lion’s Den Expedition' : '🌟 Welcome back to the adventure'}</p>
-              <h1>Hi, {charDisplayName}! What will you explore today?</h1>
-              <p className="child-hero-subtext">
-                {teen
-                  ? 'Dive into your courage study, take on Bible arcade games, and explore biblical lands.'
-                  : 'Journey through Eden and Galilee, solve puzzles, level up your character, and light the path!'}
-              </p>
+            {/* Help / Notification Bell */}
+            <button
+              ref={helpTriggerRef}
+              type="button"
+              className="kid-bell-btn"
+              onClick={() => setShowHelp(true)}
+              aria-label="Help and Notifications"
+            >
+              🔔
+            </button>
 
-              {/* Status Radar Chips */}
-              <div className="child-hero-status-grid">
-                <div className="hero-status-card status-quests">
-                  <span className="status-icon" aria-hidden="true">📅</span>
-                  <div>
-                    <strong>{dailySummary.completed}/{dailySummary.total} Quests</strong>
-                    <small>{dailySummary.completed >= dailySummary.total ? 'All completed today! 🌟' : 'Ready to play'}</small>
-                  </div>
+            {/* Profile Capsule Switcher */}
+            <div className="profile-switch">
+              <button
+                ref={profileButtonRef}
+                type="button"
+                className="kid-profile-capsule"
+                onClick={() => setShowProfiles((prev) => !prev)}
+                aria-expanded={showProfiles}
+                aria-haspopup="menu"
+              >
+                <div className="kid-profile-avatar-bubble">
+                  {charDisplayName.slice(0, 1).toUpperCase()}
                 </div>
-                <div className="hero-status-card status-streak">
-                  <span className="status-icon" aria-hidden="true">🔥</span>
-                  <div>
-                    <strong>{dailySummary.streak} Day Streak</strong>
-                    <small>Keep the flame shining</small>
-                  </div>
+                <div className="kid-profile-text">
+                  <strong>{charDisplayName}</strong>
+                  <small>Lvl {currentLevelNum} Explorer ▾</small>
                 </div>
-                <div className="hero-status-card status-expedition">
-                  <span className="status-icon" aria-hidden="true">{nextExpedition.region.icon}</span>
-                  <div>
-                    <strong>{nextExpedition.region.name}</strong>
-                    <small>{nextExpedition.title}</small>
-                  </div>
-                </div>
-              </div>
+              </button>
 
-              <div className="child-hero-cta-row">
-                <Link href={nextExpedition.actionHref} className="button button-primary child-hero-play-btn">
-                  ▶ Jump Into Today’s Expedition →
-                </Link>
-                <Link href="/arcade" className="button button-secondary child-hero-arcade-btn">
-                  🎮 Play Arcade Games
-                </Link>
-              </div>
+              {showProfiles && (
+                <div className="profile-menu" role="menu">
+                  {children.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setActiveId(c.id);
+                        localStorage.setItem('lanternLionActiveChild', String(c.id));
+                        setShowProfiles(false);
+                      }}
+                      className={c.id === activeId ? 'active' : ''}
+                    >
+                      <span>{c.name.slice(0, 1)}</span>
+                      <div>
+                        <strong>{c.name}</strong>
+                        <small>{c.age} yrs · {statsForChild(c).points} Stars</small>
+                      </div>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="child-family-summary-btn"
+                    onClick={() => { setShowFamilyModal(true); setShowProfiles(false); }}
+                  >
+                    👨‍👩‍👧 Family Progress Overview
+                  </button>
+                  <Link href="/child-access" className="child-signout-link">
+                    Sign out / Switch account
+                  </Link>
+                </div>
+              )}
             </div>
+          </div>
+        </header>
 
-            <div className="welcome-lantern" aria-hidden="true">
-              <span></span>
-              <i></i>
-              <b>{points}</b>
-            </div>
-          </section>
+        {/* FEEDBACK NOTICE */}
+        {helpNotice && (
+          <div className="kid-notice-banner" role="status">
+            <span>🛡️ {helpNotice}</span>
+            <button type="button" onClick={() => setHelpNotice('')}>✕</button>
+          </div>
+        )}
 
-          {/* ── STREAK & LEAGUE ROW ── */}
-          {learningStreak && !isPreview && (
-            <StreakCard streak={learningStreak} tone={teen ? 'teen' : 'child'} onFetchCalendar={fetchStreakCalendar} />
-          )}
-
-          {!isPreview && (
-            <LeagueCard
-              pod={getLeaguePod(child.id, child.name, child.age, child.avatar, charAppearance)}
-              isTeen={teen}
-            />
-          )}
-
-          {!isPreview && learningPlan && (
-            <LearningJourneyCard plan={learningPlan} isTeen={teen} />
-          )}
-
-          {/* ── TODAY'S MISSION & EXPEDITION GRID ── */}
-          <div className="child-today-grid">
-            {/* Mission Board: Today's Quests */}
-            <section className="child-quest-board-card" aria-label="Today's Quests">
-              <div className="quest-board-header">
-                <div className="quest-board-title-side">
-                  <span className="quest-board-badge" aria-hidden="true">🎯</span>
-                  <div>
-                    <h2>Today’s Daily Quests</h2>
-                    <small className="quest-board-subtitle">Complete missions to earn XP, Lantern Coins, and Gems!</small>
+        {/* ── TAB CONTENT ── */}
+        <main className="kid-content-canvas">
+          {/* TAB 1: MAIN DASHBOARD VIEW */}
+          {activeTab === 'dashboard' && (
+            <div className="kid-dashboard-grid">
+              {/* 1. LARGE HERO BANNER ("LET'S LEARN!") */}
+              <section className="kid-hero-banner">
+                <div className="kid-hero-copy">
+                  <div className="kid-hero-kicker-row">
+                    <span className="kid-hero-sparkle" aria-hidden="true">✨</span>
+                    <span className="kid-hero-kicker">TODAY’S EXPEDITION</span>
+                  </div>
+                  <h2>Let’s Learn!</h2>
+                  <p className="kid-hero-tagline">
+                    Every lesson is an adventure. Let’s go!
+                  </p>
+                  <p className="kid-hero-mission-title">
+                    📍 <b>{nextExpedition.region.name}:</b> {nextExpedition.title}
+                  </p>
+                  <div className="kid-hero-btn-row">
+                    <Link href={nextExpedition.actionHref} className="kid-hero-start-btn">
+                      <span className="kid-hero-btn-icon" aria-hidden="true">📖</span>
+                      <span>Start Lesson</span>
+                      <span className="kid-hero-arrow-bubble" aria-hidden="true">›</span>
+                    </Link>
                   </div>
                 </div>
-                <div className="quest-board-progress-side">
-                  <span className="quest-count-pill">
-                    <b>{dailySummary.completed}</b> of <b>{dailySummary.total}</b> done
-                  </span>
-                  <div className="quest-meter">
+
+                <div className="kid-hero-rocket-art" aria-hidden="true">
+                  {/* Floating Cloud Silhouettes and Rocket/Pixar Character */}
+                  <div className="kid-cloud-one" />
+                  <div className="kid-cloud-two" />
+                  <div className="kid-star-decor star-pos-1">⭐</div>
+                  <div className="kid-star-decor star-pos-2">✨</div>
+                  <div className="kid-star-decor star-pos-3">⭐</div>
+                  <div className="kid-rocket-box">
+                    <div className="kid-rocket-body">
+                      <div className="kid-rocket-tip" />
+                      <div className="kid-rocket-fin-left" />
+                      <div className="kid-rocket-fin-right" />
+                      <div className="kid-rocket-window">
+                        <div className="kid-rocket-pilot">🦁</div>
+                      </div>
+                      <div className="kid-rocket-flame" />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 2. THREE QUICK-ACTION STATUS CARDS ROW */}
+              <section className="kid-three-cards-row">
+                {/* Card 1: Claim Star / Rewards */}
+                <div className="kid-action-card card-yellow-claim">
+                  <div className="kid-action-card-top">
+                    <div className="kid-action-icon-circle yellow-circle" aria-hidden="true">
+                      🏆
+                    </div>
+                    <div className="kid-action-copy">
+                      <strong>Claim Star</strong>
+                      <p>Complete a lesson to earn your star!</p>
+                    </div>
+                  </div>
+                  <Link href="/daily-quests" className="kid-pill-btn btn-yellow-pill">
+                    <span>⭐</span> Claim Star
+                  </Link>
+                </div>
+
+                {/* Card 2: Correct / Daily Scripture Check */}
+                <div className="kid-action-card card-green-correct">
+                  <div className="kid-action-card-top">
+                    <div className="kid-action-icon-circle green-circle" aria-hidden="true">
+                      ✓
+                    </div>
+                    <div className="kid-action-copy">
+                      <strong>Verse Memory</strong>
+                      <p>“Thy word is a lamp unto my feet.”</p>
+                    </div>
+                  </div>
+                  <Link href="/arcade/verse-builder" className="kid-pill-btn btn-green-pill">
+                    <span>Correct!</span> ✓
+                  </Link>
+                </div>
+
+                {/* Card 3: Daily Quest Progress */}
+                <div className="kid-action-card card-blue-quest">
+                  <div className="kid-action-card-top">
+                    <div className="kid-action-icon-circle blue-circle" aria-hidden="true">
+                      📅
+                    </div>
+                    <div className="kid-action-copy">
+                      <strong>Daily Quest</strong>
+                      <p>Complete {dailySummary.total} missions today</p>
+                    </div>
+                  </div>
+                  <div className="kid-quest-progress-track">
                     <div
-                      className="quest-meter-fill"
+                      className="kid-quest-progress-fill"
                       style={{ width: `${(dailySummary.completed / Math.max(dailySummary.total, 1)) * 100}%` }}
                     />
                   </div>
+                  <div className="kid-quest-card-footer">
+                    <span className="kid-quest-reward-tag">⭐ 50 Stars</span>
+                    <span className="kid-quest-fraction">{dailySummary.completed}/{dailySummary.total}</span>
+                  </div>
                 </div>
+              </section>
+
+              {/* 3. BOTTOM ROW: YOUR PROGRESS CARD + MASCOT CELEBRATION CARD */}
+              <section className="kid-bottom-grid">
+                {/* Left Card: Your Progress */}
+                <div className="kid-progress-card">
+                  <div className="kid-progress-head">
+                    <div>
+                      <h3>Your Progress</h3>
+                      <p>Amazing effort! You’re on a great streak.</p>
+                    </div>
+                    <div className="kid-streak-badge">
+                      <span aria-hidden="true">🔥</span>
+                      <strong>{dailySummary.streak} Day Streak</strong>
+                    </div>
+                  </div>
+
+                  {/* 3 Stat Counters with Playful Wavy Underlines */}
+                  <div className="kid-stat-counters-row">
+                    <div className="kid-stat-col">
+                      <div className="kid-stat-icon-wrap" aria-hidden="true">⭐</div>
+                      <div className="kid-stat-num">{starsEarned}</div>
+                      <div className="kid-wavy-line wavy-yellow" />
+                      <div className="kid-stat-label">Stars Earned</div>
+                    </div>
+
+                    <div className="kid-stat-col">
+                      <div className="kid-stat-icon-wrap" aria-hidden="true">🎯</div>
+                      <div className="kid-stat-num">{totalSubLessonsCompleted}</div>
+                      <div className="kid-wavy-line wavy-green" />
+                      <div className="kid-stat-label">Lessons Completed</div>
+                    </div>
+
+                    <div className="kid-stat-col">
+                      <div className="kid-stat-icon-wrap" aria-hidden="true">🏆</div>
+                      <div className="kid-stat-num">Level {currentLevelNum}</div>
+                      <div className="kid-wavy-line wavy-blue" />
+                      <div className="kid-stat-label">{currentLevelTitle}</div>
+                    </div>
+                  </div>
+
+                  {/* Star Rating Track */}
+                  <div className="kid-star-track-row">
+                    <span>Next Level: {nextLevelRequirement} Stars</span>
+                    <div className="kid-five-stars-row" aria-label="Level Progress Stars">
+                      <span className="star-filled">⭐</span>
+                      <span className="star-filled">⭐</span>
+                      <span className="star-filled">⭐</span>
+                      <span className="star-filled">⭐</span>
+                      <span className="star-empty">☆</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Card: Mascot Celebration Card */}
+                <div className="kid-mascot-card">
+                  <div className="kid-mascot-hills" aria-hidden="true">
+                    <div className="mascot-hill-left" />
+                    <div className="mascot-hill-right" />
+                  </div>
+                  <div className="kid-mascot-speech-bubble">
+                    Keep shining, superstar!
+                  </div>
+                  <div className="kid-mascot-character-art">
+                    {/* Cute Animated Star Mascot with Friendly Face */}
+                    <div className="kid-star-mascot" aria-hidden="true">
+                      <div className="star-hand-left">👋</div>
+                      <div className="star-mascot-face">
+                        <div className="star-eye left" />
+                        <div className="star-eye right" />
+                        <div className="star-mouth" />
+                        <div className="star-cheeks" />
+                      </div>
+                      <div className="star-hand-right">✨</div>
+                      <div className="star-leg-left" />
+                      <div className="star-leg-right" />
+                    </div>
+                  </div>
+                  <div className="kid-mascot-action-row">
+                    <Link href="/arcade" className="kid-mascot-arcade-btn">
+                      🎮 Play Arcade Games
+                    </Link>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* TAB 2: LESSONS & CURRICULUM EXPLORER */}
+          {activeTab === 'lessons' && (
+            <div className="kid-tab-view">
+              <div className="kid-tab-header">
+                <h2>📖 Bible Curriculum &amp; Lessons</h2>
+                <p>Explore biblical chapters and learn God’s word step by step!</p>
               </div>
 
-              <div className="quest-slot-list">
-                {todayQuestSet?.quests.map((instance) => {
-                  const tmpl = getTemplate(instance.templateId);
-                  if (!tmpl) return null;
-                  const isDone = instance.completed;
+              <div className="dashboard-filters">
+                {(['All lessons', 'Not started', 'In progress', 'Completed'] as ModuleFilter[]).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    className={filter === f ? 'active' : ''}
+                    onClick={() => setFilter(f)}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+
+              <div className="library-grid">
+                {filteredModules.map((mod) => {
+                  const lessons = getModuleLessons(mod);
+                  const done = doneCountFor(mod.id);
+                  const isDone = isModuleComplete(mod.id);
                   return (
-                    <article key={instance.templateId} className={`quest-item-tile ${isDone ? 'quest-done' : ''}`}>
-                      <span className="quest-item-icon" aria-hidden="true">
-                        {isDone ? '✅' : tmpl.icon}
-                      </span>
-                      <div className="quest-item-body">
-                        <strong>{tmpl.title}</strong>
-                        <p>{tmpl.description}</p>
+                    <article key={mod.id} className="child-game-card theme-blue">
+                      <div className="game-card-top">
+                        <div className="game-card-icon">📖</div>
+                        <span className="game-xp-badge">{done}/{lessons.length} Done</span>
                       </div>
-                      <div className="quest-item-rewards">
-                        <span className="reward-pill xp-pill">+{tmpl.xp} XP</span>
-                        <span className="reward-pill coin-pill">+{tmpl.coins} 🪙</span>
-                      </div>
-                      <div className="quest-item-action">
-                        {isDone ? (
-                          <span className="quest-completed-badge">✓ Completed</span>
-                        ) : (
-                          <Link href="/daily-quests" className="button button-primary quest-play-btn">
-                            {tmpl.completionMode === 'verse-recall' || tmpl.completionMode === 'word-scramble' ? 'Play' : 'Go'}
-                          </Link>
-                        )}
-                      </div>
+                      <h3>{mod.title}</h3>
+                      <p>{mod.description}</p>
+                      <Link href={`/curriculum/${mod.id}`} className="game-play-btn">
+                        {isDone ? 'Review Chapter ✓' : done > 0 ? 'Continue Chapter →' : 'Start Chapter →'}
+                      </Link>
                     </article>
                   );
                 })}
               </div>
+            </div>
+          )}
 
-              <div className="quest-board-footer">
-                <Link href="/daily-quests" className="button button-primary quest-footer-btn">
-                  {dailySummary.completed >= dailySummary.total ? '🌟 View Today’s Rewards & Mystery Chest →' : '🚀 Open Daily Quests Room →'}
-                </Link>
-              </div>
-            </section>
-
-            {/* Next Expedition Spotlight */}
-            <section className="child-expedition-card" aria-label="Next Bible Adventure Expedition">
-              <div className="expedition-header">
-                <span className="expedition-region-icon" aria-hidden="true">{nextExpedition.region.icon}</span>
-                <div>
-                  <span className="expedition-tag">🗺️ Next Expedition · {nextExpedition.region.name}</span>
-                  <h2>{nextExpedition.title}</h2>
-                  <p className="expedition-subtitle">{nextExpedition.subtitle}</p>
-                </div>
+          {/* TAB 3: DAILY QUESTS */}
+          {activeTab === 'quests' && (
+            <div className="kid-tab-view">
+              <div className="kid-tab-header">
+                <h2>⚔️ Today’s Quests Board</h2>
+                <p>Complete 4 daily quests to earn stars, coins, and mystery rewards!</p>
               </div>
 
-              {/* 8-Region Mini World Track */}
-              <div className="expedition-world-track" aria-label="8 Biblical Regions Progression">
-                <p className="track-kicker">Bible Adventure World Progress</p>
-                <div className="track-dots-row">
-                  {canonicalRegions.map((r, idx) => {
-                    const status = getRegionStatus(r, adventureCtx);
-                    const isCompleted = status === 'completed';
-                    const isCurrent = status === 'in-progress' || status === 'available';
+              <div className="child-quest-board-card">
+                <div className="quest-slot-list">
+                  {(todayQuestSet?.quests || []).map((q) => {
+                    const tmpl = getTemplate(q.templateId);
+                    if (!tmpl) return null;
+                    const isDone = q.completed;
                     return (
-                      <div
-                        key={r.id}
-                        className={`track-region-node ${isCompleted ? 'node-complete' : isCurrent ? 'node-current' : 'node-locked'}`}
-                        title={`${r.name}: ${status}`}
-                      >
-                        <span className="node-icon">{r.icon}</span>
-                        <small className="node-label">{r.name}</small>
-                        {isCompleted && <span className="node-check" aria-hidden="true">✓</span>}
-                        {idx < canonicalRegions.length - 1 && <span className="node-connector" />}
-                      </div>
+                      <article key={q.templateId} className={`quest-item-tile ${isDone ? 'quest-done' : ''}`}>
+                        <span className="quest-item-icon" aria-hidden="true">
+                          {isDone ? '✅' : tmpl.icon}
+                        </span>
+                        <div className="quest-item-body">
+                          <strong>{tmpl.title}</strong>
+                          <p>{tmpl.description}</p>
+                        </div>
+                        <div className="quest-item-rewards">
+                          <span className="reward-pill xp-pill">+{tmpl.xp} XP</span>
+                          <span className="reward-pill coin-pill">+{tmpl.coins} 🪙</span>
+                        </div>
+                        <div className="quest-item-action">
+                          {isDone ? (
+                            <span className="quest-completed-badge">✓ Completed</span>
+                          ) : (
+                            <Link href="/daily-quests" className="button button-primary quest-play-btn">
+                              Play
+                            </Link>
+                          )}
+                        </div>
+                      </article>
                     );
                   })}
                 </div>
               </div>
-
-              <div className="expedition-actions">
-                <Link href={nextExpedition.actionHref} className="button button-primary expedition-main-btn">
-                  ▶ Continue Adventure in {nextExpedition.region.name} →
-                </Link>
-                <Link href="/adventure" className="button button-secondary expedition-map-btn">
-                  🗺️ Open Full World Map
-                </Link>
-              </div>
-            </section>
-          </div>
-
-          {/* ── INTERACTIVE BIBLE STORIES SPOTLIGHT ── */}
-          {storySummary && (
-            <section className="child-story-spotlight-card" aria-label="Interactive Bible Story Adventure">
-              <div className="story-spotlight-hero-icon" aria-hidden="true">
-                {storySummary.story.heroEmoji}
-              </div>
-              <div className="story-spotlight-content">
-                <span className="story-spotlight-tag">
-                  {storySummary.resuming ? '📖 Resume Story Adventure' : '✨ Interactive Bible Story'}
-                </span>
-                <h2>{storySummary.story.title}</h2>
-                <p className="story-spotlight-meta">
-                  📖 {storySummary.story.scriptureRange} · ⏱️ ~{storySummary.story.estimatedMinutes} minutes · Make faithful choices!
-                </p>
-                <p className="story-spotlight-tagline">
-                  ⭐ Earn +{storySummary.story.reward.xp} XP, +{storySummary.story.reward.coins} Coins, and +{storySummary.story.reward.gems} Gems by completing this story adventure!
-                </p>
-              </div>
-              <div className="story-spotlight-action">
-                <Link href={`/stories/${storySummary.story.id}`} className="button button-primary story-start-btn">
-                  {storySummary.resuming ? '▶ Continue Story →' : '▶ Start Adventure Story →'}
-                </Link>
-              </div>
-            </section>
+            </div>
           )}
 
-          {/* ── ARCADE & BIBLE GAMES SHOWCASE ── */}
-          <section className="child-arcade-showcase" aria-label="Bible Arcade Games">
-            <div className="child-section-head">
-              <div>
-                <p className="child-kicker">🎮 Lantern Bible Arcade</p>
-                <h2>Play &amp; Learn Games</h2>
+          {/* TAB 4: REWARDS & STREAK */}
+          {activeTab === 'rewards' && (
+            <div className="kid-tab-view">
+              <div className="kid-tab-header">
+                <h2>⭐ Rewards &amp; Faith Streak</h2>
+                <p>Keep your daily streak alive and unlock chests in the Lantern Shop!</p>
               </div>
-              <Link href="/arcade" className="section-head-link">
-                Visit Full Arcade ({GAME_DEFINITIONS.length} Games) →
-              </Link>
-            </div>
 
-            <div className="child-games-grid">
-              {GAME_DEFINITIONS.slice(0, 6).map((game, index) => {
-                const gameThemes = ['theme-blue', 'theme-yellow', 'theme-green', 'theme-purple', 'theme-blue', 'theme-yellow'];
-                const themeClass = gameThemes[index % gameThemes.length];
-                return (
-                  <article key={game.id} className={`child-game-card ${themeClass}`}>
+              <StreakCard
+                streak={learningStreak || { currentStreak: dailySummary.streak, longestStreak: dailySummary.streak, graceDays: 2, todayQualified: false, nextMilestone: null, streakEndedRecently: false }}
+                tone={teen ? 'teen' : 'child'}
+                onFetchCalendar={fetchStreakCalendar}
+              />
+
+              <div style={{ marginTop: '24px' }}>
+                <Link href="/character" className="button button-primary" style={{ display: 'inline-block' }}>
+                  🛍️ Open Lantern Shop &amp; Rewards →
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: PROGRESS & ACHIEVEMENTS */}
+          {activeTab === 'progress' && (
+            <div className="kid-tab-view">
+              <div className="kid-tab-header">
+                <h2>📊 Hall of Achievements</h2>
+                <p>Track your biblical knowledge milestones and badges!</p>
+              </div>
+
+              <div className="progress-overview">
+                <article>
+                  <span>🗺️</span>
+                  <strong>{canonicalRegions.length}</strong>
+                  <small>Regions Discovered</small>
+                </article>
+                <article>
+                  <span>⭐</span>
+                  <strong>{starsEarned}</strong>
+                  <small>Total Stars Earned</small>
+                </article>
+                <article>
+                  <span>🔥</span>
+                  <strong>{dailySummary.streak}</strong>
+                  <small>Days in a Row</small>
+                </article>
+                <article>
+                  <span>🏆</span>
+                  <strong>Level {currentLevelNum}</strong>
+                  <small>{currentLevelTitle}</small>
+                </article>
+              </div>
+
+              <div className="child-progress-achievements">
+                <div className="achievements-card-grid">
+                  <div className={`achievement-badge-card ${totalSubLessonsCompleted >= 1 ? 'unlocked' : 'locked'}`}>
+                    <span className="badge-icon">🌱</span>
+                    <strong>First Steps</strong>
+                    <small>Completed your first Bible lesson.</small>
+                    <span className="badge-status">{totalSubLessonsCompleted >= 1 ? 'Unlocked' : 'In Progress'}</span>
+                  </div>
+
+                  <div className={`achievement-badge-card ${dailySummary.streak >= 3 ? 'unlocked' : 'locked'}`}>
+                    <span className="badge-icon">🔥</span>
+                    <strong>Faithful Habit</strong>
+                    <small>Maintained a 3-day learning streak.</small>
+                    <span className="badge-status">{dailySummary.streak >= 3 ? 'Unlocked' : 'In Progress'}</span>
+                  </div>
+
+                  <div className={`achievement-badge-card ${totalSubLessonsCompleted >= 10 ? 'unlocked' : 'locked'}`}>
+                    <span className="badge-icon">⚔️</span>
+                    <strong>Word Warrior</strong>
+                    <small>Completed 10 interactive lessons.</small>
+                    <span className="badge-status">{totalSubLessonsCompleted >= 10 ? 'Unlocked' : 'In Progress'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: ARCADE GAMES SHOWCASE */}
+          {activeTab === 'arcade' && (
+            <div className="kid-tab-view">
+              <div className="kid-tab-header">
+                <h2>🎮 Bible Arcade Quick-Play</h2>
+                <p>Play fun interactive Bible games to practice scripture memory!</p>
+              </div>
+
+              <div className="child-games-grid">
+                {GAME_DEFINITIONS.map((game, idx) => (
+                  <article key={game.id} className={`child-game-card theme-${idx % 2 === 0 ? 'blue' : 'yellow'}`}>
                     <div className="game-card-top">
-                      <span className="game-card-icon" aria-hidden="true">{game.icon}</span>
+                      <div className="game-card-icon">{game.icon}</div>
                       <span className="game-xp-badge">+{game.baseXp} XP</span>
                     </div>
                     <h3>{game.name}</h3>
                     <p>{game.description}</p>
-                    <div className="game-skills-row">
-                      {game.skills.slice(0, 2).map((skill) => (
-                        <span key={skill} className="game-skill-chip">{skill}</span>
-                      ))}
-                    </div>
-                    <Link href={`/arcade/${game.id}`} className="button button-primary game-play-btn">
-                      Play Now ▶
+                    <Link href={`/arcade/${game.id}`} className="game-play-btn">
+                      Play Now ➔
                     </Link>
                   </article>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* ── SCRIPTURE OF THE DAY ("VERSE ON THE PATH") ── */}
-          <section className="verse-strip" aria-label="Verse of the Day">
-            <span className="verse-mark" aria-hidden="true">💡</span>
-            <div>
-              <p className="child-kicker">Verse on the path</p>
-              <blockquote>
-                “{continueModule?.corePassage || 'Your word is a lamp to my feet, and a light for my path.'}”
-              </blockquote>
-              <small>{continueModule?.coreVerse || 'Psalm 119:105'}, WEB</small>
-
-              <div className="verse-audio-wrap">
-                <StudioAudioPlayer
-                  text={`Verse on the path. ${continueModule?.coreVerse || 'Psalm 119:105'}. ${continueModule?.corePassage || 'Your word is a lamp to my feet, and a light for my path.'}`}
-                  title="Daily Scripture Audio"
-                  compact={true}
-                  defaultVoiceId={childTrack === 'teen' ? 'en-GB-Journey-D' : 'en-GB-Journey-F'}
-                />
+                ))}
               </div>
             </div>
-            <div className="verse-strip-actions">
-              <Link href="/arcade/verse-builder" className="button button-primary verse-builder-action">
-                🧱 Practise in Verse Builder →
-              </Link>
-            </div>
-          </section>
-
-          {/* ── SUNDAY SCHOOL / CLASSROOM STRIP ── */}
-          <section className="child-classroom-strip" aria-label="Sunday School connection">
-            <span className="classroom-strip-icon" aria-hidden="true">🏫</span>
-            {connectedClass ? (
-              <div className="classroom-strip-info">
-                <strong>Connected to {connectedClass.name}</strong>
-                <small>Teacher: {connectedClass.teacher} · Join code: <b>{connectedClass.code}</b></small>
-              </div>
-            ) : (
-              <div className="classroom-strip-info">
-                <strong>Have a Sunday School or School class code?</strong>
-                <small>Connect with your teacher to see classroom assignments and study together.</small>
-              </div>
-            )}
-            <button
-              type="button"
-              className="button button-secondary classroom-strip-btn"
-              onClick={() => setShowClassModal(true)}
-            >
-              {connectedClass ? 'Class details →' : 'Enter join code →'}
-            </button>
-          </section>
-
-          {/* ── CONTINUED LESSON SPOTLIGHT ── */}
-          <section className="continue-layout" aria-label="Continue your lesson">
-            {continueModule ? (
-              <article className="continue-card">
-                <div className="continue-art">
-                  <span>01</span>
-                  <div className="hill hill-one"></div>
-                  <div className="hill hill-two"></div>
-                  <i></i>
-                </div>
-                <div className="continue-copy">
-                  <p className="child-kicker">{trackLabel[childTrack]} · Continue your study</p>
-                  <h2>{continueModule.title}</h2>
-                  <p>{continueModule.description}</p>
-                  <div className="lesson-progress">
-                    <span>
-                      <i style={{ width: `${(continueDoneCount / Math.max(continueLessons.length, 1)) * 100}%` }} />
-                    </span>
-                    <small>
-                      {continueModuleComplete ? '✓ Module Finished' : `Lesson ${Math.min(continueDoneCount + 1, continueLessons.length)} of ${continueLessons.length}`}
-                    </small>
-                  </div>
-                  <Link className="button button-primary" href={`/learn?module=${continueModule.id}`}>
-                    {continueModuleComplete ? 'Review this module' : continueDoneCount > 0 ? 'Continue the lesson' : 'Start the lesson'}
-                  </Link>
-                </div>
-              </article>
-            ) : (
-              <article className="continue-card">
-                <div className="continue-copy">
-                  <p className="child-kicker">{trackLabel[childTrack]}</p>
-                  <h2>New lessons coming soon</h2>
-                  <p>Check back soon for more in your age group.</p>
-                </div>
-              </article>
-            )}
-
-            <aside className="today-plan">
-              <div className="today-plan-head">
-                <span>{continueModule ? continueModule.title : 'Today’s plan'}</span>
-                <b>{continueDoneCount} of {continueLessons.length} done</b>
-              </div>
-              {continueLessons.map((lesson, index) => {
-                const done = index < continueDoneCount;
-                const isNext = index === continueDoneCount;
-                return (
-                  <Link
-                    key={lesson.title}
-                    className={done ? 'done' : ''}
-                    href={`/learn?module=${continueModule?.id}&lesson=${index}`}
-                  >
-                    <span>{done ? '✓' : index + 1}</span>
-                    <div>
-                      <strong>{lesson.title}</strong>
-                      <small>{done ? 'Finished' : isNext ? `${lesson.minutes} minutes` : 'Up next'}</small>
-                    </div>
-                  </Link>
-                );
-              })}
-              <p>You can stop after any lesson. Your place is saved on this device.</p>
-            </aside>
-          </section>
-        </div>
-      )}
-
-      {/* ── EXPLORE / LIBRARY VIEW ── */}
-      {view === 'library' && (
-        <div className="child-dashboard-body dashboard-view">
-          <div className="dashboard-title">
-            <p className="child-kicker">🧭 Explore {trackLabel[childTrack]}</p>
-            <h1>What do you feel like learning?</h1>
-            <p>Every lesson here is handcrafted for your age band. Explore at your own pace!</p>
-          </div>
-
-          <div className="dashboard-filters">
-            {(['All lessons', 'Not started', 'In progress', 'Completed'] as ModuleFilter[]).map((item) => (
-              <button
-                key={item}
-                type="button"
-                aria-pressed={filter === item}
-                className={filter === item ? 'active' : ''}
-                onClick={() => setFilter(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-
-          <div className="dashboard-activity-grid library-grid">
-            {filteredModules.map((mod) => {
-              const total = lessonCountFor(mod.id);
-              const done = doneCountFor(mod.id);
-              return (
-                <article className={toneForTrack[mod.track]} key={mod.id}>
-                  <span className="activity-mark">{mod.title[0]}</span>
-                  <small>{mod.theme} · {total} lessons</small>
-                  <h3>{mod.title}</h3>
-                  <Link href={`/learn?module=${mod.id}`}>
-                    {done >= total && total > 0 ? 'Review again' : done > 0 ? 'Continue' : 'Start lesson'}
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
-          {filteredModules.length === 0 && (
-            <p className="dashboard-empty-note">No lessons match this filter yet — try a different one.</p>
           )}
-        </div>
-      )}
+        </main>
+      </div>
 
-      {/* ── MY PROGRESS VIEW ── */}
-      {view === 'progress' && (
-        <div className="child-dashboard-body dashboard-view">
-          <div className="dashboard-title">
-            <p className="child-kicker">📊 My Progress &amp; Trophies</p>
-            <h1>Look how far you’ve come!</h1>
-            <p>Every step in God’s Word shines bright. You never lose points for taking a break.</p>
-          </div>
-
-          {/* 4 Top Progress Counters */}
-          <div className="progress-overview">
-            <article>
-              <span aria-hidden="true">⭐</span>
-              <strong>{wallet.xp.toLocaleString()}</strong>
-              <small>Total Light XP</small>
-            </article>
-            <article>
-              <span aria-hidden="true">📖</span>
-              <strong>{completedModulesCount}</strong>
-              <small>Modules Completed</small>
-            </article>
-            <article>
-              <span aria-hidden="true">🔥</span>
-              <strong>{dailySummary.streak}</strong>
-              <small>Day Learning Streak</small>
-            </article>
-            <article>
-              <span aria-hidden="true">✅</span>
-              <strong>{totalSubLessonsCompleted}</strong>
-              <small>Lessons Finished</small>
-            </article>
-          </div>
-
-          {/* Weekly Path */}
-          <section className="progress-path" aria-label="Weekly Light Path">
-            <div>
-              <p className="child-kicker">This week’s lights</p>
-              <h2>Growing in {trackLabel[childTrack]}</h2>
-            </div>
-            <div className="path-line">
-              {[1, 2, 3, 4, 5].map((day) => (
-                <span className={day <= goalDone ? 'lit' : ''} key={day}>
-                  {day <= goalDone ? '✓' : day}
-                </span>
-              ))}
-            </div>
-            <p>
-              {goalDone === 5
-                ? '🌟 Every light is on this week! Take a rest or explore a new story.'
-                : `${5 - goalDone} more ${5 - goalDone === 1 ? 'light' : 'lights'} to complete this week’s path.`}
-            </p>
-          </section>
-
-          {/* Achievements Showcase */}
-          <section className="child-progress-achievements" aria-label="Achievements Showcase">
-            <div className="child-section-head">
-              <div>
-                <p className="child-kicker">🏆 Hall of Achievements</p>
-                <h2>Badges &amp; Milestones</h2>
-              </div>
-            </div>
-
-            <div className="achievements-card-grid">
-              <div className={`achievement-badge-card ${wallet.xp >= 50 ? 'unlocked' : 'locked'}`}>
-                <span className="badge-icon" aria-hidden="true">🌟</span>
-                <strong>First Light</strong>
-                <small>Earned your first 50 Light XP</small>
-                <span className="badge-status">{wallet.xp >= 50 ? 'Unlocked' : 'In Progress'}</span>
-              </div>
-              <div className={`achievement-badge-card ${completedModulesCount >= 1 ? 'unlocked' : 'locked'}`}>
-                <span className="badge-icon" aria-hidden="true">🗺️</span>
-                <strong>Eden Pioneer</strong>
-                <small>Complete your first full study module</small>
-                <span className="badge-status">{completedModulesCount >= 1 ? 'Unlocked' : 'In Progress'}</span>
-              </div>
-              <div className={`achievement-badge-card ${dailySummary.streak >= 3 ? 'unlocked' : 'locked'}`}>
-                <span className="badge-icon" aria-hidden="true">🔥</span>
-                <strong>Faithful Flame</strong>
-                <small>Maintain a 3-day learning streak</small>
-                <span className="badge-status">{dailySummary.streak >= 3 ? 'Unlocked' : 'In Progress'}</span>
-              </div>
-              <div className={`achievement-badge-card ${totalSubLessonsCompleted >= 5 ? 'unlocked' : 'locked'}`}>
-                <span className="badge-icon" aria-hidden="true">📜</span>
-                <strong>Scripture Scout</strong>
-                <small>Finish 5 sub-lessons across any module</small>
-                <span className="badge-status">{totalSubLessonsCompleted >= 5 ? 'Unlocked' : 'In Progress'}</span>
-              </div>
-              <div className={`achievement-badge-card ${wallet.coins >= 50 ? 'unlocked' : 'locked'}`}>
-                <span className="badge-icon" aria-hidden="true">🪙</span>
-                <strong>Coin Collector</strong>
-                <small>Accumulate 50 Lantern Coins</small>
-                <span className="badge-status">{wallet.coins >= 50 ? 'Unlocked' : 'In Progress'}</span>
-              </div>
-              <div className={`achievement-badge-card ${currentLvl >= 5 ? 'unlocked' : 'locked'}`}>
-                <span className="badge-icon" aria-hidden="true">🦁</span>
-                <strong>Lion Guardian</strong>
-                <small>Reach Adventurer Level 5</small>
-                <span className="badge-status">{currentLvl >= 5 ? 'Unlocked' : 'In Progress'}</span>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* ── TOASTS & MODALS ── */}
-      {helpNotice && (
-        <div className="child-help-confirmation" role="status">
-          <span>✓</span>
-          <p>{helpNotice}</p>
-          <button type="button" onClick={() => setHelpNotice('')}>Close</button>
-        </div>
-      )}
-
+      {/* ── HELP DIALOG MODAL ── */}
       {showHelp && (
-        <div className="help-overlay" role="presentation" onClick={() => setShowHelp(false)}>
-          <section
-            className="help-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="help-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button ref={closeHelpRef} className="close-help" aria-label="Close help" onClick={() => setShowHelp(false)}>
-              ×
+        <div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
+          <div className="help-dialog">
+            <button ref={closeHelpRef} type="button" className="close-help" onClick={() => setShowHelp(false)} aria-label="Close help">
+              ✕
             </button>
-            <p className="child-kicker">You did the right thing</p>
-            <h2 id="help-title">What kind of help do you need?</h2>
-            <p>A trusted grown-up will see your message. You won’t get in trouble for asking.</p>
+            <p className="child-kicker">Need a Hand?</p>
+            <h2 id="help-title">We’re right here with you!</h2>
+            <p>Tell us what is happening and we will notify your parent or teacher right away.</p>
             <div>
-              <button type="button" onClick={() => submitHelp('Something feels wrong')}>Something feels wrong</button>
-              <button type="button" onClick={() => submitHelp('Stuck in an activity')}>I’m stuck in an activity</button>
-              <button type="button" onClick={() => submitHelp('Wants their parent')}>I want my parent</button>
+              <button type="button" onClick={() => submitHelp('A question or story feels confusing')}>
+                🤔 A question or story feels confusing
+              </button>
+              <button type="button" onClick={() => submitHelp('A word or picture made me uncomfortable')}>
+                😟 Something made me feel uncomfortable
+              </button>
+              <button type="button" onClick={() => submitHelp('I want to take a break')}>
+                ☕ I want to take a break
+              </button>
             </div>
-            <small>If you feel unsafe right now, leave the device and find a trusted grown-up near you.</small>
-          </section>
+            <small>Your grown-ups are always in the loop so you can learn safely.</small>
+          </div>
         </div>
       )}
 
-      {/* ── Classroom Code Modal ── */}
-      {showClassModal && (
-        <div className="help-overlay" role="presentation" onClick={() => setShowClassModal(false)}>
-          <section className="help-dialog classroom-connect-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <button className="close-help" aria-label="Close" onClick={() => setShowClassModal(false)}>×</button>
-            <div className="classroom-modal-badge"><span aria-hidden="true">🏫</span></div>
-            <p className="child-kicker">Sunday School &amp; Classroom</p>
-            <h2>Connect with your Teacher</h2>
-            <p className="classroom-modal-lead">
-              Enter the join code given to you by your Sunday School teacher or Christian school leader.
-            </p>
-
-            {connectedClass ? (
-              <div className="classroom-active-box">
-                <div className="active-class-meta">
-                  <span>Currently connected:</span>
-                  <strong>{connectedClass.name} ({connectedClass.ageBand})</strong>
-                  <small>Teacher: {connectedClass.teacher} · Code: {connectedClass.code}</small>
-                </div>
-                {!isPreview && (
-                  <button className="classroom-disconnect-btn" onClick={disconnectClassroom}>
-                    Disconnect from this class
-                  </button>
-                )}
-              </div>
-            ) : isPreview ? (
-              <p className="classroom-error">Connecting to a classroom isn’t available in preview mode.</p>
-            ) : (
-              <div className="classroom-input-card">
-                <label>
-                  Classroom Join Code
-                  <input
-                    value={classCodeInput}
-                    onChange={(e) => { setClassCodeInput(e.target.value.toUpperCase()); setClassError(''); }}
-                    placeholder="e.g. LION-482 or LAMP-731"
-                    maxLength={12}
-                  />
-                </label>
-                {classError && <p className="classroom-error" role="alert">{classError}</p>}
-                <div className="classroom-code-hints">
-                  <span>Demo codes available to try:</span>
-                  <button type="button" onClick={() => setClassCodeInput('LION-482')}>LION-482 (Wed Explorers)</button>
-                  <button type="button" onClick={() => setClassCodeInput('LAMP-731')}>LAMP-731 (Teen Circle)</button>
-                </div>
-                <button className="button button-primary classroom-submit-btn" onClick={connectClassroom}>
-                  Connect to classroom
-                </button>
-              </div>
-            )}
-
-            <button className="family-text-button modal-cancel-link" onClick={() => setShowClassModal(false)}>
-              Close
-            </button>
-          </section>
-        </div>
-      )}
-
-      {/* ── Family Profile Summary Modal ── */}
+      {/* ── FAMILY SUMMARY MODAL ── */}
       {showFamilyModal && (
-        <div className="help-overlay" role="presentation" onClick={() => setShowFamilyModal(false)}>
-          <section className="help-dialog family-summary-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <button className="close-help" aria-label="Close" onClick={() => setShowFamilyModal(false)}>×</button>
-            <div className="family-modal-badge"><span aria-hidden="true">🦁</span></div>
-            <p className="child-kicker">Our Family Squad</p>
+        <div className="help-overlay" role="dialog" aria-modal="true">
+          <div className="help-dialog family-modal-dialog">
+            <button type="button" className="close-help" onClick={() => setShowFamilyModal(false)}>✕</button>
+            <div className="family-modal-badge">👨‍👩‍👧</div>
+            <p className="child-kicker">Family Account</p>
             <h2>{familyData.familyName}</h2>
-            <p className="family-modal-lead">
-              Hello <b>{child.name}</b>! Here is how your family is shining in the Bible club together.
-            </p>
-
-            <div className="family-modal-meta">
-              <div><span>Parent / Guardian:</span> <strong>{familyData.parentName}</strong></div>
-              <div><span>Home Country:</span> <strong>{familyData.country}</strong></div>
-              <div><span>Family Members:</span> <strong>{children.length} profiles</strong></div>
+            <div className="family-modal-child-grid">
+              {children.map((c) => {
+                const s = statsForChild(c);
+                return (
+                  <div key={c.id} className={`family-score-card ${c.id === activeId ? 'current' : ''}`}>
+                    <div className="fam-card-avatar">{c.name.slice(0, 1)}</div>
+                    <div className="fam-card-info">
+                      <strong>{c.name} {c.id === activeId ? '(You)' : ''}</strong>
+                      <small>{c.age} years old · {s.done} lessons</small>
+                    </div>
+                    <div className="fam-card-points">
+                      <b>⭐ {s.points}</b>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-
-            <div className="family-modal-scores">
-              <p className="family-modal-scores-title">Family Member Scoreboard</p>
-              <div className="family-modal-child-grid">
-                {children.map((c) => {
-                  const stats = statsForChild(c);
-                  const isCurrent = c.id === activeId;
-                  return (
-                    <article key={c.id} className={`family-score-card ${isCurrent ? 'current' : ''}`}>
-                      <span className="fam-card-avatar">{c.name.slice(0, 1)}</span>
-                      <div className="fam-card-info">
-                        <strong>
-                          {c.name} {isCurrent && <em className="you-tag">(You)</em>}
-                        </strong>
-                        <small>{trackEmoji[stats.track]} {trackLabel[stats.track]}</small>
-                      </div>
-                      <div className="fam-card-points">
-                        <b>★ {stats.points}</b>
-                        <small>{stats.done} lessons finished</small>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-
-            <aside className="family-modal-safety-note">
-              <span>🛡️ Family Safety Summary</span>
-              <p>
-                Children have no open chat or public profiles. All progress stays private within your family and connected teachers.
-              </p>
-            </aside>
-
-            <button className="button button-primary family-modal-close-btn" onClick={() => setShowFamilyModal(false)}>
-              Back to my club →
+            <button type="button" className="family-modal-close-btn" onClick={() => setShowFamilyModal(false)}>
+              Close Overview
             </button>
-          </section>
+          </div>
         </div>
       )}
 
-      {!isPreview && <ChatAssistant mode="child" name={child.name} onSafetyFlag={handleChatSafetyFlag} />}
-    </main>
+      {/* ── EMBEDDED CHAT ASSISTANT ── */}
+      <ChatAssistant
+        mode="child"
+        name={child.name}
+        onSafetyFlag={handleChatSafetyFlag}
+      />
+    </div>
   );
 }
