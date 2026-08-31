@@ -161,9 +161,15 @@ export default function CharacterPage() {
         <div className="adv-topbar-center">
           <GameHUD level={levelInfo.level} wallet={wallet} />
         </div>
-        <div className="child-header-actions">
-          <Link href="/adventure" className="help-button adv-cross-link">🗺️ Adventure</Link>
-          <Link href={dashboardHref} className="help-button">← Back to dashboard</Link>
+        <div className="child-header-actions char-topbar-actions">
+          <Link href="/adventure" className="char-nav-btn char-nav-adventure">
+            <span aria-hidden="true">🗺️</span>
+            <span>Adventure</span>
+          </Link>
+          <Link href={dashboardHref} className="char-nav-btn char-nav-back">
+            <span aria-hidden="true">←</span>
+            <span>Dashboard</span>
+          </Link>
         </div>
       </header>
 
@@ -234,20 +240,49 @@ export default function CharacterPage() {
               <StatChip icon="💎" value={achievements.collectiblesFound} label="Collectibles found" />
             </div>
 
-            <section className="char-panel">
-              <p className="child-kicker">Companion &amp; Artifact</p>
+            <section className="char-panel char-companion-panel">
+              <div className="char-companion-panel-header">
+                <div>
+                  <p className="child-kicker">Companion &amp; Artifact</p>
+                  <h3 className="char-companion-title">Faith Travel Companion</h3>
+                </div>
+                {companionItem && (
+                  <span className="char-companion-active-badge">Equipped ✨</span>
+                )}
+              </div>
               {companionItem ? (
                 <div className="char-companion-display">
-                  <ItemIllustration itemId={companionItem} size={54} />
-                  <div>
+                  <div className="char-companion-icon-frame">
+                    <ItemIllustration itemId={companionItem} size={56} />
+                  </div>
+                  <div className="char-companion-info">
                     <strong>{getItem(companionItem)?.name || 'Faith Companion'}</strong>
                     <p className="char-companion-line">Travels alongside you on your biblical journeys with glowing light.</p>
                   </div>
+                  <button
+                    type="button"
+                    className="button button-secondary char-companion-change-btn"
+                    onClick={() => { setTab('inventory'); setActiveSlot('special'); }}
+                  >
+                    Change Companion
+                  </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <p className="char-companion-line">No companion equipped yet — unlock the Lion Cub, Lost Sheep or Dove in the Lantern Shop or via quests!</p>
-                  <button type="button" className="button button-secondary" onClick={() => { setTab('shop'); setShopCategory('pet'); }}>Browse Pets →</button>
+                <div className="char-companion-empty-box">
+                  <div className="char-companion-empty-icon" aria-hidden="true">
+                    🦁
+                  </div>
+                  <div className="char-companion-empty-info">
+                    <strong>No Companion Equipped Yet</strong>
+                    <p>Unlock loyal Bible companions like the Lion Cub, Lost Sheep, or Peace Dove to journey with you!</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="button button-primary char-companion-browse-btn"
+                    onClick={() => { setTab('shop'); setShopCategory('special'); }}
+                  >
+                    🐾 Browse Pets in Shop →
+                  </button>
                 </div>
               )}
             </section>
