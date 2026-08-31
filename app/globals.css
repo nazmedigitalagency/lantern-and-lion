@@ -1681,12 +1681,20 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   background: #fff2ea;
   box-shadow: 5px 5px 0 var(--kid-orange);
 }
-.streak-card.streak-card-teen { background: var(--navy); color: #ffffff; border-color: var(--gold); }
+.streak-card.streak-card-teen {
+  margin-top: 0;
+  background: #0f172a;
+  color: #ffffff;
+  border: 1.5px solid #1e293b;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
 .streak-card-top { display: flex; align-items: center; gap: 14px; }
 .streak-flame { font-size: 32px; line-height: 1; }
 .streak-card-top strong { display: block; font: 700 19px var(--font-fredoka); color: var(--kid-navy); }
 .streak-card-teen .streak-card-top strong { color: #ffffff; }
 .streak-card-top p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.streak-card-teen .streak-card-top p { color: #94a3b8; }
 .streak-card-status { margin-top: 14px; }
 .streak-status-done, .streak-status-pending {
   display: inline-block;
@@ -1697,11 +1705,17 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .streak-status-done { background: var(--kid-success-bg); color: var(--kid-success); }
 .streak-status-pending { background: #fff8e6; color: var(--kid-gold-dark); }
+.streak-card-teen .streak-status-done { background: #064e3b; color: #86efac; }
+.streak-card-teen .streak-status-pending { background: #422006; color: #fde047; }
 .streak-card-stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
 .streak-card-stats div { padding: 8px 14px; border: 1.5px solid var(--kid-navy); border-radius: 12px; background: #ffffff; min-width: 96px; }
+.streak-card-teen .streak-card-stats div { background: #1e293b; border: 1.5px solid #334155; }
 .streak-card-stats dt { margin: 0; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.streak-card-teen .streak-card-stats dt { color: #94a3b8; }
 .streak-card-stats dd { margin: 2px 0 0; font-size: 16px; font-weight: 800; color: var(--kid-navy); }
+.streak-card-teen .streak-card-stats dd { color: #ffffff; }
 .streak-ended-note { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+.streak-card-teen .streak-ended-note { color: #94a3b8; }
 .streak-view-button {
   margin-top: 16px;
   min-height: 42px;
@@ -1715,12 +1729,27 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   transition: transform 120ms ease;
 }
 .streak-view-button:hover { transform: translateY(-1px); }
+.streak-card-teen .streak-view-button {
+  background: #1e293b;
+  border: 1.5px solid #334155;
+  color: #ffffff;
+}
+.streak-card-teen .streak-view-button:hover {
+  background: #253349;
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
 .streak-calendar-panel { margin-top: 16px; padding: 16px; border: 2px solid var(--kid-navy); border-radius: 14px; background: #ffffff; }
+.streak-card-teen .streak-calendar-panel { background: #1e293b; border: 1.5px solid #334155; color: #ffffff; }
 .streak-calendar-head { display: flex; align-items: center; justify-content: space-between; font: 800 13px var(--font-nunito); color: var(--kid-navy); }
+.streak-card-teen .streak-calendar-head { color: #ffffff; }
 .streak-calendar-head button { border: 0; background: transparent; font-size: 18px; cursor: pointer; color: var(--kid-navy); }
+.streak-card-teen .streak-calendar-head button { color: #ffffff; }
 .streak-calendar-days { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .streak-calendar-days li { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 10px; background: var(--kid-sky); font-size: 16px; }
+.streak-card-teen .streak-calendar-days li { background: #0f172a; color: #ffffff; }
 .streak-calendar-days small { font-size: 10px; color: var(--muted); }
+.streak-card-teen .streak-calendar-days small { color: #94a3b8; }
 
 /* ── Modal system: Help dialog & Family overview ── */
 .help-overlay {
@@ -2809,13 +2838,13 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 /* ============================================================
    TEEN DASHBOARD — Lion’s Den Experience
-   Visual system: Mature, Modern, Gamified, Confident, Solid Colors (NO GRADIENTS)
+   Visual system: Mature Dark Navy Blue, Gamified, Confident, Solid Colors (NO GRADIENTS)
    ============================================================ */
 
 .teen-dashboard {
   min-height: 100vh;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #0b1120;
+  color: #f8fafc;
   font-family: var(--font-nunito);
 }
 
@@ -2827,22 +2856,22 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border-bottom: 1.5px solid #1e293b;
+  background: #0f172a;
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .teen-menu-trigger {
   display: none;
   width: 40px;
   height: 40px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #334155;
   border-radius: 10px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font-size: 18px;
   font-weight: 900;
   cursor: pointer;
@@ -2851,8 +2880,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-menu-trigger:hover {
   border-color: #3b82f6;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #253349;
+  color: #60a5fa;
 }
 
 .teen-logo {
@@ -2860,7 +2889,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: #1e293b;
+  color: #ffffff;
   flex-shrink: 0;
 }
 
@@ -2869,9 +2898,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   height: 44px;
   display: grid;
   place-items: center;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #eff6ff;
+  background: #1e293b;
   overflow: hidden;
 }
 .teen-logo-mark img {
@@ -2883,12 +2912,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-logo-text strong {
   display: block;
   font: 700 18px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
   line-height: 1.1;
 }
 .teen-logo-text small {
   display: block;
-  color: #3b82f6;
+  color: #60a5fa;
   font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
@@ -2911,12 +2940,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-hud-pill {
   padding: 6px 12px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 800;
-  background: #ffffff;
-  color: #1e293b;
+  background: #1e293b;
+  color: #f8fafc;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -2924,24 +2953,24 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 
 .teen-hud-streak {
-  border-color: #fed7aa;
-  background: #fff7ed;
-  color: #c2410c;
+  border-color: #9a3412;
+  background: #431407;
+  color: #fb923c;
 }
 .teen-hud-xp {
-  border-color: #fef08a;
-  background: #fefce8;
-  color: #854d0e;
+  border-color: #a16207;
+  background: #422006;
+  color: #fde047;
 }
 .teen-hud-coins {
-  border-color: #e2e8f0;
-  background: #f8fafc;
-  color: #334155;
+  border-color: #334155;
+  background: #1e293b;
+  color: #e2e8f0;
 }
 .teen-hud-gems {
-  border-color: #ddd6fe;
-  background: #f5f3ff;
-  color: #6d28d9;
+  border-color: #7e22ce;
+  background: #3b0764;
+  color: #c084fc;
 }
 
 .teen-profile-switch {
@@ -2954,10 +2983,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 9999px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   cursor: pointer;
   transition: transform 120ms ease, border-color 120ms ease;
 }
@@ -2986,12 +3015,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   display: block;
   font-size: 12px;
   font-weight: 900;
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-profile-btn-info small {
   display: block;
   font-size: 10px;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 700;
 }
 
@@ -3001,10 +3030,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   top: 48px;
   width: 240px;
   padding: 10px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+  background: #1e293b;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   z-index: 60;
   display: flex;
   flex-direction: column;
@@ -3013,18 +3042,18 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-profile-menu-head {
   padding: 8px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #334155;
   margin-bottom: 4px;
 }
 .teen-profile-menu-head strong {
   display: block;
   font-size: 13px;
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-profile-menu-head small {
   display: block;
   font-size: 11px;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .teen-profile-menu-item {
@@ -3036,21 +3065,21 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #1e293b;
+  color: #e2e8f0;
   font: 800 12px var(--font-nunito);
   text-align: left;
   cursor: pointer;
 }
 .teen-profile-menu-item:hover {
-  background: #f1f5f9;
+  background: #334155;
 }
 
 .teen-signout-link {
   display: block;
   margin-top: 4px;
   padding: 8px 10px;
-  border-top: 1px solid #e2e8f0;
-  color: #ef4444;
+  border-top: 1px solid #334155;
+  color: #f87171;
   font-size: 12px;
   font-weight: 900;
   text-decoration: underline;
@@ -3075,10 +3104,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   height: calc(100vh - 104px);
   position: sticky;
   top: 86px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  background: #0f172a;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   z-index: 40;
 }
 
@@ -3088,20 +3117,20 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   justify-content: space-between;
   padding-bottom: 12px;
   margin-bottom: 12px;
-  border-bottom: 1.5px solid #e2e8f0;
+  border-bottom: 1.5px solid #1e293b;
 }
 .teen-sidebar-mobile-title strong {
   font: 700 18px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .teen-sidebar-close-btn {
   width: 32px;
   height: 32px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #334155;
   border-radius: 50%;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font: 900 14px var(--font-nunito);
   cursor: pointer;
   display: grid;
@@ -3131,7 +3160,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   border: 1.5px solid transparent;
   border-radius: 12px;
   background: transparent;
-  color: #475569;
+  color: #94a3b8;
   font: 800 14px var(--font-nunito);
   text-align: left;
   text-decoration: none;
@@ -3142,8 +3171,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 
 .teen-nav-item:hover {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #1e293b;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
@@ -3152,7 +3181,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   color: #ffffff;
   border-color: #3b82f6;
   font-weight: 900;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
 }
 
 .teen-nav-icon {
@@ -3164,7 +3193,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-sidebar-static-character {
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1.5px solid #e2e8f0;
+  border-top: 1.5px solid #1e293b;
 }
 
 .teen-static-character-link {
@@ -3173,16 +3202,16 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: center;
   gap: 10px;
   padding: 10px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 16px;
-  background: #f8fafc;
+  background: #1e293b;
   text-decoration: none;
-  color: #1e293b;
+  color: #ffffff;
   transition: all 120ms ease;
 }
 .teen-static-character-link:hover {
   border-color: #3b82f6;
-  background: #eff6ff;
+  background: #253349;
   transform: translateY(-1px);
 }
 
@@ -3190,8 +3219,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   width: 52px;
   height: 52px;
   border-radius: 12px;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  background: #0f172a;
+  border: 1.5px solid #334155;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -3204,20 +3233,20 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   margin: 0;
   font-size: 9px;
   font-weight: 900;
-  color: #3b82f6;
+  color: #60a5fa;
   text-transform: uppercase;
   letter-spacing: .06em;
 }
 .teen-static-character-info strong {
   display: block;
   font: 700 14px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
   margin: 2px 0 1px;
 }
 .teen-static-character-info small {
   display: block;
   font-size: 10px;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 800;
 }
 
@@ -3241,11 +3270,11 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-title h1 {
   margin: 0 0 6px;
   font: 700 clamp(28px, 4vw, 38px) var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-title p {
   margin: 0;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 15px;
   max-width: 680px;
   line-height: 1.5;
@@ -3254,7 +3283,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-back {
   border: 0;
   background: transparent;
-  color: #1d4ed8;
+  color: #60a5fa;
   font: 900 13px var(--font-nunito);
   cursor: pointer;
   text-decoration: underline;
@@ -3272,9 +3301,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: center;
   border: 1.5px solid #1e293b;
   border-radius: 20px;
-  background: #1e293b;
+  background: #0f172a;
   color: #ffffff;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 .teen-kicker-tag {
@@ -3313,9 +3342,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-stat-badge {
   padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1.5px solid #334155;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: #1e293b;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -3329,15 +3358,15 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-stat-badge strong {
   font-size: 14px;
-  color: #fbbf24;
+  color: #fde047;
   font-weight: 900;
 }
 
 .teen-level-card {
   padding: 20px;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid #334155;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #1e293b;
   text-align: left;
 }
 
@@ -3355,13 +3384,13 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-level-card-xp {
   font: 700 18px var(--font-fredoka);
-  color: #fbbf24;
+  color: #fde047;
 }
 
 .teen-level-bar {
   height: 10px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: #0f172a;
   overflow: hidden;
   margin-bottom: 10px;
 }
@@ -3392,10 +3421,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-expedition-portal-card,
 .teen-daily-missions-card {
   padding: 24px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  background: #0f172a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -3406,7 +3435,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-expedition-portal-card:hover,
 .teen-daily-missions-card:hover {
   border-color: #3b82f6;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
 }
 
 .teen-card-kicker-row {
@@ -3421,7 +3450,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-portal-region-name {
   font-size: 11px;
   font-weight: 900;
-  color: #1d4ed8;
+  color: #60a5fa;
   text-transform: uppercase;
   letter-spacing: .05em;
 }
@@ -3429,8 +3458,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   margin-left: auto;
   padding: 2px 8px;
   border-radius: 9999px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #1e293b;
+  color: #93c5fd;
+  border: 1px solid #334155;
   font-size: 10px;
   font-weight: 900;
   letter-spacing: .04em;
@@ -3439,12 +3469,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-portal-body h3 {
   margin: 0 0 6px;
   font: 700 20px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-portal-body p {
   margin: 0;
   font-size: 14px;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.5;
 }
 
@@ -3452,7 +3482,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   margin-top: 12px;
   height: 8px;
   border-radius: 9999px;
-  background: #f1f5f9;
+  background: #1e293b;
   overflow: hidden;
 }
 .teen-quest-meter-fill {
@@ -3471,10 +3501,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-quest-fraction {
   font-size: 13px;
-  color: #475569;
+  color: #94a3b8;
 }
 .teen-quest-fraction b {
-  color: #1e293b;
+  color: #ffffff;
   font-weight: 900;
 }
 
@@ -3513,10 +3543,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font: 900 14px var(--font-nunito);
   cursor: pointer;
   text-decoration: none;
@@ -3525,8 +3555,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-secondary-btn:hover {
   border-color: #3b82f6;
-  color: #1d4ed8;
-  background: #eff6ff;
+  color: #60a5fa;
+  background: #253349;
   transform: translateY(-1px);
 }
 
@@ -3536,10 +3566,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   grid-template-columns: 200px 1fr;
   gap: 28px;
   padding: 28px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  background: #0f172a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   align-items: center;
 }
 
@@ -3557,16 +3587,18 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-char-pill {
   padding: 3px 10px;
   border-radius: 9999px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #60a5fa;
   font-size: 11px;
   font-weight: 900;
 }
 .teen-char-rank-pill {
   padding: 3px 10px;
   border-radius: 9999px;
-  background: #fefce8;
-  color: #854d0e;
+  background: #422006;
+  border: 1px solid #a16207;
+  color: #fde047;
   font-size: 11px;
   font-weight: 900;
 }
@@ -3574,12 +3606,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-char-details-side h2 {
   margin: 0 0 8px;
   font: 700 24px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .teen-char-desc {
   margin: 0 0 18px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 14px;
   line-height: 1.5;
   max-width: 680px;
@@ -3597,17 +3629,17 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 10px;
-  background: #f8fafc;
+  background: #1e293b;
   font-size: 12px;
   font-weight: 800;
-  color: #334155;
+  color: #e2e8f0;
 }
 .teen-char-slot-special {
-  border-color: #ddd6fe;
-  background: #f5f3ff;
-  color: #6d28d9;
+  border-color: #7e22ce;
+  background: #3b0764;
+  color: #e9d5ff;
 }
 
 .teen-char-btn-row {
@@ -3626,9 +3658,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-fallback-streak-card {
   padding: 24px;
-  border: 1.5px solid #fed7aa;
+  border: 1.5px solid #9a3412;
   border-radius: 18px;
-  background: #fff7ed;
+  background: #431407;
   display: flex;
   align-items: center;
 }
@@ -3643,21 +3675,21 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .streak-head strong {
   display: block;
   font: 700 18px var(--font-fredoka);
-  color: #c2410c;
+  color: #fb923c;
 }
 .streak-head small {
   display: block;
   font-size: 12px;
-  color: #9a3412;
+  color: #fdba74;
 }
 
 /* ── 5. TODAY’S SUMMARY STATS CARD ── */
 .teen-your-day-card {
   padding: 24px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  background: #0f172a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .your-day-stats-grid {
@@ -3669,9 +3701,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .day-stat-col {
   padding: 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #f8fafc;
+  background: #1e293b;
   text-align: center;
 }
 .day-stat-col span {
@@ -3682,12 +3714,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .day-stat-col strong {
   display: block;
   font: 700 20px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .day-stat-col small {
   display: block;
   font-size: 11px;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -3697,9 +3729,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   padding: 30px;
   border: 1.5px solid #1e293b;
   border-radius: 20px;
-  background: #1e293b;
+  background: #0f172a;
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .teen-devotion-kicker {
@@ -3750,28 +3782,28 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-read-devotion-btn {
   min-height: 38px;
   padding: 0 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid #334155;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #1e293b;
   color: #ffffff;
   font: 800 13px var(--font-nunito);
   cursor: pointer;
   transition: background 140ms ease;
 }
 .teen-read-devotion-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: #253349;
 }
 
 .teen-devotion-expanded {
   margin-top: 16px;
   padding: 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  background: #1e293b;
   border-left: 3px solid #3b82f6;
 }
 .teen-devotion-body-para {
   margin: 0 0 10px;
-  color: #e2e8f0;
+  color: #cbd5e1;
   font-size: 14px;
   line-height: 1.65;
 }
@@ -3789,10 +3821,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-panel {
   padding: 24px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  background: #0f172a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .teen-panel-head {
@@ -3806,20 +3838,20 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   margin: 0 0 4px;
   font-size: 10px;
   font-weight: 900;
-  color: #3b82f6;
+  color: #60a5fa;
   letter-spacing: .06em;
   text-transform: uppercase;
 }
 .teen-panel-head h2 {
   margin: 0;
   font: 700 22px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .teen-link-action {
   border: 0;
   background: transparent;
-  color: #1d4ed8;
+  color: #60a5fa;
   font: 900 13px var(--font-nunito);
   cursor: pointer;
   text-decoration: underline;
@@ -3827,7 +3859,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-panel-copy {
   margin: 0 0 16px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -3843,17 +3875,17 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: center;
   gap: 12px;
   padding: 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 14px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   cursor: pointer;
   text-align: left;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
 }
 .teen-recommend-card:hover {
   border-color: #3b82f6;
-  background: #eff6ff;
+  background: #253349;
   transform: translateY(-2px);
 }
 .rec-icon {
@@ -3863,10 +3895,11 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   display: block;
   font-size: 13px;
   font-weight: 900;
+  color: #ffffff;
 }
 .teen-recommend-card small {
   display: block;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 11px;
   font-weight: 700;
   margin-top: 2px;
@@ -3874,9 +3907,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-side-panel {
   padding: 24px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 18px;
-  background: #f8fafc;
+  background: #0f172a;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -3884,19 +3917,19 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-side-panel h2 {
   margin: 0;
   font: 700 20px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-side-panel p {
   margin: 0;
   font-size: 13px;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.5;
 }
 
 .teen-journey-mini {
   height: 8px;
   border-radius: 9999px;
-  background: #e2e8f0;
+  background: #1e293b;
   overflow: hidden;
 }
 .teen-journey-mini i {
@@ -3914,7 +3947,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-scripture-panel h3 {
   margin: 18px 0 6px;
   font: 700 18px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .teen-study-question {
@@ -3923,7 +3956,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-study-question label {
   display: block;
   margin-bottom: 8px;
-  color: #1e293b;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 800;
   line-height: 1.4;
@@ -3932,10 +3965,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   width: 100%;
   min-height: 84px;
   padding: 12px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font: 14px var(--font-nunito);
   resize: vertical;
 }
@@ -3949,7 +3982,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: center;
   gap: 14px;
   padding: 14px 4px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #1e293b;
 }
 .teen-assignment-row:last-child {
   border: 0;
@@ -3959,10 +3992,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   width: 40px;
   height: 40px;
   flex-shrink: 0;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #475569;
   border-radius: 10px;
-  background: #f8fafc;
-  color: #3b82f6;
+  background: #1e293b;
+  color: #60a5fa;
   font-weight: 900;
   cursor: pointer;
   display: grid;
@@ -3976,12 +4009,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-assignment-row strong {
   display: block;
-  color: #1e293b;
+  color: #ffffff;
   font-size: 14px;
 }
 .teen-assignment-row small {
   display: block;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 11px;
   margin-top: 2px;
 }
@@ -3996,14 +4029,14 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   min-width: 200px;
   min-height: 44px;
   padding: 0 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
 }
 .teen-inline-error {
   margin: 8px 0 0;
-  color: #ef4444;
+  color: #f87171;
   font-size: 12px;
   font-weight: 800;
 }
@@ -4021,10 +4054,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: flex-start;
   gap: 8px;
   padding: 22px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 16px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #0f172a;
+  color: #ffffff;
   cursor: pointer;
   text-align: left;
   text-decoration: none;
@@ -4033,11 +4066,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-play-card:hover {
   transform: translateY(-3px);
   border-color: #3b82f6;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
-}
-.teen-play-card-world {
-  border-color: #93c5fd;
-  background: #eff6ff;
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
 }
 
 .play-card-icon {
@@ -4045,10 +4075,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-play-card strong {
   font: 700 17px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-play-card small {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 12px;
   line-height: 1.45;
 }
@@ -4066,24 +4096,26 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   align-items: flex-start;
   gap: 8px;
   padding: 20px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 16px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #0f172a;
+  color: #ffffff;
   cursor: pointer;
   text-align: left;
   transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
 .teen-scenario-card:hover {
   border-color: #3b82f6;
+  background: #1e293b;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 .teen-scenario-tag {
   padding: 3px 8px;
   border-radius: 6px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #1e293b;
+  color: #93c5fd;
+  border: 1px solid #334155;
   font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
@@ -4091,15 +4123,15 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-scenario-card strong {
   font: 700 17px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-scenario-card small {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 13px;
   line-height: 1.45;
 }
 .teen-done-mark {
-  color: #16a34a;
+  color: #22c55e;
   font-size: 11px;
   font-weight: 900;
   margin-top: 4px;
@@ -4110,25 +4142,25 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   max-width: 760px;
   margin: 0 auto;
   padding: 32px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  background: #0f172a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 .teen-scenario-player h1 {
   margin: 8px 0 14px;
   font: 700 clamp(24px, 3.5vw, 32px) var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-scenario-hook {
-  color: #475569;
+  color: #cbd5e1;
   font-size: 15px;
   line-height: 1.6;
   margin: 0 0 20px;
   font-style: italic;
 }
 .teen-scenario-prompt {
-  color: #1e293b;
+  color: #ffffff;
   font-size: 16px;
   font-weight: 800;
   line-height: 1.5;
@@ -4143,10 +4175,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-scenario-choices button {
   min-height: 52px;
   padding: 12px 18px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font: 800 14px var(--font-nunito);
   cursor: pointer;
   text-align: left;
@@ -4154,7 +4186,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-scenario-choices button:hover {
   border-color: #3b82f6;
-  background: #eff6ff;
+  background: #253349;
   transform: translateY(-1px);
 }
 
@@ -4165,15 +4197,18 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-ending-wise {
   border: 2px solid #22c55e;
-  background: #f0fdf4;
+  background: #064e3b;
+  color: #f8fafc;
 }
 .teen-ending-risky {
   border: 2px solid #f59e0b;
-  background: #fffbeb;
+  background: #451a03;
+  color: #f8fafc;
 }
 .teen-ending-unwise {
   border: 2px solid #ef4444;
-  background: #fef2f2;
+  background: #450a0a;
+  color: #f8fafc;
 }
 
 .teen-ending-tag {
@@ -4181,21 +4216,22 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   margin-bottom: 12px;
   padding: 4px 10px;
   border-radius: 6px;
-  background: #ffffff;
+  background: #0f172a;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: .05em;
 }
 .teen-ending p {
-  color: #1e293b;
+  color: #f8fafc;
   font-size: 14px;
   line-height: 1.65;
   margin: 0 0 14px;
 }
 .teen-ending .teen-verse-line {
-  border-left-color: #1e293b;
-  color: #1e293b;
+  border-left-color: #ffffff;
+  color: #ffffff;
 }
 .teen-scenario-choices-row {
   display: flex;
@@ -4220,17 +4256,17 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   gap: 12px;
   align-items: flex-start;
   padding: 18px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 14px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   cursor: pointer;
   text-align: left;
   transition: border-color 140ms ease, background 140ms ease;
 }
 .teen-evidence-card.reviewed {
   border-color: #22c55e;
-  background: #f0fdf4;
+  background: #064e3b;
 }
 .teen-evidence-card>span {
   flex-shrink: 0;
@@ -4240,7 +4276,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   place-items: center;
   border: 1.5px solid #3b82f6;
   border-radius: 50%;
-  color: #3b82f6;
+  color: #60a5fa;
   font-weight: 900;
   font-size: 13px;
 }
@@ -4253,26 +4289,27 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   display: block;
   font-size: 13px;
   font-weight: 900;
+  color: #ffffff;
 }
 .teen-evidence-card small {
   display: block;
-  color: #1d4ed8;
+  color: #93c5fd;
   font-size: 11px;
   margin: 2px 0 6px;
   font-weight: 800;
 }
 .teen-evidence-card p {
   margin: 0;
-  color: #475569;
+  color: #cbd5e1;
   font-size: 12px;
   line-height: 1.5;
 }
 
 .teen-evidence-hint {
   padding: 14px;
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed #475569;
   border-radius: 12px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 13px;
   font-weight: 800;
   text-align: center;
@@ -4283,12 +4320,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   padding: 24px;
   border: 1.5px solid #3b82f6;
   border-radius: 18px;
-  background: #eff6ff;
+  background: #1e293b;
 }
 .teen-verdict-box h3 {
   margin: 0 0 16px;
   font: 700 18px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 
 .teen-verdict-options {
@@ -4300,10 +4337,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-verdict-options button {
   min-height: 48px;
   padding: 12px 16px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #0f172a;
+  color: #ffffff;
   font: 800 13px var(--font-nunito);
   cursor: pointer;
   text-align: left;
@@ -4315,14 +4352,14 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-verdict-options button.correct {
   border-color: #22c55e;
-  background: #f0fdf4;
-  color: #15803d;
+  background: #064e3b;
+  color: #86efac;
   font-weight: 900;
 }
 .teen-verdict-options button.wrong {
   border-color: #ef4444;
-  background: #fef2f2;
-  color: #b91c1c;
+  background: #450a0a;
+  color: #fca5a5;
 }
 
 /* Ask the Word Quiz */
@@ -4332,18 +4369,18 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-quiz-intro {
   padding: 32px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 20px;
-  background: #ffffff;
+  background: #0f172a;
   text-align: center;
 }
 .teen-quiz-intro h1 {
   margin: 0 0 12px;
   font: 700 clamp(28px, 4vw, 38px) var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-quiz-intro p {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 15px;
   line-height: 1.6;
   margin: 0 0 24px;
@@ -4351,16 +4388,16 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 
 .teen-quiz-live {
   padding: 28px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 20px;
-  background: #ffffff;
+  background: #0f172a;
 }
 .teen-quiz-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
@@ -4369,19 +4406,19 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-quiz-timer {
   padding: 4px 10px;
   border-radius: 9999px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #1e293b;
+  color: #60a5fa;
   font-weight: 900;
 }
 .teen-quiz-timer.low {
-  background: #fef2f2;
-  color: #dc2626;
+  background: #450a0a;
+  color: #f87171;
 }
 
 .teen-quiz-live h2 {
   margin: 0 0 20px;
   font: 700 22px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
   line-height: 1.4;
 }
 .teen-quiz-options {
@@ -4392,10 +4429,10 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-quiz-options button {
   min-height: 50px;
   padding: 12px 18px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font: 800 13px var(--font-nunito);
   cursor: pointer;
   text-align: left;
@@ -4403,17 +4440,17 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-quiz-options button.correct {
   border-color: #22c55e;
-  background: #f0fdf4;
-  color: #15803d;
+  background: #064e3b;
+  color: #86efac;
 }
 .teen-quiz-options button.wrong {
   border-color: #ef4444;
-  background: #fef2f2;
-  color: #b91c1c;
+  background: #450a0a;
+  color: #fca5a5;
 }
 .teen-quiz-ref {
   margin: 14px 0 0;
-  color: #1d4ed8;
+  color: #60a5fa;
   font-size: 12px;
   font-weight: 800;
 }
@@ -4422,7 +4459,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   padding: 36px;
   border: 1.5px solid #3b82f6;
   border-radius: 20px;
-  background: #ffffff;
+  background: #0f172a;
   text-align: center;
 }
 .teen-quiz-results h1 {
@@ -4431,7 +4468,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   color: #3b82f6;
 }
 .teen-quiz-results p {
-  color: #475569;
+  color: #cbd5e1;
   font-size: 15px;
   margin: 0 0 24px;
 }
@@ -4451,9 +4488,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-journey-stage {
   padding: 22px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #1e293b;
   border-radius: 16px;
-  background: #ffffff;
+  background: #0f172a;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -4461,7 +4498,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 .teen-journey-stage.done {
   border-color: #22c55e;
-  background: #f0fdf4;
+  background: #064e3b;
 }
 
 .teen-journey-stage-head {
@@ -4475,9 +4512,9 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   height: 28px;
   display: grid;
   place-items: center;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #475569;
   border-radius: 50%;
-  color: #15803d;
+  color: #22c55e;
   font-weight: 900;
   font-size: 13px;
 }
@@ -4489,11 +4526,11 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-journey-stage-head strong {
   display: block;
   font: 700 18px var(--font-fredoka);
-  color: #1e293b;
+  color: #ffffff;
 }
 .teen-journey-stage-head small {
   display: block;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 12px;
   margin-top: 2px;
   line-height: 1.4;
@@ -4502,40 +4539,40 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-journey-stage textarea {
   min-height: 80px;
   padding: 12px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #334155;
   border-radius: 10px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font: 13px var(--font-nunito);
   resize: vertical;
 }
 
 .teen-unmark-btn {
   min-height: 40px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #334155;
   border-radius: 10px;
-  background: #ffffff;
-  color: #64748b;
+  background: #1e293b;
+  color: #94a3b8;
   font: 800 12px var(--font-nunito);
   cursor: pointer;
   transition: all 120ms ease;
 }
 .teen-unmark-btn:hover {
-  background: #f8fafc;
-  color: #1e293b;
+  background: #253349;
+  color: #ffffff;
 }
 
 .teen-submit-panel {
   border-color: #3b82f6 !important;
-  background: #eff6ff !important;
+  background: #0f172a !important;
   text-align: left;
 }
 .teen-submitted-note {
   padding: 14px 18px;
   border: 1.5px solid #22c55e;
   border-radius: 12px;
-  background: #f0fdf4;
-  color: #15803d;
+  background: #064e3b;
+  color: #86efac;
   font-size: 13px;
   font-weight: 800;
 }
@@ -4558,22 +4595,22 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   gap: 6px;
   font-size: 12px;
   font-weight: 800;
-  color: #475569;
+  color: #cbd5e1;
 }
 .teen-pin-form input {
   min-height: 46px;
   padding: 0 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #334155;
   border-radius: 12px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: #1e293b;
+  color: #ffffff;
   font-size: 16px;
 }
 .teen-pin-notice {
   margin-top: 10px;
   font-size: 12px;
   font-weight: 800;
-  color: #15803d;
+  color: #86efac;
 }
 
 .teen-signout-full {
@@ -4583,14 +4620,14 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   text-align: center;
   border: 1.5px solid #ef4444;
   border-radius: 14px;
-  color: #dc2626;
+  color: #f87171;
   font-weight: 900;
   font-size: 13px;
   text-decoration: none;
   transition: background 140ms ease;
 }
 .teen-signout-full:hover {
-  background: #fef2f2;
+  background: #450a0a;
 }
 
 /* ── RESPONSIVE MEDIA QUERIES ── */

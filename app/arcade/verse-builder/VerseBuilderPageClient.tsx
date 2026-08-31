@@ -20,7 +20,14 @@ function pickVerses(difficulty: DifficultyLevel, count: number): { reference: st
   return pickRandomUnique(VERSE_POOLS[difficulty], count);
 }
 
-export default function VerseBuilderPage() {
+/**
+ * The actual game. Rendered standalone (its own page, full topbar) by
+ * default; pass `embedded` to drop the page chrome and render just the
+ * game surface for use inside a modal (e.g. launched from the dashboard's
+ * Arcade tab without leaving the dashboard) — `onClose` is called instead
+ * of navigating back to /arcade in that case.
+ */
+export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'setup' | 'playing' | 'result'>('setup');
@@ -164,22 +171,8 @@ export default function VerseBuilderPage() {
     );
   }
 
-  return (
-    <main className="adventure-page arcade-page">
-      <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Verse Builder</strong>
-            <small>Lantern Arcade</small>
-          </span>
-        </Link>
-        <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
-        </div>
-      </header>
-
-      <div className="adv-body arcade-body arcade-game-body">
+  const body = (
+    <div className="adv-body arcade-body arcade-game-body">
         {phase === 'setup' && (
           <section className="arcade-setup-card">
             <span className="arcade-setup-icon" aria-hidden="true">🧱</span>
@@ -241,10 +234,33 @@ export default function VerseBuilderPage() {
             xpEarned={outcome.session.xpEarned}
             coinsEarned={outcome.session.coinsEarned}
             onPlayAgain={() => setPhase('setup')}
-            backHref="/arcade"
+            {...(embedded && onClose ? { onBack: onClose } : { backHref: '/arcade' })}
           />
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page arcade-page">
+      <header className="child-topbar adv-topbar">
+        <Link href="/arcade" className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Verse Builder</strong>
+            <small>Lantern Arcade</small>
+          </span>
+        </Link>
+        <div className="child-header-actions">
+          <Link href="/arcade" className="help-button">← Arcade</Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function VerseBuilderPage() {
+  return <VerseBuilderGame />;
 }
