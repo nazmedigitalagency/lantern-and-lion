@@ -642,11 +642,11 @@ export default function ParentDashboardPage() {
                         <h2>{activeChild.name} · Level {childLvl.level} {childLvl.title}</h2>
                         <small>PIN: {activeChild.pin} · Username: @{activeChild.username || activeChild.name.toLowerCase()}</small>
                         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                          <span style={{ fontSize: '0.8rem', background: '#fef3c7', color: '#92400e', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>⭐ {childWallet.xp.toLocaleString()} XP</span>
-                          <span style={{ fontSize: '0.8rem', background: '#ecfdf5', color: '#065f46', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>🪙 {childWallet.coins.toLocaleString()} Coins</span>
-                          <span style={{ fontSize: '0.8rem', background: '#eff6ff', color: '#1e40af', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>💎 {childWallet.gems.toLocaleString()} Gems</span>
+                          <span style={{ fontSize: '0.8rem', background: 'var(--pd-gold-tint, #FFF8E6)', color: 'var(--pd-ink, #132D46)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>⭐ {childWallet.xp.toLocaleString()} XP</span>
+                          <span style={{ fontSize: '0.8rem', background: 'var(--pd-emerald-tint, #E3F7F2)', color: 'var(--pd-emerald-dark, #0B7A65)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>🪙 {childWallet.coins.toLocaleString()} Coins</span>
+                          <span style={{ fontSize: '0.8rem', background: 'var(--pd-violet-tint, #F2EEFC)', color: 'var(--pd-violet-dark, #6640AD)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>💎 {childWallet.gems.toLocaleString()} Gems</span>
                         </div>
-                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)' }}>
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--pd-text-secondary, #52677D)' }}>
                           <span>Gear: {getItem(childEq.clothing || 'starter-tunic')?.name} · {getItem(childEq.lantern || 'starter-lantern')?.name}{childEq.pet ? ` · Companion: ${getItem(childEq.pet)?.name}` : ''}</span>
                         </div>
                       </div>
@@ -679,7 +679,7 @@ export default function ParentDashboardPage() {
                 const userInPod = childPod.participants.find((p) => p.isCurrentUser);
 
                 return (
-                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem', border: `1.5px solid ${progress.currentTier.badgeTone}` }}>
+                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem', borderTop: `3px solid ${progress.currentTier.badgeTone}` }}>
                     <div className="panel-heading">
                       <div>
                         <p className="parent-dash-kicker">Competitive League &amp; Season Progress</p>
@@ -691,15 +691,15 @@ export default function ParentDashboardPage() {
                       {activeChild.name} is currently competing in <strong>{currentSeason.name}</strong>. Seasonal XP is earned purely through lessons, Bible games, and memory verse activities.
                     </p>
                     <div style={{ marginTop: '0.75rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: '0.35rem' }}>
-                        <span>⭐ <strong>{childSeasonXp.toLocaleString()}</strong> Season XP</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--pd-text-secondary, #52677D)', marginBottom: '0.35rem' }}>
+                        <span>⭐ <strong style={{ color: 'var(--pd-ink, #132D46)' }}>{childSeasonXp.toLocaleString()}</strong> Season XP</span>
                         {progress.nextTier ? (
                           <span>Next Tier ({progress.nextTier.name}): {progress.nextTier.minXp.toLocaleString()} XP</span>
                         ) : (
                           <span>Top League Reached 🦁</span>
                         )}
                       </div>
-                      <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden' }}>
+                      <div style={{ width: '100%', height: '8px', background: 'var(--pd-border, #E2E8F1)', borderRadius: '9999px', overflow: 'hidden' }}>
                         <div
                           style={{
                             width: `${progress.progressPercent}%`,
@@ -739,16 +739,16 @@ export default function ParentDashboardPage() {
                           <div
                             key={reg.id}
                             style={{
-                              background: '#f8fafc',
-                              border: reg.id === currRegId ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
+                              background: 'var(--pd-well, #F6F9FC)',
+                              border: reg.id === currRegId ? '1.5px solid var(--pd-blue, #155EEF)' : '1px solid var(--pd-border, #E2E8F1)',
                               borderRadius: '8px',
                               padding: '0.6rem',
                               textAlign: 'center',
                             }}
                           >
                             <span style={{ fontSize: '1.25rem' }}>{reg.icon}</span>
-                            <strong style={{ display: 'block', fontSize: '0.75rem', color: '#0f172a' }}>{reg.name}</strong>
-                            <small style={{ fontSize: '0.7rem', color: pct >= 100 ? '#059669' : '#64748b', fontWeight: 600 }}>
+                            <strong style={{ display: 'block', fontSize: '0.75rem', color: 'var(--pd-ink, #132D46)' }}>{reg.name}</strong>
+                            <small style={{ fontSize: '0.7rem', color: pct >= 100 ? 'var(--pd-emerald-dark, #0B7A65)' : 'var(--pd-text-secondary, #52677D)', fontWeight: 600 }}>
                               {pct >= 100 ? '✓ Mastered' : `${pct}%`}
                             </small>
                           </div>
