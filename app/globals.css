@@ -1810,6 +1810,28 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .help-dialog > small { display: block; color: var(--muted); font-size: 12px; }
 
 .family-modal-dialog { width: min(560px, 100%); }
+
+/* ── In-dashboard game popup (pilot: launching an arcade game as a modal
+   instead of navigating to its own page) ── */
+.game-modal-dialog {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  border: 2.5px solid var(--kid-navy);
+  border-radius: 22px;
+  background: var(--white);
+  box-shadow: 8px 8px 0 var(--kid-navy);
+  text-align: left;
+}
+.game-modal-dialog .adv-body { width: 100%; padding: 8px 0 0; }
+.game-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+}
 .family-modal-parent-line { margin: 0 0 18px; color: var(--muted); font-size: 13px; font-weight: 700; }
 .family-modal-child-grid { display: flex; flex-direction: column; gap: 10px; margin: 0 0 18px; }
 .family-score-card {

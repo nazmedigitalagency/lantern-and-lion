@@ -23,6 +23,7 @@ import { getWallet, getCurrentLevel } from '../lib/economy/wallet-service';
 import type { Wallet } from '../lib/economy/types';
 import type { LevelInfo } from '../lib/xp-levels';
 import { GAME_DEFINITIONS } from '../arcade/catalog';
+import { VerseBuilderGame } from '../arcade/verse-builder/VerseBuilderPageClient';
 import { STORY_CATALOG } from '../stories/catalog';
 import { signOutOfPersona } from '../lib/session';
 
@@ -77,6 +78,11 @@ export default function ChildDashboardPage() {
   const closeHelpRef = useRef<HTMLButtonElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
   const [isPreview, setIsPreview] = useState(false);
+  // Games that have been converted to open as an in-dashboard popup instead
+  // of navigating to their own page (see VerseBuilderGame's `embedded` mode)
+  // — a pilot for the pattern before rolling it out to the rest of the arcade.
+  const [activeGameModal, setActiveGameModal] = useState<string | null>(null);
+  const EMBEDDABLE_GAME_IDS = new Set(['verse-builder']);
   type TodaySummaryData = { active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number };
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
 
@@ -838,9 +844,15 @@ export default function ChildDashboardPage() {
                     </div>
                     <h3>{game.name}</h3>
                     <p>{game.description}</p>
-                    <Link href={`/arcade/${game.id}`} className="game-play-btn">
-                      Play Now ➔
-                    </Link>
+                    {EMBEDDABLE_GAME_IDS.has(game.id) ? (
+                      <button type="button" className="game-play-btn" onClick={() => setActiveGameModal(game.id)}>
+                        Play Now ➔
+                      </button>
+                    ) : (
+                      <Link href={`/arcade/${game.id}`} className="game-play-btn">
+                        Play Now ➔
+                      </Link>
+                    )}
                   </article>
                 ))}
               </div>
@@ -978,6 +990,16 @@ export default function ChildDashboardPage() {
             <button type="button" className="family-modal-close-btn" onClick={() => setShowFamilyModal(false)}>
               Close Overview
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── IN-DASHBOARD GAME POPUP (pilot: Verse Builder) ── */}
+      {activeGameModal === 'verse-builder' && (
+        <div className="help-overlay" role="presentation" onClick={() => setActiveGameModal(null)}>
+          <div className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="close-help game-modal-close" aria-label="Close game" onClick={() => setActiveGameModal(null)}>✕</button>
+            <VerseBuilderGame embedded onClose={() => setActiveGameModal(null)} />
           </div>
         </div>
       )}
