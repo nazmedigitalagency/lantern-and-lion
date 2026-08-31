@@ -27,8 +27,7 @@ import { getWallet } from '../lib/economy/wallet-service';
 import type { Wallet } from '../lib/economy/types';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
-type Tab = 'home' | 'learn' | 'play' | 'journey' | 'profile';
-type PlayMode = 'menu' | 'decision' | 'reallife' | 'cases' | 'askword';
+type Tab = 'home' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
 
 function trackForAge(age: number): CurriculumModule['track'] {
   if (age <= 5) return 'early';
@@ -221,32 +220,6 @@ const REAL_LIFE_SCENARIOS: Scenario[] = [
       unwise1: { ending: true, verdict: 'unwise', text: 'Picking a side — or disappearing completely — both feel like doing something. Neither one actually helped, and both left you carrying weight that was never meant to be yours alone.', verseRef: 'Romans 12:18', verseText: 'If possible, so far as it depends on you, live peaceably with all.' },
     },
   },
-  {
-    id: 'witness-bullying',
-    title: 'The Hallway',
-    hook: 'You see someone getting mocked hard by a group in the hallway. You’re not involved, and you know some of the people doing it.',
-    tag: 'Courage',
-    nodes: {
-      start: {
-        prompt: 'Getting involved could make you a target too. What do you do?',
-        choices: [
-          { text: 'Walk over and stand with the person being mocked', to: 'wise1' },
-          { text: 'Keep walking, but tell a teacher right after', to: 'risky1' },
-          { text: 'Keep walking and say nothing to anyone', to: 'unwise1' },
-        ],
-      },
-      risky1: {
-        prompt: 'You told a teacher, but it happens again the next day, and this time no adult is nearby.',
-        choices: [
-          { text: 'Step in directly this time', to: 'wise2' },
-          { text: 'Keep reporting it after the fact and hope it stops', to: 'unwise1' },
-        ],
-      },
-      wise1: { ending: true, verdict: 'wise', text: 'You put yourself between the crowd and the person they were targeting. That’s not a small thing — it’s the exact kind of courage Joshua 1:9 was written for: strong and courageous, even when it’s socially expensive.', verseRef: 'Proverbs 31:8', verseText: 'Open your mouth for the mute, for the rights of all who are destitute.' },
-      wise2: { ending: true, verdict: 'wise', text: 'You tried the safer route first, and when it wasn’t enough, you didn’t stay comfortable — you stepped in. Courage that grows when the easy option fails is the kind that’s actually real.', verseRef: 'Galatians 6:2', verseText: 'Bear one another’s burdens, and so fulfill the law of Christ.' },
-      unwise1: { ending: true, verdict: 'unwise', text: 'Staying uninvolved felt safe, but someone still walked away from that hallway alone. Neutrality feels like nothing happened. For the person being mocked, something absolutely happened.', verseRef: 'James 4:17', verseText: 'So whoever knows the right thing to do and fails to do it, for him it is sin.' },
-    },
-  },
 ];
 
 type CaseEvidence = { id: string; label: string; ref: string; text: string };
@@ -293,26 +266,6 @@ const CASE_FILES: CaseFile[] = [
     correct: 'c',
     explanation: 'The text is explicit: the thorn guarded Paul against pride, and God’s answer reframed the problem instead of removing it — “my power is made perfect in weakness.” Unanswered prayer, here, isn’t evidence of God’s absence. It’s presented as evidence of a different kind of answer.',
   },
-  {
-    id: 'birthright',
-    title: 'The Case of the Traded Birthright',
-    mystery: 'Esau trades his entire inheritance for a bowl of stew. Was this one impulsive moment, or was something building underneath it?',
-    evidence: [
-      { id: 'e1', label: 'Evidence 1 — The Trade', ref: 'Genesis 25:29-34', text: 'Esau comes in exhausted from hunting, demands the stew, and says “I am about to die; of what use is a birthright to me?”' },
-      { id: 'e2', label: 'Evidence 2 — The Verdict', ref: 'Genesis 25:34', text: 'The text itself comments: “Thus Esau despised his birthright” — this is framed as the narrator’s judgment, not just a hungry decision.' },
-      { id: 'e3', label: 'Evidence 3 — Later Reflection', ref: 'Hebrews 12:16-17', text: 'Esau is later described as “unholy,” who sold his birthright for a single meal, and who found no way to change the outcome, though he sought it with tears.' },
-      { id: 'e4', label: 'Evidence 4 — What the Birthright Meant', ref: 'Genesis 27:36 (context)', text: 'The birthright carried a double inheritance and the covenant blessing passed down from Abraham — this wasn’t a small family formality.' },
-    ],
-    question: 'What does the fuller evidence suggest about Esau’s trade?',
-    options: [
-      { id: 'a', text: 'It was a single unfair moment of weakness with no real pattern' },
-      { id: 'b', text: 'It revealed a settled attitude that treated something sacred as worthless' },
-      { id: 'c', text: 'Jacob tricked him with no fault of Esau’s own' },
-      { id: 'd', text: 'The birthright wasn’t actually valuable, so nothing was really lost' },
-    ],
-    correct: 'b',
-    explanation: 'The narrator’s own verdict — “Esau despised his birthright” — plus Hebrews’ later commentary both point past a single bad moment to a deeper pattern: something sacred, traded cheaply, because it wasn’t valued in the first place. The tears came after the trade, not before it.',
-  },
 ];
 
 type Question = { q: string; options: string[]; correct: number; ref: string };
@@ -322,11 +275,6 @@ const ASK_WORD_QUESTIONS: Question[] = [
   { q: 'Which prophet was told to marry an unfaithful woman as a living picture of Israel’s unfaithfulness to God?', options: ['Jeremiah', 'Hosea', 'Amos', 'Micah'], correct: 1, ref: 'Hosea 1:2' },
   { q: 'What does “sanctification” refer to in Christian teaching?', options: ['The moment of first believing', 'The final resurrection of the body', 'The ongoing process of being made holy', 'The act of being baptized'], correct: 2, ref: '1 Thessalonians 4:3' },
   { q: 'In the book of Job, who ultimately speaks and answers Job’s questions?', options: ['Job’s three friends', 'An angel', 'God, out of the whirlwind', 'Job answers his own questions'], correct: 2, ref: 'Job 38:1' },
-  { q: 'What covenant sign did God give Noah after the flood?', options: ['Circumcision', 'The rainbow', 'The Sabbath', 'The Passover lamb'], correct: 1, ref: 'Genesis 9:13' },
-  { q: 'Which New Testament letter was written specifically to correct the teaching that faith alone requires no accompanying action?', options: ['Romans', 'James', 'Galatians', 'Philemon'], correct: 1, ref: 'James 2:17' },
-  { q: 'What does “grace” mean, most precisely, in Paul’s letters?', options: ['Earned favor through good works', 'Unmerited favor freely given', 'A feeling of religious peace', 'Strict obedience to the law'], correct: 1, ref: 'Ephesians 2:8-9' },
-  { q: 'Who did God send to confront King David after his sin with Bathsheba?', options: ['Samuel', 'Nathan', 'Elijah', 'Gad the seer only'], correct: 1, ref: '2 Samuel 12:1' },
-  { q: 'What is the meaning of “Immanuel,” the name given in Isaiah’s prophecy?', options: ['The Lord will provide', 'God is with us', 'God is our strength', 'Prince of Peace'], correct: 1, ref: 'Isaiah 7:14' },
 ];
 
 type JourneyStage = 'read' | 'think' | 'speak' | 'live';
@@ -401,8 +349,8 @@ export default function TeenDashboardPage() {
   const router = useRouter();
   const [teens, setTeens] = useState<Teen[]>(fallbackTeens);
   const [activeId, setActiveId] = useState<number>(fallbackTeens[0].id);
-  const [tab, setTab] = useState<Tab>('home');
-  const [playMode, setPlayMode] = useState<PlayMode>('menu');
+  const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [todaySummary, setTodaySummary] = useState<{ active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number } | null>(null);
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
@@ -513,7 +461,7 @@ export default function TeenDashboardPage() {
         setTeens(teenList.length ? teenList : fallbackTeens);
         const savedId = session?.teenId || Number(localStorage.getItem('lanternLionActiveChildId'));
         
-        let currentTeenId = savedId && teenList.some((t) => t.id === savedId) ? savedId : teenList[0]?.id || fallbackTeens[0].id;
+        const currentTeenId = savedId && teenList.some((t) => t.id === savedId) ? savedId : teenList[0]?.id || fallbackTeens[0].id;
         setActiveId(currentTeenId);
 
         const teenModuleProgress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}')?.[currentTeenId] || {};
@@ -638,7 +586,7 @@ export default function TeenDashboardPage() {
       }
     }, 1400);
   }
-  function exitQuiz() { setQuizStarted(false); setQuizDone(false); setPlayMode('menu'); }
+  function exitQuiz() { setQuizStarted(false); setQuizDone(false); setActiveTab('home'); }
 
   function toggleAssignment(id: number) {
     setAssignments(assignments.map((a) => a.id === id ? { ...a, status: a.status === 'done' ? 'pending' : 'done' } : a));
@@ -710,50 +658,29 @@ export default function TeenDashboardPage() {
 
       {/* ── TOPBAR NAVIGATION & HUD ── */}
       <header className="teen-topbar">
-        {/* Left: Brand Identity */}
-        <Link href="/" className="teen-logo" aria-label="Lantern and Lion - Lion's Den">
-          <div className="teen-logo-mark">
-            <Image src="/lantern-lion-logo.png" alt="" width={44} height={44} priority />
-          </div>
-          <span className="teen-logo-text">
-            <strong>Lion’s Den</strong>
-            <small>Lantern &amp; Lion · Courage &amp; Faith</small>
-          </span>
-        </Link>
+        {/* Left: Mobile Menu Trigger + Brand Identity */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            className="teen-menu-trigger"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            ☰
+          </button>
+          <Link href="/" className="teen-logo" aria-label="Lantern and Lion - Lion's Den">
+            <div className="teen-logo-mark">
+              <Image src="/lantern-lion-logo.png" alt="" width={44} height={44} priority />
+            </div>
+            <span className="teen-logo-text">
+              <strong>Lion’s Den</strong>
+              <small>Lantern &amp; Lion · Courage &amp; Faith</small>
+            </span>
+          </Link>
+        </div>
 
-        {/* Center: Main Section Tabs */}
-        <nav className="teen-nav" aria-label="Teen dashboard sections">
-          {(['home', 'learn', 'play', 'journey', 'profile'] as Tab[]).map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={tab === id ? 'active' : ''}
-              aria-pressed={tab === id}
-              onClick={() => { setTab(id); setPlayMode('menu'); }}
-            >
-              {id === 'home' ? '🏠 Home' : id === 'learn' ? '📖 Learn' : id === 'play' ? '🎮 Play' : id === 'journey' ? '🧭 Journey' : '🧑 Profile'}
-            </button>
-          ))}
-        </nav>
-
-        {/* Right: Quick Links, HUD Metrics & Profile Capsule */}
+        {/* Right: HUD Metrics & Profile Capsule */}
         <div className="teen-header-right">
-          {/* Quick World Links */}
-          <div className="teen-quick-links">
-            <Link href="/adventure" className="teen-world-chip" title="Bible Adventure World">
-              🗺️ <span>World</span>
-            </Link>
-            <Link href="/stories" className="teen-world-chip" title="Interactive Bible Stories">
-              📖 <span>Stories</span>
-            </Link>
-            <Link href="/arcade" className="teen-world-chip" title="Lantern Arcade">
-              🎮 <span>Arcade</span>
-            </Link>
-            <Link href="/leagues" className="teen-world-chip" title="Weekly Leagues">
-              🏆 <span>Leagues</span>
-            </Link>
-          </div>
-
           {/* HUD Metric Chips */}
           <div className="teen-hud-chips">
             <span className="teen-hud-pill teen-hud-streak" title="Daily Learning Streak">
@@ -816,853 +743,929 @@ export default function TeenDashboardPage() {
         </div>
       </header>
 
-      {/* ── TAB 1: HOME (DASHBOARD HUB) ── */}
-      {tab === 'home' && (
-        <div className="teen-body">
-          {/* 1. HERO SECTION: CONFIDENT GREETING & PROGRESS METRICS */}
-          <section className="teen-welcome">
-            <div className="teen-welcome-left">
-              <div className="teen-kicker-tag">
-                <span className="teen-kicker-spark">⚡</span>
-                <span>LION’S DEN · TEEN EXPEDITION</span>
-              </div>
-              <h1>Hey, {teen.name}. One real step today.</h1>
-              <p className="teen-welcome-sub">{DEVOTION.title}</p>
-              
-              <div className="teen-welcome-stats">
-                <div className="teen-stat-badge">
-                  <span className="stat-label">Current Rank</span>
-                  <strong>{level.name}</strong>
-                </div>
-                <div className="teen-stat-badge">
-                  <span className="stat-label">Decisions Explored</span>
-                  <strong>{decisionsMade.length}</strong>
-                </div>
-                <div className="teen-stat-badge">
-                  <span className="stat-label">Cases Solved</span>
-                  <strong>{casesSolved.length}</strong>
-                </div>
-              </div>
+      {/* ── APP BODY: SIDEBAR NAVIGATION + MAIN CANVAS ── */}
+      <div className="teen-body-container">
+        {/* ── LEFT SIDEBAR NAVIGATION DOCK ── */}
+        <aside className={`teen-sidebar ${mobileMenuOpen ? 'teen-sidebar-open' : ''}`}>
+          <div className="teen-sidebar-mobile-head">
+            <div className="teen-sidebar-mobile-title">
+              <strong>Lion’s Den Menu</strong>
             </div>
+            <button
+              type="button"
+              className="teen-sidebar-close-btn"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close navigation"
+            >
+              ✕
+            </button>
+          </div>
 
-            <div className="teen-level-card">
-              <div className="teen-level-card-top">
-                <span className="teen-level-card-kicker">LEVEL PROGRESS</span>
-                <span className="teen-level-card-xp">{points.toLocaleString()} XP</span>
-              </div>
-              <div className="teen-level-bar" role="progressbar" aria-valuenow={levelProgress} aria-valuemin={0} aria-valuemax={100}>
-                <i style={{ width: `${levelProgress}%` }} />
-              </div>
-              <p className="teen-level-card-foot">
-                {nextLevel ? (
-                  <span><b>{nextLevel.min - points} XP</b> to {nextLevel.name}</span>
-                ) : (
-                  <span>Top rank reached · Lightbearer</span>
-                )}
-              </p>
-            </div>
-          </section>
+          <nav className="teen-sidebar-nav" aria-label="Teen Dashboard Navigation">
+            {/* 1. Today / Home */}
+            <button
+              type="button"
+              className={`teen-nav-item ${activeTab === 'home' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }}
+            >
+              <span className="teen-nav-icon">🏠</span>
+              <span>Today</span>
+            </button>
 
-          {/* 2. PRIMARY ACTION ROW: RECOMMENDED BIBLE EXPEDITION & DAILY QUESTS */}
-          <div className="teen-action-cards-grid">
-            {/* Action 1: Recommended Next Expedition */}
-            {(() => {
-              const advCtx = loadWorldContext(teen.id, 'teen');
-              const next = getNextMissionRecommendation(advCtx);
-              return (
-                <section className="teen-expedition-portal-card">
+            {/* 2. Adventure World */}
+            <Link
+              href="/adventure"
+              className="teen-nav-item"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="teen-nav-icon">🗺️</span>
+              <span>Adventure</span>
+            </Link>
+
+            {/* 3. Interactive Stories */}
+            <Link
+              href="/stories"
+              className="teen-nav-item"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="teen-nav-icon">📖</span>
+              <span>Stories</span>
+            </Link>
+
+            {/* 4. Lantern Arcade */}
+            <Link
+              href="/arcade"
+              className="teen-nav-item"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="teen-nav-icon">🎮</span>
+              <span>Arcade</span>
+            </Link>
+
+            {/* 5. Weekly Leagues */}
+            <Link
+              href="/leagues"
+              className="teen-nav-item"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="teen-nav-icon">🏆</span>
+              <span>Leagues</span>
+            </Link>
+
+            {/* 6. Decision Lab */}
+            <button
+              type="button"
+              className={`teen-nav-item ${activeTab === 'decision' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('decision'); setActiveScenario(null); setMobileMenuOpen(false); }}
+            >
+              <span className="teen-nav-icon">⚖️</span>
+              <span>Decision Lab</span>
+            </button>
+
+            {/* 7. Case Files */}
+            <button
+              type="button"
+              className={`teen-nav-item ${activeTab === 'cases' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('cases'); setActiveCase(null); setMobileMenuOpen(false); }}
+            >
+              <span className="teen-nav-icon">🔍</span>
+              <span>Case Files</span>
+            </button>
+
+            {/* 8. Ask the Word */}
+            <button
+              type="button"
+              className={`teen-nav-item ${activeTab === 'askword' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('askword'); setQuizStarted(false); setQuizDone(false); setMobileMenuOpen(false); }}
+            >
+              <span className="teen-nav-icon">⏱️</span>
+              <span>Ask the Word</span>
+            </button>
+
+            {/* 9. Learn & Notes */}
+            <button
+              type="button"
+              className={`teen-nav-item ${activeTab === 'learn' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('learn'); setMobileMenuOpen(false); }}
+            >
+              <span className="teen-nav-icon">📚</span>
+              <span>Learn &amp; Notes</span>
+            </button>
+
+            {/* 10. Scripture Journey */}
+            <button
+              type="button"
+              className={`teen-nav-item ${activeTab === 'journey' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('journey'); setMobileMenuOpen(false); }}
+            >
+              <span className="teen-nav-icon">🧭</span>
+              <span>Journey</span>
+            </button>
+
+            {/* 11. Profile & Security */}
+            <button
+              type="button"
+              className={`teen-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }}
+            >
+              <span className="teen-nav-icon">🧑</span>
+              <span>Profile &amp; PIN</span>
+            </button>
+          </nav>
+
+          {/* ── STATIC CHARACTER CARD AT BOTTOM OF SIDEBAR ── */}
+          <div className="teen-sidebar-static-character">
+            <Link href="/character" className="teen-static-character-link" onClick={() => setMobileMenuOpen(false)}>
+              <div className="teen-static-character-avatar">
+                <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="small" showPedestal={false} />
+              </div>
+              <div className="teen-static-character-info">
+                <p className="teen-char-kicker">⚔️ Character</p>
+                <strong>{charDisplayName}</strong>
+                <small>{level.name} · Lvl {Math.floor(points / 100) + 1}</small>
+              </div>
+            </Link>
+          </div>
+        </aside>
+
+        {/* ── MAIN CANVAS AREA ── */}
+        <div className="teen-main-canvas">
+          {/* ── TAB 1: HOME (DASHBOARD HUB) ── */}
+          {activeTab === 'home' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              {/* 1. HERO SECTION: CONFIDENT GREETING & PROGRESS METRICS */}
+              <section className="teen-welcome">
+                <div className="teen-welcome-left">
+                  <div className="teen-kicker-tag">
+                    <span className="teen-kicker-spark">⚡</span>
+                    <span>LION’S DEN · TEEN EXPEDITION</span>
+                  </div>
+                  <h1>Hey, {teen.name}. One real step today.</h1>
+                  <p className="teen-welcome-sub">{DEVOTION.title}</p>
+                  
+                  <div className="teen-welcome-stats">
+                    <div className="teen-stat-badge">
+                      <span className="stat-label">Current Rank</span>
+                      <strong>{level.name}</strong>
+                    </div>
+                    <div className="teen-stat-badge">
+                      <span className="stat-label">Decisions Explored</span>
+                      <strong>{decisionsMade.length}</strong>
+                    </div>
+                    <div className="teen-stat-badge">
+                      <span className="stat-label">Cases Solved</span>
+                      <strong>{casesSolved.length}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="teen-level-card">
+                  <div className="teen-level-card-top">
+                    <span className="teen-level-card-kicker">LEVEL PROGRESS</span>
+                    <span className="teen-level-card-xp">{points.toLocaleString()} XP</span>
+                  </div>
+                  <div className="teen-level-bar" role="progressbar" aria-valuenow={levelProgress} aria-valuemin={0} aria-valuemax={100}>
+                    <i style={{ width: `${levelProgress}%` }} />
+                  </div>
+                  <p className="teen-level-card-foot">
+                    {nextLevel ? (
+                      <span><b>{nextLevel.min - points} XP</b> to {nextLevel.name}</span>
+                    ) : (
+                      <span>Top rank reached · Lightbearer</span>
+                    )}
+                  </p>
+                </div>
+              </section>
+
+              {/* 2. PRIMARY ACTION ROW: RECOMMENDED BIBLE EXPEDITION & DAILY QUESTS */}
+              <div className="teen-action-cards-grid">
+                {/* Action 1: Recommended Next Expedition */}
+                {(() => {
+                  const advCtx = loadWorldContext(teen.id, 'teen');
+                  const next = getNextMissionRecommendation(advCtx);
+                  return (
+                    <section className="teen-expedition-portal-card">
+                      <div className="teen-card-kicker-row">
+                        <span className="teen-portal-region-icon">{next.region.icon}</span>
+                        <span className="teen-portal-region-name">{next.region.name}</span>
+                        <span className="teen-portal-tag">ACTIVE EXPEDITION</span>
+                      </div>
+                      <div className="teen-portal-body">
+                        <h3>{next.title}</h3>
+                        <p>{next.subtitle}</p>
+                      </div>
+                      <div className="teen-portal-action">
+                        <Link href={next.actionHref} className="teen-primary-btn">
+                          <span>▶ Launch Expedition</span>
+                          <span className="btn-arrow">→</span>
+                        </Link>
+                      </div>
+                    </section>
+                  );
+                })()}
+
+                {/* Action 2: Daily Quests Board */}
+                <section className="teen-daily-missions-card">
                   <div className="teen-card-kicker-row">
-                    <span className="teen-portal-region-icon">{next.region.icon}</span>
-                    <span className="teen-portal-region-name">{next.region.name}</span>
-                    <span className="teen-portal-tag">ACTIVE EXPEDITION</span>
+                    <span className="teen-portal-region-icon">📅</span>
+                    <span className="teen-portal-region-name">DAILY MISSIONS</span>
+                    <span className="teen-portal-tag">STREAK + REWARD</span>
                   </div>
                   <div className="teen-portal-body">
-                    <h3>{next.title}</h3>
-                    <p>{next.subtitle}</p>
+                    <h3>Today’s Missions</h3>
+                    <p>Complete {dailyQuestSummary.total} Scripture practice goals to boost your weekly league rank.</p>
+                    <div className="teen-quest-meter-track">
+                      <div
+                        className="teen-quest-meter-fill"
+                        style={{ width: `${(dailyQuestSummary.completed / Math.max(dailyQuestSummary.total, 1)) * 100}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="teen-portal-action">
-                    <Link href={next.actionHref} className="teen-primary-btn">
-                      <span>▶ Launch Expedition</span>
-                      <span className="btn-arrow">→</span>
+                  <div className="teen-daily-missions-foot">
+                    <span className="teen-quest-fraction">
+                      <b>{dailyQuestSummary.completed}</b> / {dailyQuestSummary.total} Completed
+                    </span>
+                    <Link href="/daily-quests" className="teen-secondary-btn">
+                      {dailyQuestSummary.completed >= dailyQuestSummary.total ? 'View Rewards →' : 'Start Quests →'}
                     </Link>
                   </div>
                 </section>
-              );
-            })()}
+              </div>
 
-            {/* Action 2: Daily Quests Board */}
-            <section className="teen-daily-missions-card">
-              <div className="teen-card-kicker-row">
-                <span className="teen-portal-region-icon">📅</span>
-                <span className="teen-portal-region-name">DAILY MISSIONS</span>
-                <span className="teen-portal-tag">STREAK + REWARD</span>
-              </div>
-              <div className="teen-portal-body">
-                <h3>Today’s Missions</h3>
-                <p>Complete {dailyQuestSummary.total} Scripture practice goals to boost your weekly league rank.</p>
-                <div className="teen-quest-meter-track">
-                  <div
-                    className="teen-quest-meter-fill"
-                    style={{ width: `${(dailyQuestSummary.completed / Math.max(dailyQuestSummary.total, 1)) * 100}%` }}
-                  />
+              {/* 3. HERO CHARACTER PROFILE & LOADOUT SHOWCASE */}
+              <section className="teen-character-card">
+                <div className="teen-char-avatar-side">
+                  <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="large" showPedestal={true} />
                 </div>
-              </div>
-              <div className="teen-daily-missions-foot">
-                <span className="teen-quest-fraction">
-                  <b>{dailyQuestSummary.completed}</b> / {dailyQuestSummary.total} Completed
-                </span>
-                <Link href="/daily-quests" className="teen-secondary-btn">
-                  {dailyQuestSummary.completed >= dailyQuestSummary.total ? 'View Rewards →' : 'Start Quests →'}
-                </Link>
-              </div>
-            </section>
-          </div>
+                <div className="teen-char-details-side">
+                  <div className="teen-char-badge-row">
+                    <span className="teen-char-pill">⚔️ Hero Profile</span>
+                    <span className="teen-char-rank-pill">{level.name} · Level {Math.floor(points / 100) + 1}</span>
+                  </div>
+                  <h2>{charDisplayName}</h2>
+                  <p className="teen-char-desc">
+                    Customized avatar with live biblical artifacts and adventurer gear. Level up through Decision Labs, Case Files, and Daily Scripture to unlock rare items.
+                  </p>
 
-          {/* 3. HERO CHARACTER PROFILE & LOADOUT SHOWCASE */}
-          <section className="teen-character-card">
-            <div className="teen-char-avatar-side">
-              <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="large" showPedestal={true} />
-            </div>
-            <div className="teen-char-details-side">
-              <div className="teen-char-badge-row">
-                <span className="teen-char-pill">⚔️ Hero Profile</span>
-                <span className="teen-char-rank-pill">{level.name} · Level {Math.floor(points / 100) + 1}</span>
-              </div>
-              <h2>{charDisplayName}</h2>
-              <p className="teen-char-desc">
-                Customized avatar with live biblical artifacts and adventurer gear. Level up through Decision Labs, Case Files, and Daily Scripture to unlock rare items.
-              </p>
+                  <div className="teen-char-equipped-row">
+                    <div className="teen-char-slot" title="Headwear">
+                      <ItemIllustration itemId={charEquipment.headwear || 'starter-cap'} size={28} />
+                      <span>{charEquipment.headwear ? getItem(charEquipment.headwear)?.name : 'Traveler’s Cap'}</span>
+                    </div>
+                    <div className="teen-char-slot" title="Robe / Cloak">
+                      <ItemIllustration itemId={charEquipment.clothing || 'starter-tunic'} size={28} />
+                      <span>{charEquipment.clothing ? getItem(charEquipment.clothing)?.name : 'Traveler’s Tunic'}</span>
+                    </div>
+                    <div className="teen-char-slot" title="Footwear">
+                      <ItemIllustration itemId={charEquipment.shoes || 'starter-sandals'} size={28} />
+                      <span>{charEquipment.shoes ? getItem(charEquipment.shoes)?.name : 'Simple Sandals'}</span>
+                    </div>
+                    {charEquipment.accessory && (
+                      <div className="teen-char-slot" title="Accessory">
+                        <ItemIllustration itemId={charEquipment.accessory} size={28} />
+                        <span>{getItem(charEquipment.accessory)?.name}</span>
+                      </div>
+                    )}
+                    {charEquipment.special && (
+                      <div className="teen-char-slot teen-char-slot-special" title="Special Artifact">
+                        <ItemIllustration itemId={charEquipment.special} size={28} />
+                        <span>{getItem(charEquipment.special)?.name}</span>
+                      </div>
+                    )}
+                  </div>
 
-              <div className="teen-char-equipped-row">
-                <div className="teen-char-slot" title="Headwear">
-                  <ItemIllustration itemId={charEquipment.headwear || 'starter-cap'} size={28} />
-                  <span>{charEquipment.headwear ? getItem(charEquipment.headwear)?.name : 'Traveler’s Cap'}</span>
+                  <div className="teen-char-btn-row">
+                    <Link href="/character" className="teen-primary-btn">
+                      <span>Customize Gear &amp; Artifacts 🎨</span>
+                      <span className="btn-arrow">→</span>
+                    </Link>
+                    <Link href="/adventure" className="teen-secondary-btn">
+                      <span>Enter Adventure Map 🗺️</span>
+                    </Link>
+                  </div>
                 </div>
-                <div className="teen-char-slot" title="Robe / Cloak">
-                  <ItemIllustration itemId={charEquipment.clothing || 'starter-tunic'} size={28} />
-                  <span>{charEquipment.clothing ? getItem(charEquipment.clothing)?.name : 'Traveler’s Tunic'}</span>
-                </div>
-                <div className="teen-char-slot" title="Footwear">
-                  <ItemIllustration itemId={charEquipment.shoes || 'starter-sandals'} size={28} />
-                  <span>{charEquipment.shoes ? getItem(charEquipment.shoes)?.name : 'Simple Sandals'}</span>
-                </div>
-                {charEquipment.accessory && (
-                  <div className="teen-char-slot" title="Accessory">
-                    <ItemIllustration itemId={charEquipment.accessory} size={28} />
-                    <span>{getItem(charEquipment.accessory)?.name}</span>
+              </section>
+
+              {/* 4. STREAK CARD & LEAGUE POD CARD */}
+              <div className="teen-social-progression-grid">
+                {learningStreak ? (
+                  <StreakCard streak={learningStreak} tone="teen" onFetchCalendar={fetchStreakCalendar} />
+                ) : (
+                  <div className="teen-fallback-streak-card">
+                    <div className="streak-head">
+                      <span className="streak-fire">🔥</span>
+                      <div>
+                        <strong>{dailyQuestSummary.streak} Days Strong</strong>
+                        <small>Keep building your daily Scripture rhythm.</small>
+                      </div>
+                    </div>
                   </div>
                 )}
-                {charEquipment.special && (
-                  <div className="teen-char-slot teen-char-slot-special" title="Special Artifact">
-                    <ItemIllustration itemId={charEquipment.special} size={28} />
-                    <span>{getItem(charEquipment.special)?.name}</span>
-                  </div>
-                )}
-              </div>
 
-              <div className="teen-char-btn-row">
-                <Link href="/character" className="teen-primary-btn">
-                  <span>Customize Gear &amp; Artifacts 🎨</span>
-                  <span className="btn-arrow">→</span>
-                </Link>
-                <Link href="/adventure" className="teen-secondary-btn">
-                  <span>Enter Adventure Map 🗺️</span>
-                </Link>
-              </div>
-            </div>
-          </section>
-
-          {/* 4. STREAK CARD & LEAGUE POD CARD */}
-          <div className="teen-social-progression-grid">
-            {learningStreak ? (
-              <StreakCard streak={learningStreak} tone="teen" onFetchCalendar={fetchStreakCalendar} />
-            ) : (
-              <div className="teen-fallback-streak-card">
-                <div className="streak-head">
-                  <span className="streak-fire">🔥</span>
-                  <div>
-                    <strong>{dailyQuestSummary.streak} Days Strong</strong>
-                    <small>Keep building your daily Scripture rhythm.</small>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <LeagueCard
-              pod={getLeaguePod(teen.id, teen.name, teen.age, teen.avatar, charAppearance)}
-              isTeen={true}
-            />
-          </div>
-
-          {/* 5. ADAPTIVE LEARNING CARD */}
-          {learningPlan && (
-            <LearningJourneyCard plan={learningPlan} isTeen={true} />
-          )}
-
-          {/* 6. TODAY'S SUMMARY STATS (IF ACTIVE) */}
-          {todaySummary && (todaySummary.games_played > 0 || todaySummary.quests_completed > 0 || todaySummary.xp_earned > 0 || todaySummary.achievements_earned > 0) && (
-            <section className="teen-your-day-card" aria-label="Your session summary">
-              <div className="teen-card-kicker-row">
-                <span className="teen-portal-region-name">SESSION ACTIVITY</span>
-                <span className="teen-portal-tag">TODAY’S SUMMARY</span>
-              </div>
-              <div className="your-day-stats-grid">
-                <div className="day-stat-col">
-                  <span>🔥</span>
-                  <strong>{todaySummary.quests_completed}</strong>
-                  <small>Quests Done</small>
-                </div>
-                <div className="day-stat-col">
-                  <span>⭐</span>
-                  <strong>{todaySummary.xp_earned}</strong>
-                  <small>XP Gained</small>
-                </div>
-                <div className="day-stat-col">
-                  <span>🎮</span>
-                  <strong>{todaySummary.games_played}</strong>
-                  <small>Games Played</small>
-                </div>
-                <div className="day-stat-col">
-                  <span>🏆</span>
-                  <strong>{todaySummary.achievements_earned}</strong>
-                  <small>Achievements</small>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* 7. TODAY'S LIGHT / WEEKLY DEVOTION WITH AUDIO */}
-          <section className="teen-devotion-card">
-            <div className="teen-devotion-head">
-              <p className="teen-devotion-kicker">TODAY’S SCRIPTURE LIGHT</p>
-              <h2>{DEVOTION.title}</h2>
-            </div>
-            
-            <p className="teen-verse-line big">
-              {WEEKLY_VERSE.text}
-              <span>{WEEKLY_VERSE.ref}, WEB</span>
-            </p>
-
-            <div className="teen-devotion-audio-bar">
-              <StudioAudioPlayer
-                text={`${WEEKLY_VERSE.ref}. ${WEEKLY_VERSE.text}. Weekly Devotion: ${DEVOTION.title}. ${DEVOTION.body.join(' ')}`}
-                title="Weekly Devotion Audio"
-                compact={true}
-                defaultVoiceId="en-GB-Journey-D"
-              />
-              <button
-                type="button"
-                className="teen-read-devotion-btn"
-                onClick={() => setDevotionOpen(!devotionOpen)}
-              >
-                {devotionOpen ? '▲ Collapse Devotion' : '📖 Read Full Devotion'}
-              </button>
-            </div>
-
-            {devotionOpen && (
-              <div className="teen-devotion-expanded">
-                {DEVOTION.body.map((p, i) => (
-                  <p key={i} className="teen-devotion-body-para">{p}</p>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* 8. QUICK SPOTLIGHT: DECISION LAB & CASE FILES */}
-          <section className="teen-home-grid">
-            <article className="teen-panel">
-              <div className="teen-panel-head">
-                <div>
-                  <p className="teen-kicker">WEEKLY THEME</p>
-                  <h2>Courage Under Pressure</h2>
-                </div>
-                <button type="button" className="teen-link-action" onClick={() => setTab('play')}>
-                  Open Play Hub →
-                </button>
-              </div>
-              <p className="teen-panel-copy">
-                Three Decision Lab scenarios and one Bible Case File are live this week. Every path you choose leads somewhere real — there’s no single “correct” click to farm.
-              </p>
-              <div className="teen-recommend-row">
-                <button
-                  type="button"
-                  className="teen-recommend-card"
-                  onClick={() => { setTab('play'); setPlayMode('decision'); }}
-                >
-                  <span className="rec-icon">⚖️</span>
-                  <div>
-                    <strong>Decision Lab</strong>
-                    <small>The Answer Sheet · Integrity</small>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="teen-recommend-card"
-                  onClick={() => { setTab('play'); setPlayMode('cases'); }}
-                >
-                  <span className="rec-icon">🔍</span>
-                  <div>
-                    <strong>Bible Case Files</strong>
-                    <small>The Empty Tomb · Evidence &amp; Verdicts</small>
-                  </div>
-                </button>
-              </div>
-            </article>
-
-            <aside className="teen-side-panel">
-              <p className="teen-kicker">WEEKLY JOURNEY</p>
-              <h2>{journeyStagesDone} of 4 stages</h2>
-              <div className="teen-journey-mini" role="progressbar" aria-valuenow={(journeyStagesDone / 4) * 100} aria-valuemin={0} aria-valuemax={100}>
-                <i style={{ width: `${(journeyStagesDone / 4) * 100}%` }} />
-              </div>
-              <p>Read, think, speak, live — one verse, worked all the way through.</p>
-              <button type="button" className="teen-primary-btn" onClick={() => setTab('journey')}>
-                Continue Journey →
-              </button>
-            </aside>
-          </section>
-        </div>
-      )}
-
-      {/* ── TAB 2: LEARN (SCRIPTURE STUDY & CLASS SYNC) ── */}
-      {tab === 'learn' && (
-        <div className="teen-body">
-          <div className="teen-title">
-            <p className="teen-kicker">SCRIPTURE STUDY</p>
-            <h1>Go past the highlight verse.</h1>
-            <p>Real study means context, not just a quote. Work through this week’s passage properly.</p>
-          </div>
-
-          <section className="teen-panel teen-scripture-panel">
-            <p className="teen-verse-line big">
-              {WEEKLY_VERSE.text} <span>{WEEKLY_VERSE.ref}, WEB</span>
-            </p>
-            <h3>Study Questions — Private Drafts</h3>
-            <p className="teen-panel-copy">Nobody reads these unless you choose to submit them from the Journey tab. Write honestly.</p>
-            {STUDY_QUESTIONS.map((q, i) => (
-              <div key={i} className="teen-study-question">
-                <label htmlFor={`study-q-${i}`}>{q}</label>
-                <textarea
-                  id={`study-q-${i}`}
-                  value={notes[i] || ''}
-                  onChange={(e) => setNotes({ ...notes, [i]: e.target.value })}
-                  placeholder="Type your thinking here — even a rough answer counts."
+                <LeagueCard
+                  pod={getLeaguePod(teen.id, teen.name, teen.age, teen.avatar, charAppearance)}
+                  isTeen={true}
                 />
               </div>
-            ))}
-          </section>
 
-          <section className="teen-panel">
-            <div className="teen-panel-head">
-              <div>
-                <p className="teen-kicker">ASSIGNMENTS</p>
-                <h2>From Your Class</h2>
-              </div>
-            </div>
-            {assignments.map((a) => (
-              <article key={a.id} className="teen-assignment-row">
-                <button
-                  type="button"
-                  className={`teen-check ${a.status === 'done' ? 'done' : ''}`}
-                  onClick={() => toggleAssignment(a.id)}
-                  aria-pressed={a.status === 'done'}
-                  aria-label={a.status === 'done' ? `Mark "${a.title}" as not done` : `Mark "${a.title}" as done`}
-                >
-                  {a.status === 'done' ? '✓' : ''}
-                </button>
-                <div>
-                  <strong>{a.title}</strong>
-                  <small>Due {a.due}</small>
+              {/* 5. ADAPTIVE LEARNING CARD */}
+              {learningPlan && (
+                <LearningJourneyCard plan={learningPlan} isTeen={true} />
+              )}
+
+              {/* 6. TODAY'S SUMMARY STATS (IF ACTIVE) */}
+              {todaySummary && (todaySummary.games_played > 0 || todaySummary.quests_completed > 0 || todaySummary.xp_earned > 0 || todaySummary.achievements_earned > 0) && (
+                <section className="teen-your-day-card" aria-label="Your session summary">
+                  <div className="teen-card-kicker-row">
+                    <span className="teen-portal-region-name">SESSION ACTIVITY</span>
+                    <span className="teen-portal-tag">TODAY’S SUMMARY</span>
+                  </div>
+                  <div className="your-day-stats-grid">
+                    <div className="day-stat-col">
+                      <span>🔥</span>
+                      <strong>{todaySummary.quests_completed}</strong>
+                      <small>Quests Done</small>
+                    </div>
+                    <div className="day-stat-col">
+                      <span>⭐</span>
+                      <strong>{todaySummary.xp_earned}</strong>
+                      <small>XP Gained</small>
+                    </div>
+                    <div className="day-stat-col">
+                      <span>🎮</span>
+                      <strong>{todaySummary.games_played}</strong>
+                      <small>Games Played</small>
+                    </div>
+                    <div className="day-stat-col">
+                      <span>🏆</span>
+                      <strong>{todaySummary.achievements_earned}</strong>
+                      <small>Achievements</small>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* 7. TODAY'S LIGHT / WEEKLY DEVOTION WITH AUDIO */}
+              <section className="teen-devotion-card">
+                <div className="teen-devotion-head">
+                  <p className="teen-devotion-kicker">TODAY’S SCRIPTURE LIGHT</p>
+                  <h2>{DEVOTION.title}</h2>
                 </div>
-              </article>
-            ))}
-          </section>
-
-          <section className="teen-panel teen-class-panel">
-            <div className="teen-panel-head">
-              <div>
-                <p className="teen-kicker">CLASS CONNECTION</p>
-                <h2>{connectedClass ? connectedClass.name : 'Not Connected Yet'}</h2>
-              </div>
-            </div>
-            {connectedClass ? (
-              <p className="teen-panel-copy">Connected with code <b>{connectedClass.code}</b>. Assignments above sync from this class.</p>
-            ) : (
-              <div className="teen-class-connect">
-                <input
-                  value={classCode}
-                  onChange={(e) => setClassCode(e.target.value)}
-                  placeholder="Enter your teacher’s join code"
-                  maxLength={12}
-                />
-                <button type="button" className="teen-primary-btn" onClick={connectClass}>
-                  Connect Class
-                </button>
-                {classError && <p className="teen-inline-error">{classError}</p>}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-
-      {/* ── TAB 3: PLAY (INTERACTIVE BIBLE CHALLENGES) ── */}
-      {tab === 'play' && (
-        <div className="teen-body">
-          {playMode === 'menu' && (
-            <>
-              <div className="teen-title">
-                <p className="teen-kicker">PLAY &amp; COMPETE</p>
-                <h1>Choose your challenge.</h1>
-                <p>These aren’t quizzes with one right tap. Real branching, real evidence, real stakes.</p>
-              </div>
-
-              <div className="teen-play-grid">
-                <Link className="teen-play-card teen-play-card-world" href="/adventure">
-                  <span className="play-card-icon">🗺️</span>
-                  <strong>Adventure World</strong>
-                  <small>Walk the Bible’s story region by region with full quest maps</small>
-                </Link>
-
-                <Link className="teen-play-card" href="/stories">
-                  <span className="play-card-icon">📖</span>
-                  <strong>Interactive Stories</strong>
-                  <small>Live the Bible’s biggest moments, scene by scene with choices</small>
-                </Link>
-
-                <Link className="teen-play-card" href="/arcade">
-                  <span className="play-card-icon">🎮</span>
-                  <strong>Lantern Arcade</strong>
-                  <small>Scripture Maze, Scramble, Verse Builder, Detective</small>
-                </Link>
-
-                <button type="button" className="teen-play-card" onClick={() => setPlayMode('decision')}>
-                  <span className="play-card-icon">⚖️</span>
-                  <strong>Decision Lab</strong>
-                  <small>{DECISION_SCENARIOS.length} branching scenarios · school &amp; online life</small>
-                </button>
-
-                <button type="button" className="teen-play-card" onClick={() => setPlayMode('reallife')}>
-                  <span className="play-card-icon">🧭</span>
-                  <strong>Real Life</strong>
-                  <small>{REAL_LIFE_SCENARIOS.length} scenarios · work, family, courage under fire</small>
-                </button>
-
-                <button type="button" className="teen-play-card" onClick={() => setPlayMode('cases')}>
-                  <span className="play-card-icon">🔍</span>
-                  <strong>Bible Case Files</strong>
-                  <small>{CASE_FILES.length} investigations · evidence &amp; verdicts</small>
-                </button>
-
-                <button type="button" className="teen-play-card" onClick={() => { setPlayMode('askword'); setQuizStarted(false); setQuizDone(false); }}>
-                  <span className="play-card-icon">⏱️</span>
-                  <strong>Ask the Word</strong>
-                  <small>10 timed questions · deep theological knowledge challenge</small>
-                </button>
-
-                <Link className="teen-play-card" href="/multiplayer">
-                  <span className="play-card-icon">🤝</span>
-                  <strong>Play Together</strong>
-                  <small>Cooperative games with your approved class circle</small>
-                </Link>
-
-                <Link className="teen-play-card" href="/curriculum">
-                  <span className="play-card-icon">📜</span>
-                  <strong>Story World</strong>
-                  <small>Lion’s Den curriculum chapters, engineered for your age</small>
-                </Link>
-              </div>
-            </>
-          )}
-
-          {/* SUBVIEW: DECISION LAB / REAL LIFE SELECTION */}
-          {(playMode === 'decision' || playMode === 'reallife') && !activeScenario && (
-            <>
-              <div className="teen-title">
-                <button type="button" className="teen-back" onClick={() => setPlayMode('menu')}>← Back to Play Hub</button>
-                <h1>{playMode === 'decision' ? 'Decision Lab' : 'Real Life Scenarios'}</h1>
-                <p>
-                  {playMode === 'decision'
-                    ? 'Every choice branches. There’s no reset button that erases what you picked — only the chance to see where a different choice leads.'
-                    : 'Ordinary situations. The kind you’ll actually face this month.'}
-                </p>
-              </div>
-
-              <div className="teen-scenario-grid">
-                {(playMode === 'decision' ? DECISION_SCENARIOS : REAL_LIFE_SCENARIOS).map((s) => (
-                  <button key={s.id} type="button" className="teen-scenario-card" onClick={() => openScenario(s)}>
-                    <span className="teen-scenario-tag">{s.tag}</span>
-                    <strong>{s.title}</strong>
-                    <small>{s.hook}</small>
-                    {decisionsMade.includes(s.id) && <b className="teen-done-mark">✓ Explored</b>}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* SUBVIEW: SCENARIO PLAYER */}
-          {activeScenario && (() => {
-            const node = activeScenario.nodes[nodeId];
-            return (
-              <div className="teen-scenario-player">
-                <button type="button" className="teen-back" onClick={closeScenario}>
-                  ← {playMode === 'decision' ? 'Decision Lab' : 'Real Life'}
-                </button>
-                <p className="teen-scenario-tag">{activeScenario.tag}</p>
-                <h1>{activeScenario.title}</h1>
-                {nodeId === 'start' && <p className="teen-scenario-hook">{activeScenario.hook}</p>}
                 
-                {'choices' in node ? (
-                  <>
-                    <p className="teen-scenario-prompt">{node.prompt}</p>
-                    <div className="teen-scenario-choices">
-                      {node.choices.map((c, i) => (
-                        <button key={i} type="button" onClick={() => chooseBranch(c.to)}>
-                          {c.text}
+                <p className="teen-verse-line big">
+                  {WEEKLY_VERSE.text}
+                  <span>{WEEKLY_VERSE.ref}, WEB</span>
+                </p>
+
+                <div className="teen-devotion-audio-bar">
+                  <StudioAudioPlayer
+                    text={`${WEEKLY_VERSE.ref}. ${WEEKLY_VERSE.text}. Weekly Devotion: ${DEVOTION.title}. ${DEVOTION.body.join(' ')}`}
+                    title="Weekly Devotion Audio"
+                    compact={true}
+                    defaultVoiceId="en-GB-Journey-D"
+                  />
+                  <button
+                    type="button"
+                    className="teen-read-devotion-btn"
+                    onClick={() => setDevotionOpen(!devotionOpen)}
+                  >
+                    {devotionOpen ? '▲ Collapse Devotion' : '📖 Read Full Devotion'}
+                  </button>
+                </div>
+
+                {devotionOpen && (
+                  <div className="teen-devotion-expanded">
+                    {DEVOTION.body.map((p, i) => (
+                      <p key={i} className="teen-devotion-body-para">{p}</p>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* 8. QUICK SPOTLIGHT: DECISION LAB & CASE FILES */}
+              <section className="teen-home-grid">
+                <article className="teen-panel">
+                  <div className="teen-panel-head">
+                    <div>
+                      <p className="teen-kicker">WEEKLY THEME</p>
+                      <h2>Courage Under Pressure</h2>
+                    </div>
+                    <button type="button" className="teen-link-action" onClick={() => setActiveTab('decision')}>
+                      Open Decision Lab →
+                    </button>
+                  </div>
+                  <p className="teen-panel-copy">
+                    Three Decision Lab scenarios and one Bible Case File are live this week. Every path you choose leads somewhere real — there’s no single “correct” click to farm.
+                  </p>
+                  <div className="teen-recommend-row">
+                    <button
+                      type="button"
+                      className="teen-recommend-card"
+                      onClick={() => setActiveTab('decision')}
+                    >
+                      <span className="rec-icon">⚖️</span>
+                      <div>
+                        <strong>Decision Lab</strong>
+                        <small>The Answer Sheet · Integrity</small>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      className="teen-recommend-card"
+                      onClick={() => setActiveTab('cases')}
+                    >
+                      <span className="rec-icon">🔍</span>
+                      <div>
+                        <strong>Bible Case Files</strong>
+                        <small>The Empty Tomb · Evidence &amp; Verdicts</small>
+                      </div>
+                    </button>
+                  </div>
+                </article>
+
+                <aside className="teen-side-panel">
+                  <p className="teen-kicker">WEEKLY JOURNEY</p>
+                  <h2>{journeyStagesDone} of 4 stages</h2>
+                  <div className="teen-journey-mini" role="progressbar" aria-valuenow={(journeyStagesDone / 4) * 100} aria-valuemin={0} aria-valuemax={100}>
+                    <i style={{ width: `${(journeyStagesDone / 4) * 100}%` }} />
+                  </div>
+                  <p>Read, think, speak, live — one verse, worked all the way through.</p>
+                  <button type="button" className="teen-primary-btn" onClick={() => setActiveTab('journey')}>
+                    Continue Journey →
+                  </button>
+                </aside>
+              </section>
+            </div>
+          )}
+
+          {/* ── TAB 2: DECISION LAB ── */}
+          {activeTab === 'decision' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              {!activeScenario ? (
+                <>
+                  <div className="teen-title">
+                    <p className="teen-kicker">DECISION LAB</p>
+                    <h1>Real Decisions. Real Consequences.</h1>
+                    <p>Every choice branches. There is no reset button that erases what you picked — only the chance to see where each road actually leads.</p>
+                  </div>
+
+                  <div className="teen-scenario-grid">
+                    {[...DECISION_SCENARIOS, ...REAL_LIFE_SCENARIOS].map((s) => (
+                      <button key={s.id} type="button" className="teen-scenario-card" onClick={() => openScenario(s)}>
+                        <span className="teen-scenario-tag">{s.tag}</span>
+                        <strong>{s.title}</strong>
+                        <small>{s.hook}</small>
+                        {decisionsMade.includes(s.id) && <b className="teen-done-mark">✓ Explored</b>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (() => {
+                const node = activeScenario.nodes[nodeId];
+                return (
+                  <div className="teen-scenario-player">
+                    <button type="button" className="teen-back" onClick={closeScenario}>
+                      ← Back to All Scenarios
+                    </button>
+                    <p className="teen-scenario-tag">{activeScenario.tag}</p>
+                    <h1>{activeScenario.title}</h1>
+                    {nodeId === 'start' && <p className="teen-scenario-hook">{activeScenario.hook}</p>}
+                    
+                    {'choices' in node ? (
+                      <>
+                        <p className="teen-scenario-prompt">{node.prompt}</p>
+                        <div className="teen-scenario-choices">
+                          {node.choices.map((c, i) => (
+                            <button key={i} type="button" onClick={() => chooseBranch(c.to)}>
+                              {c.text}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className={`teen-ending teen-ending-${node.verdict}`}>
+                        <span className="teen-ending-tag">
+                          {node.verdict === 'wise' ? '✓ Wise Path' : node.verdict === 'risky' ? '⚠️ Risky Path' : '❌ Costly Path'}
+                        </span>
+                        <p>{node.text}</p>
+                        <p className="teen-verse-line">
+                          {node.verseText} <span>{node.verseRef}</span>
+                        </p>
+                        <div className="teen-scenario-choices-row">
+                          <button type="button" className="teen-secondary-btn" onClick={resetScenario}>
+                            Try a Different Path
+                          </button>
+                          <button
+                            type="button"
+                            className="teen-primary-btn"
+                            onClick={() => { finishScenario(activeScenario, node.verdict); closeScenario(); }}
+                          >
+                            Finish &amp; Claim XP →
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* ── TAB 3: BIBLE CASE FILES ── */}
+          {activeTab === 'cases' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              {!activeCase ? (
+                <>
+                  <div className="teen-title">
+                    <p className="teen-kicker">HISTORICAL INVESTIGATIONS</p>
+                    <h1>Bible Case Files</h1>
+                    <p>Review every piece of historical and scriptural evidence before you can reach a verdict. No skipping ahead.</p>
+                  </div>
+
+                  <div className="teen-scenario-grid">
+                    {CASE_FILES.map((c) => (
+                      <button key={c.id} type="button" className="teen-scenario-card" onClick={() => openCase(c)}>
+                        <span className="teen-scenario-tag">Investigation</span>
+                        <strong>{c.title}</strong>
+                        <small>{c.mystery}</small>
+                        {casesSolved.includes(c.id) && <b className="teen-done-mark">✓ Solved</b>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="teen-scenario-player teen-case-player">
+                  <button type="button" className="teen-back" onClick={closeCase}>← Back to Case Files</button>
+                  <h1>{activeCase.title}</h1>
+                  <p className="teen-scenario-hook">{activeCase.mystery}</p>
+                  
+                  <div className="teen-evidence-grid">
+                    {activeCase.evidence.map((ev) => (
+                      <button
+                        key={ev.id}
+                        type="button"
+                        className={`teen-evidence-card ${reviewedEvidence.includes(ev.id) ? 'reviewed' : ''}`}
+                        onClick={() => markReviewed(ev.id)}
+                      >
+                        <span>{reviewedEvidence.includes(ev.id) ? '✓' : ev.label.split(' ')[1]}</span>
+                        <div>
+                          <strong>{ev.label}</strong>
+                          <small>{ev.ref}</small>
+                          <p>{ev.text}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {reviewedEvidence.length === activeCase.evidence.length ? (
+                    <div className="teen-verdict-box">
+                      <h3>{activeCase.question}</h3>
+                      <div className="teen-verdict-options">
+                        {activeCase.options.map((o) => (
+                          <button
+                            key={o.id}
+                            type="button"
+                            className={`${verdict === o.id ? 'picked' : ''} ${verdictSubmitted ? (o.id === activeCase.correct ? 'correct' : verdict === o.id ? 'wrong' : '') : ''}`}
+                            disabled={verdictSubmitted}
+                            onClick={() => setVerdict(o.id)}
+                          >
+                            {o.text}
+                          </button>
+                        ))}
+                      </div>
+                      {!verdictSubmitted ? (
+                        <button type="button" className="teen-primary-btn" disabled={!verdict} onClick={submitVerdict}>
+                          Submit Verdict
+                        </button>
+                      ) : (
+                        <div className={`teen-ending teen-ending-${verdict === activeCase.correct ? 'wise' : 'unwise'}`}>
+                          <span className="teen-ending-tag">
+                            {verdict === activeCase.correct ? 'Case closed — correct verdict' : 'Not quite the strongest verdict'}
+                          </span>
+                          <p>{activeCase.explanation}</p>
+                          <button type="button" className="teen-primary-btn" onClick={closeCase}>
+                            Back to Case Files →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="teen-evidence-hint">
+                      Review all {activeCase.evidence.length} pieces of evidence to unlock the verdict ({reviewedEvidence.length}/{activeCase.evidence.length}).
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── TAB 4: ASK THE WORD (SPEED THEOLOGY QUIZ) ── */}
+          {activeTab === 'askword' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              <div className="teen-quiz-player">
+                {!quizStarted && !quizDone && (
+                  <div className="teen-quiz-intro">
+                    <p className="teen-kicker">THEOLOGICAL SPEED CHALLENGE</p>
+                    <h1>Ask the Word</h1>
+                    <p>5 timed questions. 20 seconds each. This isn’t basic Sunday school — it’s built for teens ready to test real depth.</p>
+                    <button type="button" className="teen-primary-btn" onClick={startQuiz}>
+                      Start the Challenge →
+                    </button>
+                  </div>
+                )}
+
+                {quizStarted && !quizDone && (
+                  <div className="teen-quiz-live">
+                    <div className="teen-quiz-meta">
+                      <span>Question {quizIndex + 1} of {ASK_WORD_QUESTIONS.length}</span>
+                      <span className={`teen-quiz-timer ${timeLeft <= 5 ? 'low' : ''}`}>{timeLeft}s</span>
+                    </div>
+                    <h2>{ASK_WORD_QUESTIONS[quizIndex].q}</h2>
+                    <div className="teen-quiz-options">
+                      {ASK_WORD_QUESTIONS[quizIndex].options.map((opt, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          disabled={quizAnswer !== null}
+                          className={quizAnswer !== null ? (i === ASK_WORD_QUESTIONS[quizIndex].correct ? 'correct' : i === quizAnswer ? 'wrong' : '') : ''}
+                          onClick={() => handleQuizAnswer(i)}
+                        >
+                          {opt}
                         </button>
                       ))}
                     </div>
-                  </>
-                ) : (
-                  <div className={`teen-ending teen-ending-${node.verdict}`}>
-                    <span className="teen-ending-tag">
-                      {node.verdict === 'wise' ? '✓ Wise Path' : node.verdict === 'risky' ? '⚠️ Risky Path' : '❌ Costly Path'}
-                    </span>
-                    <p>{node.text}</p>
-                    <p className="teen-verse-line">
-                      {node.verseText} <span>{node.verseRef}</span>
+                    {quizAnswer !== null && (
+                      <p className="teen-quiz-ref">Reference: {ASK_WORD_QUESTIONS[quizIndex].ref}</p>
+                    )}
+                  </div>
+                )}
+
+                {quizDone && (
+                  <div className="teen-quiz-results">
+                    <h1>{quizScore}/{ASK_WORD_QUESTIONS.length}</h1>
+                    <p>
+                      {quizScore >= 4
+                        ? 'Sharp! That is a strong grasp of deep theological and historical scripture.'
+                        : 'A tough round. Worth checking out the Learn & Notes tab to review context.'}
                     </p>
-                    <div className="teen-scenario-choices-row">
-                      <button type="button" className="teen-secondary-btn" onClick={resetScenario}>
-                        Try a Different Path
+                    <div className="teen-quiz-result-actions">
+                      <button type="button" className="teen-secondary-btn" onClick={startQuiz}>
+                        Play Again
                       </button>
-                      <button
-                        type="button"
-                        className="teen-primary-btn"
-                        onClick={() => { finishScenario(activeScenario, node.verdict); closeScenario(); }}
-                      >
-                        Finish &amp; Claim XP →
+                      <button type="button" className="teen-primary-btn" onClick={exitQuiz}>
+                        Back to Home →
                       </button>
                     </div>
                   </div>
                 )}
               </div>
-            );
-          })()}
+            </div>
+          )}
 
-          {/* SUBVIEW: CASE FILES SELECTION */}
-          {playMode === 'cases' && !activeCase && (
-            <>
+          {/* ── TAB 5: LEARN & NOTES ── */}
+          {activeTab === 'learn' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
               <div className="teen-title">
-                <button type="button" className="teen-back" onClick={() => setPlayMode('menu')}>← Back to Play Hub</button>
-                <h1>Bible Case Files</h1>
-                <p>Review every piece of evidence before you can reach a verdict. No skipping ahead.</p>
+                <p className="teen-kicker">SCRIPTURE CONTEXT &amp; NOTES</p>
+                <h1>Go past the highlight verse.</h1>
+                <p>Real study means context, not just a single quote. Work through this week’s passage and save private notes.</p>
               </div>
 
-              <div className="teen-scenario-grid">
-                {CASE_FILES.map((c) => (
-                  <button key={c.id} type="button" className="teen-scenario-card" onClick={() => openCase(c)}>
-                    <span className="teen-scenario-tag">Investigation</span>
-                    <strong>{c.title}</strong>
-                    <small>{c.mystery}</small>
-                    {casesSolved.includes(c.id) && <b className="teen-done-mark">✓ Solved</b>}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* SUBVIEW: CASE FILE PLAYER */}
-          {activeCase && (
-            <div className="teen-scenario-player teen-case-player">
-              <button type="button" className="teen-back" onClick={closeCase}>← Bible Case Files</button>
-              <h1>{activeCase.title}</h1>
-              <p className="teen-scenario-hook">{activeCase.mystery}</p>
-              
-              <div className="teen-evidence-grid">
-                {activeCase.evidence.map((ev) => (
-                  <button
-                    key={ev.id}
-                    type="button"
-                    className={`teen-evidence-card ${reviewedEvidence.includes(ev.id) ? 'reviewed' : ''}`}
-                    onClick={() => markReviewed(ev.id)}
-                  >
-                    <span>{reviewedEvidence.includes(ev.id) ? '✓' : ev.label.split(' ')[1]}</span>
-                    <div>
-                      <strong>{ev.label}</strong>
-                      <small>{ev.ref}</small>
-                      <p>{ev.text}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {reviewedEvidence.length === activeCase.evidence.length ? (
-                <div className="teen-verdict-box">
-                  <h3>{activeCase.question}</h3>
-                  <div className="teen-verdict-options">
-                    {activeCase.options.map((o) => (
-                      <button
-                        key={o.id}
-                        type="button"
-                        className={`${verdict === o.id ? 'picked' : ''} ${verdictSubmitted ? (o.id === activeCase.correct ? 'correct' : verdict === o.id ? 'wrong' : '') : ''}`}
-                        disabled={verdictSubmitted}
-                        onClick={() => setVerdict(o.id)}
-                      >
-                        {o.text}
-                      </button>
-                    ))}
-                  </div>
-                  {!verdictSubmitted ? (
-                    <button type="button" className="teen-primary-btn" disabled={!verdict} onClick={submitVerdict}>
-                      Submit Verdict
-                    </button>
-                  ) : (
-                    <div className={`teen-ending teen-ending-${verdict === activeCase.correct ? 'wise' : 'unwise'}`}>
-                      <span className="teen-ending-tag">
-                        {verdict === activeCase.correct ? 'Case closed — correct verdict' : 'Not quite the strongest verdict'}
-                      </span>
-                      <p>{activeCase.explanation}</p>
-                      <button type="button" className="teen-primary-btn" onClick={closeCase}>
-                        Back to Case Files →
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="teen-evidence-hint">
-                  Review all {activeCase.evidence.length} pieces of evidence to unlock the verdict ({reviewedEvidence.length}/{activeCase.evidence.length}).
+              <section className="teen-panel teen-scripture-panel">
+                <p className="teen-verse-line big">
+                  {WEEKLY_VERSE.text} <span>{WEEKLY_VERSE.ref}, WEB</span>
                 </p>
-              )}
-            </div>
-          )}
-
-          {/* SUBVIEW: ASK THE WORD TIMED QUIZ */}
-          {playMode === 'askword' && (
-            <div className="teen-quiz-player">
-              <button type="button" className="teen-back" onClick={() => setPlayMode('menu')}>← Back to Play Hub</button>
-              {!quizStarted && !quizDone && (
-                <div className="teen-quiz-intro">
-                  <h1>Ask the Word</h1>
-                  <p>10 questions. 20 seconds each. This isn’t basic Sunday school — it’s built for teens who know the biblical foundation.</p>
-                  <button type="button" className="teen-primary-btn" onClick={startQuiz}>
-                    Start the Challenge →
-                  </button>
-                </div>
-              )}
-
-              {quizStarted && !quizDone && (
-                <div className="teen-quiz-live">
-                  <div className="teen-quiz-meta">
-                    <span>Question {quizIndex + 1} of {ASK_WORD_QUESTIONS.length}</span>
-                    <span className={`teen-quiz-timer ${timeLeft <= 5 ? 'low' : ''}`}>{timeLeft}s</span>
+                <h3>Study Questions — Private Drafts</h3>
+                <p className="teen-panel-copy">Nobody reads these unless you choose to submit them from the Journey tab. Write honestly.</p>
+                {STUDY_QUESTIONS.map((q, i) => (
+                  <div key={i} className="teen-study-question">
+                    <label htmlFor={`study-q-${i}`}>{q}</label>
+                    <textarea
+                      id={`study-q-${i}`}
+                      value={notes[i] || ''}
+                      onChange={(e) => setNotes({ ...notes, [i]: e.target.value })}
+                      placeholder="Type your thinking here — even a rough answer counts."
+                    />
                   </div>
-                  <h2>{ASK_WORD_QUESTIONS[quizIndex].q}</h2>
-                  <div className="teen-quiz-options">
-                    {ASK_WORD_QUESTIONS[quizIndex].options.map((opt, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        disabled={quizAnswer !== null}
-                        className={quizAnswer !== null ? (i === ASK_WORD_QUESTIONS[quizIndex].correct ? 'correct' : i === quizAnswer ? 'wrong' : '') : ''}
-                        onClick={() => handleQuizAnswer(i)}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                  {quizAnswer !== null && (
-                    <p className="teen-quiz-ref">Reference: {ASK_WORD_QUESTIONS[quizIndex].ref}</p>
-                  )}
-                </div>
-              )}
+                ))}
+              </section>
 
-              {quizDone && (
-                <div className="teen-quiz-results">
-                  <h1>{quizScore}/{ASK_WORD_QUESTIONS.length}</h1>
-                  <p>
-                    {quizScore >= 8
-                      ? 'Sharp. That’s a strong grasp of some genuinely deep biblical material.'
-                      : quizScore >= 5
-                      ? 'Solid round — a few of those are worth digging into further in the Learn tab.'
-                      : 'A tough set. Worth revisiting the ones you missed in the Learn tab.'}
-                  </p>
-                  <div className="teen-quiz-result-actions">
-                    <button type="button" className="teen-secondary-btn" onClick={startQuiz}>
-                      Play Again
-                    </button>
-                    <button type="button" className="teen-primary-btn" onClick={exitQuiz}>
-                      Back to Play Hub →
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── TAB 4: JOURNEY (READ · THINK · SPEAK · LIVE) ── */}
-      {tab === 'journey' && (
-        <div className="teen-body">
-          <div className="teen-title">
-            <p className="teen-kicker">WEEKLY SCRIPTURE CYCLE</p>
-            <h1>Read. Think. Speak. Live.</h1>
-            <p>One verse, carried all the way from the page into an actual moment of your week.</p>
-          </div>
-
-          <section className="teen-panel teen-scripture-panel">
-            <p className="teen-verse-line big">{WEEKLY_VERSE.text} <span>{WEEKLY_VERSE.ref}, WEB</span></p>
-          </section>
-
-          <div className="teen-journey-stages">
-            {JOURNEY_STAGES.map((stage) => (
-              <article key={stage.id} className={`teen-journey-stage ${journeyDone[stage.id] ? 'done' : ''}`}>
-                <div className="teen-journey-stage-head">
-                  <span>{journeyDone[stage.id] ? '✓' : ''}</span>
+              <section className="teen-panel">
+                <div className="teen-panel-head">
                   <div>
-                    <strong>{stage.title}</strong>
-                    <small>{stage.blurb}</small>
+                    <p className="teen-kicker">ASSIGNMENTS</p>
+                    <h2>From Your Class</h2>
                   </div>
                 </div>
-                {stage.id === 'think' && (
-                  <textarea
-                    value={journeyDraft}
-                    onChange={(e) => setJourneyDraft(e.target.value)}
-                    placeholder="Private draft — only you can see this."
-                  />
-                )}
-                {stage.id === 'live' && (
-                  <textarea
-                    value={journeyLive}
-                    onChange={(e) => setJourneyLive(e.target.value)}
-                    placeholder="What happened this week when you tried to live this out?"
-                  />
-                )}
-                <button
-                  type="button"
-                  className={journeyDone[stage.id] ? 'teen-unmark-btn' : 'teen-primary-btn'}
-                  onClick={() => toggleJourneyStage(stage.id)}
-                >
-                  {journeyDone[stage.id] ? 'Mark Not Done' : 'Mark Complete (+15 XP)'}
-                </button>
-              </article>
-            ))}
-          </div>
+                {assignments.map((a) => (
+                  <article key={a.id} className="teen-assignment-row">
+                    <button
+                      type="button"
+                      className={`teen-check ${a.status === 'done' ? 'done' : ''}`}
+                      onClick={() => toggleAssignment(a.id)}
+                      aria-pressed={a.status === 'done'}
+                      aria-label={a.status === 'done' ? `Mark "${a.title}" as not done` : `Mark "${a.title}" as done`}
+                    >
+                      {a.status === 'done' ? '✓' : ''}
+                    </button>
+                    <div>
+                      <strong>{a.title}</strong>
+                      <small>Due {a.due}</small>
+                    </div>
+                  </article>
+                ))}
+              </section>
 
-          {journeyStagesDone === 4 && !journeySubmitted && (
-            <section className="teen-panel teen-submit-panel">
-              <p className="teen-kicker">ALL FOUR STAGES COMPLETE</p>
-              <h2>Submit this week’s reflection to your teacher?</h2>
-              <p className="teen-panel-copy">Only your “Live” note is shared if you submit. Your private “Think” draft stays private either way. This is optional.</p>
-              <button type="button" className="teen-primary-btn" onClick={submitJourney}>
-                Submit to Teacher (+20 XP)
-              </button>
-            </section>
+              <section className="teen-panel teen-class-panel">
+                <div className="teen-panel-head">
+                  <div>
+                    <p className="teen-kicker">CLASS CONNECTION</p>
+                    <h2>{connectedClass ? connectedClass.name : 'Not Connected Yet'}</h2>
+                  </div>
+                </div>
+                {connectedClass ? (
+                  <p className="teen-panel-copy">Connected with code <b>{connectedClass.code}</b>. Assignments above sync from this class.</p>
+                ) : (
+                  <div className="teen-class-connect">
+                    <input
+                      value={classCode}
+                      onChange={(e) => setClassCode(e.target.value)}
+                      placeholder="Enter your teacher’s join code"
+                      maxLength={12}
+                    />
+                    <button type="button" className="teen-primary-btn" onClick={connectClass}>
+                      Connect Class
+                    </button>
+                    {classError && <p className="teen-inline-error">{classError}</p>}
+                  </div>
+                )}
+              </section>
+            </div>
           )}
 
-          {journeySubmitted && (
-            <p className="teen-submitted-note">✓ This week’s Live reflection was submitted to your teacher.</p>
+          {/* ── TAB 6: JOURNEY (READ · THINK · SPEAK · LIVE) ── */}
+          {activeTab === 'journey' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              <div className="teen-title">
+                <p className="teen-kicker">WEEKLY SCRIPTURE CYCLE</p>
+                <h1>Read. Think. Speak. Live.</h1>
+                <p>One verse, carried all the way from the page into an actual moment of your week.</p>
+              </div>
+
+              <section className="teen-panel teen-scripture-panel">
+                <p className="teen-verse-line big">{WEEKLY_VERSE.text} <span>{WEEKLY_VERSE.ref}, WEB</span></p>
+              </section>
+
+              <div className="teen-journey-stages">
+                {JOURNEY_STAGES.map((stage) => (
+                  <article key={stage.id} className={`teen-journey-stage ${journeyDone[stage.id] ? 'done' : ''}`}>
+                    <div className="teen-journey-stage-head">
+                      <span>{journeyDone[stage.id] ? '✓' : ''}</span>
+                      <div>
+                        <strong>{stage.title}</strong>
+                        <small>{stage.blurb}</small>
+                      </div>
+                    </div>
+                    {stage.id === 'think' && (
+                      <textarea
+                        value={journeyDraft}
+                        onChange={(e) => setJourneyDraft(e.target.value)}
+                        placeholder="Private draft — only you can see this."
+                      />
+                    )}
+                    {stage.id === 'live' && (
+                      <textarea
+                        value={journeyLive}
+                        onChange={(e) => setJourneyLive(e.target.value)}
+                        placeholder="What happened this week when you tried to live this out?"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      className={journeyDone[stage.id] ? 'teen-unmark-btn' : 'teen-primary-btn'}
+                      onClick={() => toggleJourneyStage(stage.id)}
+                    >
+                      {journeyDone[stage.id] ? 'Mark Not Done' : 'Mark Complete (+15 XP)'}
+                    </button>
+                  </article>
+                ))}
+              </div>
+
+              {journeyStagesDone === 4 && !journeySubmitted && (
+                <section className="teen-panel teen-submit-panel">
+                  <p className="teen-kicker">ALL FOUR STAGES COMPLETE</p>
+                  <h2>Submit this week’s reflection to your teacher?</h2>
+                  <p className="teen-panel-copy">Only your “Live” note is shared if you submit. Your private “Think” draft stays private either way. This is optional.</p>
+                  <button type="button" className="teen-primary-btn" onClick={submitJourney}>
+                    Submit to Teacher (+20 XP)
+                  </button>
+                </section>
+              )}
+
+              {journeySubmitted && (
+                <p className="teen-submitted-note">✓ This week’s Live reflection was submitted to your teacher.</p>
+              )}
+            </div>
+          )}
+
+          {/* ── TAB 7: PROFILE & SECURITY PIN ── */}
+          {activeTab === 'profile' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              <div className="teen-title">
+                <p className="teen-kicker">HERO PROFILE &amp; SECURITY</p>
+                <h1>{teen.name} · Lion’s Den · Age {teen.age}</h1>
+              </div>
+
+              <section className="teen-character-card teen-profile-char-card">
+                <div className="teen-char-avatar-side">
+                  <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="large" showPedestal={true} />
+                </div>
+                <div className="teen-char-details-side">
+                  <div className="teen-char-badge-row">
+                    <span className="teen-char-pill">🧑 Active Loadout</span>
+                    <span className="teen-char-rank-pill">{level.name} · Level {Math.floor(points / 100) + 1}</span>
+                  </div>
+                  <h2>{charDisplayName}</h2>
+                  <p className="teen-char-desc">
+                    Your character carries your unlocked armor, tunics, headwear, and companion artifacts into all Adventure World quests.
+                  </p>
+
+                  <div className="teen-char-equipped-row">
+                    <div className="teen-char-slot" title="Headwear">
+                      <ItemIllustration itemId={charEquipment.headwear || 'starter-cap'} size={28} />
+                      <span>{charEquipment.headwear ? getItem(charEquipment.headwear)?.name : 'Traveler’s Cap'}</span>
+                    </div>
+                    <div className="teen-char-slot" title="Robe / Cloak">
+                      <ItemIllustration itemId={charEquipment.clothing || 'starter-tunic'} size={28} />
+                      <span>{charEquipment.clothing ? getItem(charEquipment.clothing)?.name : 'Traveler’s Tunic'}</span>
+                    </div>
+                    <div className="teen-char-slot" title="Footwear">
+                      <ItemIllustration itemId={charEquipment.shoes || 'starter-sandals'} size={28} />
+                      <span>{charEquipment.shoes ? getItem(charEquipment.shoes)?.name : 'Simple Sandals'}</span>
+                    </div>
+                  </div>
+
+                  <div className="teen-char-btn-row">
+                    <Link href="/character" className="teen-primary-btn">
+                      <span>Open Gear Customizer 🎨</span>
+                      <span className="btn-arrow">→</span>
+                    </Link>
+                  </div>
+                </div>
+              </section>
+
+              <section className="teen-panel">
+                <div className="teen-panel-head">
+                  <div>
+                    <p className="teen-kicker">ACCOUNT SECURITY</p>
+                    <h2>Change Your 4-Digit PIN</h2>
+                  </div>
+                </div>
+                <form onSubmit={changePin} className="teen-pin-form">
+                  <label>
+                    <span>New 4-digit PIN</span>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={newPin}
+                      onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                      placeholder="••••"
+                    />
+                  </label>
+                  <label>
+                    <span>Confirm PIN</span>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={confirmPin}
+                      onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                      placeholder="••••"
+                    />
+                  </label>
+                  <button type="submit" className="teen-primary-btn">
+                    Update PIN
+                  </button>
+                </form>
+                {pinNotice && <p className="teen-pin-notice">{pinNotice}</p>}
+              </section>
+
+              <Link
+                href="/teen-access"
+                onClick={() => {
+                  fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {});
+                  localStorage.removeItem('lanternLionTeenSession');
+                  localStorage.removeItem('lanternLionActiveChildId');
+                }}
+                className="teen-signout-full"
+              >
+                Sign Out of {teen.name}
+              </Link>
+            </div>
           )}
         </div>
-      )}
-
-      {/* ── TAB 5: PROFILE & SECURITY ── */}
-      {tab === 'profile' && (
-        <div className="teen-body">
-          <div className="teen-title">
-            <p className="teen-kicker">HERO PROFILE &amp; SECURITY</p>
-            <h1>{teen.name} · Lion’s Den · Age {teen.age}</h1>
-          </div>
-
-          <section className="teen-character-card teen-profile-char-card">
-            <div className="teen-char-avatar-side">
-              <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="large" showPedestal={true} />
-            </div>
-            <div className="teen-char-details-side">
-              <div className="teen-char-badge-row">
-                <span className="teen-char-pill">🧑 Active Loadout</span>
-                <span className="teen-char-rank-pill">{level.name} · Level {Math.floor(points / 100) + 1}</span>
-              </div>
-              <h2>{charDisplayName}</h2>
-              <p className="teen-char-desc">
-                Your character carries your unlocked armor, tunics, headwear, and companion artifacts into all Adventure World quests.
-              </p>
-
-              <div className="teen-char-equipped-row">
-                <div className="teen-char-slot" title="Headwear">
-                  <ItemIllustration itemId={charEquipment.headwear || 'starter-cap'} size={28} />
-                  <span>{charEquipment.headwear ? getItem(charEquipment.headwear)?.name : 'Traveler’s Cap'}</span>
-                </div>
-                <div className="teen-char-slot" title="Robe / Cloak">
-                  <ItemIllustration itemId={charEquipment.clothing || 'starter-tunic'} size={28} />
-                  <span>{charEquipment.clothing ? getItem(charEquipment.clothing)?.name : 'Traveler’s Tunic'}</span>
-                </div>
-                <div className="teen-char-slot" title="Footwear">
-                  <ItemIllustration itemId={charEquipment.shoes || 'starter-sandals'} size={28} />
-                  <span>{charEquipment.shoes ? getItem(charEquipment.shoes)?.name : 'Simple Sandals'}</span>
-                </div>
-              </div>
-
-              <div className="teen-char-btn-row">
-                <Link href="/character" className="teen-primary-btn">
-                  <span>Open Gear Customizer 🎨</span>
-                  <span className="btn-arrow">→</span>
-                </Link>
-              </div>
-            </div>
-          </section>
-
-          <section className="teen-panel">
-            <div className="teen-panel-head">
-              <div>
-                <p className="teen-kicker">ACCOUNT SECURITY</p>
-                <h2>Change Your 4-Digit PIN</h2>
-              </div>
-            </div>
-            <form onSubmit={changePin} className="teen-pin-form">
-              <label>
-                <span>New 4-digit PIN</span>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={newPin}
-                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                  placeholder="••••"
-                />
-              </label>
-              <label>
-                <span>Confirm PIN</span>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={confirmPin}
-                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-                  placeholder="••••"
-                />
-              </label>
-              <button type="submit" className="teen-primary-btn">
-                Update PIN
-              </button>
-            </form>
-            {pinNotice && <p className="teen-pin-notice">{pinNotice}</p>}
-          </section>
-
-          <Link
-            href="/teen-access"
-            onClick={() => {
-              fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {});
-              localStorage.removeItem('lanternLionTeenSession');
-              localStorage.removeItem('lanternLionActiveChildId');
-            }}
-            className="teen-signout-full"
-          >
-            Sign Out of {teen.name}
-          </Link>
-        </div>
-      )}
+      </div>
 
       {/* ── FAMILY SUMMARY MODAL ── */}
       {showFamilyModal && (
