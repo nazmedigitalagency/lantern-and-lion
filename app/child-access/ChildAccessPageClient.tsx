@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
-type Child = { id: number; name: string; username: string; age: number; avatar: string; pin: string };
+// id is a number for a locally-created demo profile, or a UUID string for
+// an account fetched from the real server (see /api/child-auth/login).
+type Child = { id: number | string; name: string; username: string; age: number; avatar: string; pin: string };
 type FamilyData = { familyName: string; children: Child[] };
 
 const fallbackFamily: FamilyData = {
@@ -24,6 +26,7 @@ export default function ChildAccessPage() {
   const [successChild, setSuccessChild] = useState<Child | null>(null);
   const [family, setFamily] = useState<FamilyData>(fallbackFamily);
   const [hydrated, setHydrated] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -56,12 +59,13 @@ export default function ChildAccessPage() {
   }, []);
 
   function handleKeypadPress(digit: string) {
+    if (checking) return;
     setError('');
     if (pin.length < 4) {
       const nextPin = pin + digit;
       setPin(nextPin);
       if (nextPin.length === 4 && username.trim()) {
-        validateLogin(username.trim(), nextPin);
+        void validateLogin(username.trim(), nextPin);
       }
     }
   }
@@ -76,7 +80,51 @@ export default function ChildAccessPage() {
     setPin('');
   }
 
-  function validateLogin(enteredUsername: string, enteredPin: string) {
+  function completeLogin(foundChild: Child, verifiedByServer: boolean) {
+    setSuccessChild(foundChild);
+    localStorage.setItem(
+      'lanternLionChildSession',
+      JSON.stringify({ childId: foundChild.id, username: foundChild.username, name: foundChild.name, age: foundChild.age })
+    );
+    localStorage.setItem('lanternLionActiveChildId', String(foundChild.id));
+    localStorage.setItem('lanternLionActiveChild', String(foundChild.id));
+
+    // Make sure this device's local family list includes the child that just
+    // logged in — the dashboard still reads this local copy to find its
+    // profile. Without this, a child whose account only exists on the
+    // server (created on another device/browser) would log in here and
+    // then immediately bounce back from the dashboard, which can't find
+    // them in a family list that was never synced to this browser.
+    if (verifiedByServer) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('lanternLionDemoFamily') || 'null') as FamilyData | null;
+        const base = stored?.children?.length ? stored : family;
+        if (!base.children.some((c) => c.id === foundChild.id)) {
+          localStorage.setItem('lanternLionDemoFamily', JSON.stringify({ ...base, children: [...base.children, foundChild] }));
+        }
+      } catch { /* Non-blocking — the dashboard will still try its own server check. */ }
+    } else {
+      // Establish the real server-side session (cookie) too, so a
+      // parent/teacher can see this login from their own device. Best
+      // effort: gameplay still works locally even if this fails (offline).
+      fetch('/api/child-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: foundChild.username, pin: foundChild.pin }),
+      }).catch(() => { /* Offline/local-only session. */ });
+    }
+
+    window.setTimeout(() => {
+      let pending: string | null = null;
+      try {
+        pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
+        if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
+      } catch { /* Storage unavailable; fall back to the dashboard. */ }
+      router.push(pending || (foundChild.age >= 13 ? '/teen-dashboard' : '/child-dashboard'));
+    }, 1200);
+  }
+
+  async function validateLogin(enteredUsername: string, enteredPin: string) {
     setError('');
     const cleanUser = enteredUsername.trim().toLowerCase();
     const foundChild = family.children.find(
@@ -84,35 +132,35 @@ export default function ChildAccessPage() {
     );
 
     if (foundChild) {
-      setSuccessChild(foundChild);
-      localStorage.setItem(
-        'lanternLionChildSession',
-        JSON.stringify({ childId: foundChild.id, username: foundChild.username, name: foundChild.name, age: foundChild.age })
-      );
-      localStorage.setItem('lanternLionActiveChildId', String(foundChild.id));
-      localStorage.setItem('lanternLionActiveChild', String(foundChild.id));
-
-      // Establish the real server-side session (cookie) so a parent/teacher
-      // can see this login and activity from their own device. Best-effort:
-      // gameplay still works locally even if this fails (e.g. offline).
-      fetch('/api/child-auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: enteredUsername, pin: enteredPin }),
-      }).catch(() => { /* Offline/local-only session. */ });
-
-      window.setTimeout(() => {
-        let pending: string | null = null;
-        try {
-          pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
-          if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
-        } catch { /* Storage unavailable; fall back to the dashboard. */ }
-        router.push(pending || (foundChild.age >= 13 ? '/teen-dashboard' : '/child-dashboard'));
-      }, 1200);
+      completeLogin(foundChild, false);
       return;
     }
 
-    // Check if user exists but PIN was wrong
+    // Not found in this browser's local family list. That list is only a
+    // local cache — the child's account may genuinely exist, just created
+    // on a different device or browser. Ask the real server before giving
+    // up, so login works across devices, not just on the browser that
+    // created the family.
+    setChecking(true);
+    try {
+      const res = await fetch('/api/child-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: enteredUsername, pin: enteredPin }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { child: { id: string; name: string; username: string; age: number; avatar: string } };
+        setChecking(false);
+        completeLogin({ ...data.child, pin: enteredPin }, true);
+        return;
+      }
+    } catch {
+      // Offline, or the server check failed — fall through to the local
+      // "not found" messaging below.
+    }
+    setChecking(false);
+
+    // Check if user exists locally but PIN was wrong
     const userExists = family.children.some(
       (c) => c.username.toLowerCase() === cleanUser || c.name.toLowerCase() === cleanUser
     );
@@ -134,7 +182,7 @@ export default function ChildAccessPage() {
       setError('Please enter your 4-digit PIN.');
       return;
     }
-    validateLogin(username, pin);
+    void validateLogin(username, pin);
   }
 
   if (!hydrated) {
@@ -262,9 +310,9 @@ export default function ChildAccessPage() {
               <button
                 type="submit"
                 className="button button-primary child-submit-btn"
-                disabled={!username.trim() || pin.length !== 4}
+                disabled={!username.trim() || pin.length !== 4 || checking}
               >
-                Sign in to my dashboard →
+                {checking ? 'Checking…' : 'Sign in to my dashboard →'}
               </button>
             </form>
 

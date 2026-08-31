@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
-type Teen = { id: number; name: string; username: string; age: number; avatar: string; pin: string };
+// id is a number for a locally-created demo profile, or a UUID string for
+// an account fetched from the real server (see /api/child-auth/login).
+type Teen = { id: number | string; name: string; username: string; age: number; avatar: string; pin: string };
 
 const fallbackTeens: Teen[] = [
   { id: 2, name: 'Tobi', username: 'tobi', age: 14, avatar: 'lantern', pin: '1357' },
@@ -19,6 +21,7 @@ export default function TeenAccessPage() {
   const [successTeen, setSuccessTeen] = useState<Teen | null>(null);
   const [teens, setTeens] = useState<Teen[]>(fallbackTeens);
   const [hydrated, setHydrated] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -46,42 +49,80 @@ export default function TeenAccessPage() {
   }, []);
 
   function handleKeypadPress(digit: string) {
+    if (checking) return;
     setError('');
     if (pin.length < 4) {
       const nextPin = pin + digit;
       setPin(nextPin);
-      if (nextPin.length === 4 && username.trim()) validateLogin(username.trim(), nextPin);
+      if (nextPin.length === 4 && username.trim()) void validateLogin(username.trim(), nextPin);
     }
   }
   function handleKeypadDelete() { setError(''); setPin((prev) => prev.slice(0, -1)); }
   function handleKeypadClear() { setError(''); setPin(''); }
 
-  function validateLogin(enteredUsername: string, enteredPin: string) {
+  function completeLogin(found: Teen, verifiedByServer: boolean) {
+    setSuccessTeen(found);
+    localStorage.setItem('lanternLionTeenSession', JSON.stringify({ teenId: found.id, username: found.username, name: found.name, age: found.age }));
+    localStorage.setItem('lanternLionActiveChildId', String(found.id));
+
+    // A teen whose account only exists on the server (created on another
+    // device/browser) needs this browser's local family list updated too,
+    // since the dashboard still reads that local copy to find its profile.
+    if (verifiedByServer) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('lanternLionDemoFamily') || 'null') as { familyName: string; children: Teen[] } | null;
+        const base = stored?.children?.length ? stored : { familyName: 'The Adeyemi Family', children: teens };
+        if (!base.children.some((c) => c.id === found.id)) {
+          localStorage.setItem('lanternLionDemoFamily', JSON.stringify({ ...base, children: [...base.children, found] }));
+        }
+      } catch { /* Non-blocking. */ }
+    } else {
+      fetch('/api/child-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: found.username, pin: found.pin }),
+      }).catch(() => { /* Offline/local-only session. */ });
+    }
+
+    window.setTimeout(() => {
+      let pending: string | null = null;
+      try {
+        pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
+        if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
+      } catch { /* Storage unavailable; fall back to the dashboard. */ }
+      router.push(pending || '/teen-dashboard');
+    }, 1200);
+  }
+
+  async function validateLogin(enteredUsername: string, enteredPin: string) {
     setError('');
     const cleanUser = enteredUsername.trim().toLowerCase();
     const found = teens.find((t) => (t.username.toLowerCase() === cleanUser || t.name.toLowerCase() === cleanUser) && t.pin === enteredPin);
 
     if (found) {
-      setSuccessTeen(found);
-      localStorage.setItem('lanternLionTeenSession', JSON.stringify({ teenId: found.id, username: found.username, name: found.name, age: found.age }));
-      localStorage.setItem('lanternLionActiveChildId', String(found.id));
+      completeLogin(found, false);
+      return;
+    }
 
-      fetch('/api/child-auth/login', {
+    // Not found locally — this browser's family list may just be stale.
+    // Ask the real server before giving up, so login works across devices.
+    setChecking(true);
+    try {
+      const res = await fetch('/api/child-auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: enteredUsername, pin: enteredPin }),
-      }).catch(() => { /* Offline/local-only session. */ });
-
-      window.setTimeout(() => {
-        let pending: string | null = null;
-        try {
-          pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
-          if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
-        } catch { /* Storage unavailable; fall back to the dashboard. */ }
-        router.push(pending || '/teen-dashboard');
-      }, 1200);
-      return;
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { child: { id: string; name: string; username: string; age: number; avatar: string } };
+        setChecking(false);
+        completeLogin({ ...data.child, pin: enteredPin }, true);
+        return;
+      }
+    } catch {
+      // Offline, or the server check failed — fall through.
     }
+    setChecking(false);
 
     const exists = teens.some((t) => t.username.toLowerCase() === cleanUser || t.name.toLowerCase() === cleanUser);
     if (exists) setError('That 4-digit PIN is not quite right. Ask your grown-up if you forgot it.');
@@ -93,7 +134,7 @@ export default function TeenAccessPage() {
     event.preventDefault();
     if (!username.trim()) { setError('Please type your login name first.'); return; }
     if (pin.length !== 4) { setError('Please enter your 4-digit PIN.'); return; }
-    validateLogin(username, pin);
+    void validateLogin(username, pin);
   }
 
   if (!hydrated) return <main className="dashboard-loading" aria-live="polite"><span /><p>Opening the Lion’s Den…</p></main>;
@@ -151,7 +192,7 @@ export default function TeenAccessPage() {
 
               {error && <p className="teen-access-error" role="alert">{error}</p>}
 
-              <button type="submit" className="teen-submit-btn" disabled={!username.trim() || pin.length !== 4}>Enter the Lion’s Den →</button>
+              <button type="submit" className="teen-submit-btn" disabled={!username.trim() || pin.length !== 4 || checking}>{checking ? 'Checking…' : 'Enter the Lion’s Den →'}</button>
             </form>
 
             <div className="teen-access-footer">
