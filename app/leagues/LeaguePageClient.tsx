@@ -14,7 +14,7 @@ import { CertificateModal } from '../lib/leagues/CertificateModal';
 
 type Tab = 'leaderboard' | 'rewards' | 'history';
 
-export default function LeaguePageClient() {
+export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<{ id: number; name: string; kind: 'child' | 'teen'; age?: number } | null>(null);
@@ -33,7 +33,7 @@ export default function LeaguePageClient() {
       try {
         const active = readActiveProfile();
         if (!active) {
-          router.replace('/child-access');
+          if (!embedded) router.replace('/child-access');
           return;
         }
         setProfile(active);
@@ -57,7 +57,7 @@ export default function LeaguePageClient() {
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [router]);
+  }, [router, embedded]);
 
   if (!hydrated || !pod || !profile) {
     return (
@@ -91,38 +91,8 @@ export default function LeaguePageClient() {
     setActiveCert(cert);
   }
 
-  return (
-    <main className="league-page" style={{ minHeight: '100vh', background: '#FEF9F3', color: '#1E293B', paddingBottom: '4rem' }}>
-      {/* Topbar */}
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '1rem 1.5rem',
-          borderBottom: '2px solid #1E293B',
-          background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(8px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-        }}
-      >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#1E293B' }}>
-          <Image src="/lantern-lion-logo.png" alt="" width={42} height={42} priority />
-          <div>
-            <strong style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Lantern &amp; Lion</strong>
-            <small style={{ color: '#64748B', fontSize: '0.75rem' }}>League Arena</small>
-          </div>
-        </Link>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Link href={dashboardHref} className="button button-secondary" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}>
-            ← Back to Dashboard
-          </Link>
-        </div>
-      </header>
-
+  const body = (
+    <>
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         {/* Season Hero Banner */}
         <section
@@ -515,6 +485,47 @@ export default function LeaguePageClient() {
       {activeCert && (
         <CertificateModal certificate={activeCert} onClose={() => setActiveCert(null)} />
       )}
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="league-page" style={{ minHeight: '100vh', background: '#FEF9F3', color: '#1E293B', paddingBottom: '4rem' }}>
+      {/* Topbar */}
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1rem 1.5rem',
+          borderBottom: '2px solid #1E293B',
+          background: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(8px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+        }}
+      >
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#1E293B' }}>
+          <Image src="/lantern-lion-logo.png" alt="" width={42} height={42} priority />
+          <div>
+            <strong style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Lantern &amp; Lion</strong>
+            <small style={{ color: '#64748B', fontSize: '0.75rem' }}>League Arena</small>
+          </div>
+        </Link>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link href={dashboardHref} className="button button-secondary" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}>
+            ← Back to Dashboard
+          </Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function LeaguePageClient() {
+  return <LeagueWorld />;
 }
