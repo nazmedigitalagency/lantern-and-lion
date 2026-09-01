@@ -117,7 +117,7 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
 
   const body = (
     <>
-      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '1.5rem 1rem', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: embedded ? 'none' : '1300px', width: '100%', margin: '0 auto', padding: '1.5rem 1rem', boxSizing: 'border-box' }}>
         {/* Season Hero Banner */}
         <section
           style={{

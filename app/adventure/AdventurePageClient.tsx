@@ -201,7 +201,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
 
   const body = (
     <>
-      <div style={{ maxWidth: '1400px', width: '100%', margin: '0 auto', padding: '1.5rem 1rem', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: embedded ? 'none' : '1400px', width: '100%', margin: '0 auto', padding: '1.5rem 1rem', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
           <button
             type="button"
