@@ -20,10 +20,10 @@ function safeParse<T>(raw: string | null, fallback: T): T {
 }
 
 /** Reads season XP for this profile (scoped to seasonId) */
-export function getSeasonXp(profileId: number, seasonId = getCurrentSeason().id): number {
+export function getSeasonXp(profileId: number | string, seasonId = getCurrentSeason().id): number {
   if (typeof window === 'undefined') return 0;
   const store = safeParse<Record<string, Record<string, number>>>(localStorage.getItem(SEASON_XP_KEY), {});
-  const profileStore = store[profileId] || {};
+  const profileStore = store[String(profileId)] || {};
   if (profileStore[seasonId] !== undefined) {
     return profileStore[seasonId];
   }
@@ -35,16 +35,17 @@ export function getSeasonXp(profileId: number, seasonId = getCurrentSeason().id)
 }
 
 /** Saves season XP for this profile */
-export function setSeasonXp(profileId: number, xp: number, seasonId = getCurrentSeason().id): void {
+export function setSeasonXp(profileId: number | string, xp: number, seasonId = getCurrentSeason().id): void {
   if (typeof window === 'undefined') return;
   const store = safeParse<Record<string, Record<string, number>>>(localStorage.getItem(SEASON_XP_KEY), {});
-  if (!store[profileId]) store[profileId] = {};
-  store[profileId][seasonId] = Math.max(0, xp);
+  const key = String(profileId);
+  if (!store[key]) store[key] = {};
+  store[key][seasonId] = Math.max(0, xp);
   localStorage.setItem(SEASON_XP_KEY, JSON.stringify(store));
 }
 
 /** Adds XP to the current season XP */
-export function addSeasonXp(profileId: number, amount: number, seasonId = getCurrentSeason().id): number {
+export function addSeasonXp(profileId: number | string, amount: number, seasonId = getCurrentSeason().id): number {
   const current = getSeasonXp(profileId, seasonId);
   const next = current + Math.max(0, Math.round(amount));
   setSeasonXp(profileId, next, seasonId);

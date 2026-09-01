@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
+import { awardCoins, awardGems, awardXP, getWallet } from '../lib/economy/wallet-service';
 
 // id is a number for a locally-created demo profile, or a UUID string for
 // an account fetched from the real server (see /api/child-auth/login).
@@ -64,6 +65,15 @@ export default function TeenAccessPage() {
     setSuccessTeen(found);
     localStorage.setItem('lanternLionTeenSession', JSON.stringify({ teenId: found.id, username: found.username, name: found.name, age: found.age }));
     localStorage.setItem('lanternLionActiveChildId', String(found.id));
+
+    try {
+      const w = getWallet(found.id);
+      if (w.xp === 0 && w.coins === 0 && w.gems === 0) {
+        awardXP(found.id, 220, 'quest-mastery', 'Initial account setup');
+        awardCoins(found.id, 45, 'quest-mastery', 'Starter treasure');
+        awardGems(found.id, 12, 'quest-mastery', 'Kingdom starter gems');
+      }
+    } catch { /* Non-blocking wallet init */ }
 
     // A teen whose account only exists on the server (created on another
     // device/browser) needs this browser's local family list updated too,

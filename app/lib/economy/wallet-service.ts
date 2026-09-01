@@ -16,6 +16,7 @@
 // etc., not localStorage directly.
 
 import { getLevelInfo, type LevelInfo } from '../xp-levels';
+import { addSeasonXp } from '../leagues/storage';
 import type { AwardResult, CurrencyType, RewardSource, Transaction, Wallet } from './types';
 
 const WALLET_KEY = 'lanternLionWallet';
@@ -118,7 +119,13 @@ function record(profileId: number | string, type: CurrencyType, amount: number, 
 
 /** Award XP for a meaningful activity. Amount should be positive. */
 export function awardXP(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult {
-  return record(profileId, 'xp', Math.max(0, Math.round(amount)), source, description);
+  const rounded = Math.max(0, Math.round(amount));
+  if (rounded > 0) {
+    try {
+      addSeasonXp(profileId, rounded);
+    } catch { /* Storage unavailable or non-browser */ }
+  }
+  return record(profileId, 'xp', rounded, source, description);
 }
 
 export function awardCoins(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult {

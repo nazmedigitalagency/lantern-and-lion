@@ -23,8 +23,9 @@ import { getLeaguePod } from '../lib/leagues/storage';
 import { LearningJourneyCard, type LearningPlanResponse } from '../lib/adaptive/LearningJourneyCard';
 import { getNextMissionRecommendation } from '../adventure/progression';
 import { loadWorldContext } from '../adventure/storage';
-import { getWallet } from '../lib/economy/wallet-service';
+import { awardCoins, awardXP, getWallet } from '../lib/economy/wallet-service';
 import type { Wallet } from '../lib/economy/types';
+import { signOutOfPersona } from '../lib/session';
 import TeenSidebar from './TeenSidebar';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
@@ -436,7 +437,7 @@ export default function TeenDashboardPage() {
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [pinNotice, setPinNotice] = useState('');
-  const [, setSafetyNotice] = useState('');
+  const [safetyNotice, setSafetyNotice] = useState<string | null>(null);
   const [dailyQuestSummary, setDailyQuestSummary] = useState({ completed: 0, total: 4, streak: 0 });
   const [charAppearance, setCharAppearance] = useState<CharacterAppearance>({ skinTone: 'honey', hairStyle: 'curls', face: 'smile' });
   const [charEquipment, setCharEquipment] = useState<CharacterEquipment>({});
@@ -544,11 +545,14 @@ export default function TeenDashboardPage() {
   const journeyStagesDone = Object.values(journeyDone).filter(Boolean).length;
 
   function addPoints(amount: number) {
-    setPoints((p) => {
-      const nextP = p + amount;
-      setWallet((w) => ({ ...w, xp: nextP, coins: w.coins + Math.floor(amount / 2) }));
-      return nextP;
-    });
+    const coinsAmount = Math.floor(amount / 2);
+    setPoints((p) => p + amount);
+    awardXP(activeId, amount, 'activity', 'Lion’s Den activity');
+    if (coinsAmount > 0) {
+      awardCoins(activeId, coinsAmount, 'activity', 'Lion’s Den reward');
+    }
+    const updatedWallet = getWallet(activeId);
+    setWallet(updatedWallet);
   }
 
   function statsForSibling(member: Teen) {
@@ -636,8 +640,11 @@ export default function TeenDashboardPage() {
 
   function handleChatSafetyFlag(message: string) {
     const report = { child: teen.name, kind: 'Chat: please check in', message, time: new Date().toISOString() };
-    localStorage.setItem('lanternLionDemoHelpRequest', JSON.stringify(report));
+    try {
+      localStorage.setItem('lanternLionDemoHelpRequest', JSON.stringify(report));
+    } catch { /* Storage error */ }
     setSafetyNotice('Your parent has been quietly told about this chat, so they can check in with you.');
+    window.setTimeout(() => setSafetyNotice(null), 6000);
   }
 
   function changePin(e: React.FormEvent) {
@@ -673,6 +680,14 @@ export default function TeenDashboardPage() {
         <div className="streak-milestone-toast" role="status" aria-live="polite">
           <strong>🔥 {milestoneToast.label}!</strong>
           <span>+{milestoneToast.coins} 🪙{milestoneToast.gems > 0 ? ` +${milestoneToast.gems} 💎` : ''}</span>
+        </div>
+      )}
+
+      {/* SAFETY NOTICE TOAST */}
+      {safetyNotice && (
+        <div className="streak-milestone-toast" role="status" aria-live="polite" style={{ borderColor: '#3b82f6' }}>
+          <strong>🛡️ Family Check-in</strong>
+          <span>{safetyNotice}</span>
         </div>
       )}
 
@@ -749,9 +764,7 @@ export default function TeenDashboardPage() {
                 <Link
                   href="/teen-access"
                   onClick={() => {
-                    fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {});
-                    localStorage.removeItem('lanternLionTeenSession');
-                    localStorage.removeItem('lanternLionActiveChildId');
+                    void signOutOfPersona('teen');
                   }}
                   className="teen-signout-link"
                 >
@@ -1549,9 +1562,7 @@ export default function TeenDashboardPage() {
               <Link
                 href="/teen-access"
                 onClick={() => {
-                  fetch('/api/child-auth/logout', { method: 'POST' }).catch(() => {});
-                  localStorage.removeItem('lanternLionTeenSession');
-                  localStorage.removeItem('lanternLionActiveChildId');
+                  void signOutOfPersona('teen');
                 }}
                 className="teen-signout-full"
               >

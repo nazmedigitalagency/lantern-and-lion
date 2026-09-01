@@ -26,7 +26,8 @@ export type RewardSource =
   | 'daily-quest'
   | 'achievement'
   | 'challenge'
-  | 'streak';
+  | 'streak'
+  | 'activity';
 
 export type Transaction = {
   id: string;
