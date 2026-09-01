@@ -330,17 +330,18 @@ export default function AdventurePage() {
             style={{
               position: 'absolute',
               top: '1rem',
-              right: '1rem',
-              width: 38,
-              height: 38,
+              right: '1.25rem',
+              width: 34,
+              height: 34,
               display: 'grid',
               placeItems: 'center',
               borderRadius: '50%',
               border: '1.5px solid #1E293B',
               background: '#EFF6FF',
               color: '#1E293B',
-              fontSize: '1.1rem',
+              fontSize: '1rem',
               cursor: 'pointer',
+              zIndex: 5,
             }}
           >
             ✕
@@ -354,7 +355,8 @@ export default function AdventurePage() {
               alignItems: 'center',
               borderBottom: '1px solid #e2e8f1',
               paddingBottom: '1.25rem',
-              marginBottom: '1.25rem',
+              marginBottom: '1.5rem',
+              paddingRight: '2.75rem',
             }}
           >
             <span style={{ fontSize: '3.5rem' }}>{selectedRegion.icon}</span>
@@ -401,12 +403,23 @@ export default function AdventurePage() {
           ) : (
             <>
               {/* Location Subtabs */}
-              <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid #e2e8f1', marginBottom: '1.25rem', overflowX: 'auto' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.4rem',
+                  background: '#F1F5F9',
+                  border: '1.5px solid #E2E8F0',
+                  borderRadius: '14px',
+                  padding: '0.4rem',
+                  marginBottom: '1.5rem',
+                  overflowX: 'auto',
+                }}
+              >
                 <button
                   type="button"
                   className={`button ${locationTab === 'chapters' ? 'button-primary' : 'button-secondary'}`}
                   onClick={() => setLocationTab('chapters')}
-                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem', whiteSpace: 'nowrap' }}
                 >
                   📖 Stories ({selectedRegion.chapters.length})
                 </button>
@@ -414,7 +427,7 @@ export default function AdventurePage() {
                   type="button"
                   className={`button ${locationTab === 'games' ? 'button-primary' : 'button-secondary'}`}
                   onClick={() => setLocationTab('games')}
-                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem', whiteSpace: 'nowrap' }}
                 >
                   🎮 Arcade Games ({regionQuests.length})
                 </button>
@@ -422,7 +435,7 @@ export default function AdventurePage() {
                   type="button"
                   className={`button ${locationTab === 'memory-verse' ? 'button-primary' : 'button-secondary'}`}
                   onClick={() => setLocationTab('memory-verse')}
-                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem', whiteSpace: 'nowrap' }}
                 >
                   📜 Memory Verse
                 </button>
@@ -430,7 +443,7 @@ export default function AdventurePage() {
                   type="button"
                   className={`button ${locationTab === 'boss' ? 'button-primary' : 'button-secondary'}`}
                   onClick={() => setLocationTab('boss')}
-                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem', whiteSpace: 'nowrap' }}
                 >
                   👑 Knowledge Boss
                 </button>
@@ -438,7 +451,7 @@ export default function AdventurePage() {
                   type="button"
                   className={`button ${locationTab === 'secrets' ? 'button-primary' : 'button-secondary'}`}
                   onClick={() => setLocationTab('secrets')}
-                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem' }}
+                  style={{ fontSize: '0.85rem', padding: '0.55rem 1rem', whiteSpace: 'nowrap' }}
                 >
                   🎁 Secrets &amp; Collectibles
                 </button>
