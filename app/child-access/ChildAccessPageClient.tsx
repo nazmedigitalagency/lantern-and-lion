@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
+import { awardCoins, awardGems, awardXP, getWallet } from '../lib/economy/wallet-service';
 
 // id is a number for a locally-created demo profile, or a UUID string for
 // an account fetched from the real server (see /api/child-auth/login).
@@ -88,6 +89,15 @@ export default function ChildAccessPage() {
     );
     localStorage.setItem('lanternLionActiveChildId', String(foundChild.id));
     localStorage.setItem('lanternLionActiveChild', String(foundChild.id));
+
+    try {
+      const w = getWallet(foundChild.id);
+      if (w.xp === 0 && w.coins === 0 && w.gems === 0) {
+        awardXP(foundChild.id, 150, 'quest-mastery', 'Initial account setup');
+        awardCoins(foundChild.id, 30, 'quest-mastery', 'Starter treasure');
+        awardGems(foundChild.id, 10, 'quest-mastery', 'Kingdom starter gems');
+      }
+    } catch { /* Non-blocking wallet init */ }
 
     // Make sure this device's local family list includes the child that just
     // logged in — the dashboard still reads this local copy to find its

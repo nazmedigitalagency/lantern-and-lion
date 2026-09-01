@@ -148,6 +148,38 @@ export default function ChildDashboardPage() {
     }
   }
 
+  function loadProfileData(targetId: number | string, childList: Child[]) {
+    const progress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}');
+    const childProgress = progress[targetId] || {};
+    setModuleProgress(childProgress);
+
+    try {
+      const history = readHistory(targetId);
+      const streakInfo = computeStreak(history);
+      const streak = streakInfo.current;
+      const questsCtx = {
+        moduleProgress: childProgress,
+        masteredQuestIds: [],
+        arcadeHighScores: {},
+        kind: 'child' as const,
+      };
+      const todaySet = getOrCreateTodaySet(targetId, questsCtx);
+      const completed = getCompletedCount(todaySet);
+      setDailySummary({ completed, total: todaySet.quests.length || 4, streak });
+    } catch {
+      setDailySummary({ completed: 0, total: 4, streak: 0 });
+    }
+
+    const matched = childList.find((c) => c.id === targetId);
+    setCharDisplayName(readCharacterName(targetId, matched?.name || 'Amara'));
+    setCharAppearance(readAppearance(targetId));
+    setCharEquipment(readEquipment(targetId));
+
+    const w = getWallet(targetId);
+    setWallet(w);
+    setLevelInfo(getCurrentLevel(targetId));
+  }
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const previewFlag = new URLSearchParams(window.location.search).get('preview') === '1';
@@ -179,20 +211,19 @@ export default function ChildDashboardPage() {
       }
 
       let resolvedActiveId: number | string = activeChildId;
+      let resolvedChildren: Child[] = fallbackChildren;
       try {
         const family = JSON.parse(storedFamilyRaw || '{}');
         if (family.children?.length) {
-          setChildren(family.children);
+          resolvedChildren = family.children;
+          setChildren(resolvedChildren);
           const found = family.children.find((c: Child) => c.id === activeChildId);
           resolvedActiveId = found ? found.id : family.children[0].id;
-          setActiveId(resolvedActiveId);
-        } else {
-          setActiveId(activeChildId);
         }
         if (family.familyName) setFamilyData(family);
-      } catch {
-        setActiveId(activeChildId);
-      }
+      } catch { /* Use defaults */ }
+
+      setActiveId(resolvedActiveId);
 
       // Persist the resolved identity every time this effect runs, so other
       // pages that independently call readActiveProfile() agree on who is
@@ -204,38 +235,11 @@ export default function ChildDashboardPage() {
         localStorage.setItem('lanternLionChildSession', JSON.stringify({ ...existingSession, childId: resolvedActiveId }));
       } catch { /* Storage error */ }
 
-      const progress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}');
-      setModuleProgress(progress[activeChildId] || {});
-
-      try {
-        const history = readHistory(activeId);
-        const streakInfo = computeStreak(history);
-        const streak = streakInfo.current;
-        const questsCtx = {
-          moduleProgress: progress[activeId] || {},
-          masteredQuestIds: [],
-          arcadeHighScores: {},
-          kind: 'child' as const,
-        };
-        const todaySet = getOrCreateTodaySet(activeId, questsCtx);
-        const completed = getCompletedCount(todaySet);
-        setDailySummary({ completed, total: todaySet.quests.length || 4, streak });
-      } catch {
-        setDailySummary({ completed: 0, total: 4, streak: 0 });
-      }
-
-      setCharDisplayName(readCharacterName(activeId, children.find((c) => c.id === activeId)?.name || 'Amara'));
-      setCharAppearance(readAppearance(activeId));
-      setCharEquipment(readEquipment(activeId));
-
-      const w = getWallet(activeId);
-      setWallet(w);
-      setLevelInfo(getCurrentLevel(activeId));
-
+      loadProfileData(resolvedActiveId, resolvedChildren);
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [router, activeId, children]);
+  }, [router]);
 
   useEffect(() => {
     if (!showHelp) return;
@@ -451,6 +455,13 @@ export default function ChildDashboardPage() {
                     onClick={() => {
                       setActiveId(c.id);
                       localStorage.setItem('lanternLionActiveChild', String(c.id));
+                      localStorage.setItem('lanternLionActiveChildId', String(c.id));
+                      try {
+                        const childSessionJson = localStorage.getItem('lanternLionChildSession');
+                        const existingSession = childSessionJson ? JSON.parse(childSessionJson) : null;
+                        localStorage.setItem('lanternLionChildSession', JSON.stringify({ ...existingSession, childId: c.id, name: c.name, age: c.age }));
+                      } catch { /* Non-blocking */ }
+                      loadProfileData(c.id, children);
                       setShowProfiles(false);
                     }}
                     className={c.id === activeId ? 'active' : ''}
