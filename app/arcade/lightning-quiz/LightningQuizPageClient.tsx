@@ -32,7 +32,7 @@ function defaultModeForAge(age: number): QuizModeId {
   return age <= 11 ? 'questions-10' : 'timed-30';
 }
 
-export default function LightningQuizPage() {
+export function LightningQuizGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'setup' | 'playing' | 'result'>('setup');
@@ -240,21 +240,7 @@ export default function LightningQuizPage() {
     );
   }
 
-  return (
-    <main className="adventure-page arcade-page">
-      <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Lightning Quiz</strong>
-            <small>Lantern Arcade</small>
-          </span>
-        </Link>
-        <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
-        </div>
-      </header>
-
+  const body = (
       <div className="adv-body arcade-body arcade-game-body">
         {phase === 'setup' && (
           <section className="arcade-setup-card">
@@ -347,11 +333,35 @@ export default function LightningQuizPage() {
             best={best}
             onPlayAgain={startGame}
             onChangeMode={() => setPhase('setup')}
+            {...(embedded && onClose ? { onBack: onClose } : {})}
           />
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page arcade-page">
+      <header className="child-topbar adv-topbar">
+        <Link href="/arcade" className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Lightning Quiz</strong>
+            <small>Lantern Arcade</small>
+          </span>
+        </Link>
+        <div className="child-header-actions">
+          <Link href="/arcade" className="help-button">← Arcade</Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function LightningQuizPage() {
+  return <LightningQuizGame />;
 }
 
 function LightningResultScreen({
@@ -359,11 +369,13 @@ function LightningResultScreen({
   best,
   onPlayAgain,
   onChangeMode,
+  onBack,
 }: {
   outcome: GameOutcome;
   best: ReturnType<typeof getPersonalBest>;
   onPlayAgain: () => void;
   onChangeMode: () => void;
+  onBack?: () => void;
 }) {
   const dialogRef = useDialogA11y<HTMLElement>(true, onChangeMode);
   const { session, isNewBest, previousBest } = outcome;
@@ -395,7 +407,11 @@ function LightningResultScreen({
         <div className="arcade-result-actions">
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           <button type="button" className="button button-secondary" onClick={onChangeMode}>Change mode</button>
-          <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          {onBack ? (
+            <button type="button" className="button button-secondary" onClick={onBack}>Back to Arcade</button>
+          ) : (
+            <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          )}
         </div>
       </section>
     </div>
