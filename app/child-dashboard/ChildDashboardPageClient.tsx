@@ -24,13 +24,39 @@ import type { Wallet } from '../lib/economy/types';
 import type { LevelInfo } from '../lib/xp-levels';
 import { GAME_DEFINITIONS } from '../arcade/catalog';
 import { VerseBuilderGame } from '../arcade/verse-builder/VerseBuilderPageClient';
+import { ScriptureMazeGame } from '../arcade/scripture-maze/ScriptureMazePageClient';
+import { ScriptureScrambleGame } from '../arcade/scripture-scramble/ScriptureScramblePageClient';
+import { LightningQuizGame } from '../arcade/lightning-quiz/LightningQuizPageClient';
+import { MemoryMatchGame } from '../arcade/memory-match/MemoryMatchPageClient';
+import { BuildTheStoryGame } from '../arcade/build-the-story/BuildTheStoryPageClient';
+import { BibleDetectiveGame } from '../arcade/bible-detective/BibleDetectivePageClient';
+import { ScriptureConnectionsGame } from '../arcade/scripture-connections/ScriptureConnectionsPageClient';
+import { AdventureWorld } from '../adventure/AdventurePageClient';
+import { LeagueWorld } from '../leagues/LeaguePageClient';
+import { CharacterBuilder } from '../character/CharacterPageClient';
 import { STORY_CATALOG } from '../stories/catalog';
 import { signOutOfPersona } from '../lib/session';
+
+// Every implemented arcade game now opens as an in-dashboard popup instead
+// of navigating to its own page (see VerseBuilderGame's `embedded` mode).
+function renderGameModal(gameId: string, onClose: () => void) {
+  switch (gameId) {
+    case 'verse-builder': return <VerseBuilderGame embedded onClose={onClose} />;
+    case 'scripture-maze': return <ScriptureMazeGame embedded onClose={onClose} />;
+    case 'scripture-scramble': return <ScriptureScrambleGame embedded onClose={onClose} />;
+    case 'lightning-quiz': return <LightningQuizGame embedded onClose={onClose} />;
+    case 'memory-match': return <MemoryMatchGame embedded onClose={onClose} />;
+    case 'build-the-story': return <BuildTheStoryGame embedded onClose={onClose} />;
+    case 'bible-detective': return <BibleDetectiveGame embedded onClose={onClose} />;
+    case 'scripture-connections': return <ScriptureConnectionsGame embedded onClose={onClose} />;
+    default: return null;
+  }
+}
 
 // id is a number for a locally-created demo profile, or a UUID string for
 // an account fetched from the real server (see /api/child-auth/login).
 type Child = { id: number | string; name: string; username?: string; age: number; avatar: string; pin: string };
-type DashboardTab = 'today' | 'adventure' | 'stories' | 'arcade' | 'leagues' | 'explore' | 'progress';
+type DashboardTab = 'today' | 'adventure' | 'stories' | 'arcade' | 'leagues' | 'explore' | 'progress' | 'character';
 type ModuleFilter = 'All lessons' | 'Not started' | 'In progress' | 'Completed';
 type ModuleProgressEntry = { completedIndices: number[]; lastCompletedIndex: number };
 
@@ -82,7 +108,7 @@ export default function ChildDashboardPage() {
   // of navigating to their own page (see VerseBuilderGame's `embedded` mode)
   // — a pilot for the pattern before rolling it out to the rest of the arcade.
   const [activeGameModal, setActiveGameModal] = useState<string | null>(null);
-  const EMBEDDABLE_GAME_IDS = new Set(['verse-builder']);
+  const EMBEDDABLE_GAME_IDS = useMemo(() => new Set(GAME_DEFINITIONS.map((g) => g.id)), []);
   type TodaySummaryData = { active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number };
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
 
@@ -152,16 +178,14 @@ export default function ChildDashboardPage() {
         activeChildId = Number.isNaN(n) ? savedChildSession : n;
       }
 
+      let resolvedActiveId: number | string = activeChildId;
       try {
         const family = JSON.parse(storedFamilyRaw || '{}');
         if (family.children?.length) {
           setChildren(family.children);
           const found = family.children.find((c: Child) => c.id === activeChildId);
-          if (found) {
-            setActiveId(found.id);
-          } else {
-            setActiveId(family.children[0].id);
-          }
+          resolvedActiveId = found ? found.id : family.children[0].id;
+          setActiveId(resolvedActiveId);
         } else {
           setActiveId(activeChildId);
         }
@@ -169,6 +193,16 @@ export default function ChildDashboardPage() {
       } catch {
         setActiveId(activeChildId);
       }
+
+      // Persist the resolved identity every time this effect runs, so other
+      // pages that independently call readActiveProfile() agree on who is
+      // logged in instead of falling back to the hardcoded demo profile.
+      localStorage.setItem('lanternLionActiveChildId', String(resolvedActiveId));
+      localStorage.setItem('lanternLionActiveChild', String(resolvedActiveId));
+      try {
+        const existingSession = childSessionJson ? JSON.parse(childSessionJson) : null;
+        localStorage.setItem('lanternLionChildSession', JSON.stringify({ ...existingSession, childId: resolvedActiveId }));
+      } catch { /* Storage error */ }
 
       const progress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}');
       setModuleProgress(progress[activeChildId] || {});
@@ -358,11 +392,11 @@ export default function ChildDashboardPage() {
           </div>
 
           {/* XP / Stars */}
-          <Link href="/adventure" className="kid-hud-chip chip-stars" title="Stars & XP Earned">
+          <button type="button" className="kid-hud-chip chip-stars" title="Stars & XP Earned" onClick={() => setActiveTab('adventure')}>
             <span aria-hidden="true">⭐</span>
             <strong>{starsEarned.toLocaleString()} XP</strong>
             <span className="chip-plus-badge" aria-hidden="true">+</span>
-          </Link>
+          </button>
 
           {/* Coins */}
           <div className="kid-hud-chip chip-coins" title="Lantern Coins">
@@ -486,14 +520,14 @@ export default function ChildDashboardPage() {
             </button>
 
             {/* 2. Adventure */}
-            <Link
-              href="/adventure"
+            <button
+              type="button"
               className={`kid-nav-item ${activeTab === 'adventure' ? 'active' : ''}`}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => { setActiveTab('adventure'); setMobileMenuOpen(false); }}
             >
               <span className="kid-nav-icon" aria-hidden="true">🗺️</span>
               <span>Adventure</span>
-            </Link>
+            </button>
 
             {/* 3. Stories */}
             <button
@@ -516,14 +550,14 @@ export default function ChildDashboardPage() {
             </button>
 
             {/* 5. Leagues */}
-            <Link
-              href="/leagues"
+            <button
+              type="button"
               className={`kid-nav-item ${activeTab === 'leagues' ? 'active' : ''}`}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => { setActiveTab('leagues'); setMobileMenuOpen(false); }}
             >
               <span className="kid-nav-icon" aria-hidden="true">🏆</span>
               <span>Leagues</span>
-            </Link>
+            </button>
 
             {/* 6. Explore */}
             <button
@@ -548,7 +582,11 @@ export default function ChildDashboardPage() {
 
           {/* ── STATIC CHARACTER CARD AT BOTTOM OF SIDEBAR ── */}
           <div className="kid-sidebar-static-character">
-            <Link href="/character" className="kid-static-character-link" onClick={() => setMobileMenuOpen(false)}>
+            <button
+              type="button"
+              className={`kid-static-character-link ${activeTab === 'character' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('character'); setMobileMenuOpen(false); }}
+            >
               <div className="kid-static-character-avatar">
                 <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="small" showPedestal={false} />
               </div>
@@ -557,7 +595,7 @@ export default function ChildDashboardPage() {
                 <strong>{charDisplayName}</strong>
                 <small>Customize &amp; Gear →</small>
               </div>
-            </Link>
+            </button>
           </div>
         </aside>
 
@@ -755,6 +793,21 @@ export default function ChildDashboardPage() {
                 </div>
               </section>
             </div>
+          )}
+
+          {/* TAB: ADVENTURE (BIBLE ADVENTURE WORLD) */}
+          {activeTab === 'adventure' && (
+            <AdventureWorld embedded onClose={() => setActiveTab('today')} />
+          )}
+
+          {/* TAB: LEAGUES */}
+          {activeTab === 'leagues' && (
+            <LeagueWorld embedded onClose={() => setActiveTab('today')} />
+          )}
+
+          {/* TAB: CHARACTER */}
+          {activeTab === 'character' && (
+            <CharacterBuilder embedded onClose={() => setActiveTab('today')} />
           )}
 
           {/* TAB: EXPLORE (CURRICULUM MODULES & LESSONS) */}
@@ -994,12 +1047,12 @@ export default function ChildDashboardPage() {
         </div>
       )}
 
-      {/* ── IN-DASHBOARD GAME POPUP (pilot: Verse Builder) ── */}
-      {activeGameModal === 'verse-builder' && (
+      {/* ── IN-DASHBOARD GAME POPUP ── */}
+      {activeGameModal && (
         <div className="help-overlay" role="presentation" onClick={() => setActiveGameModal(null)}>
           <div className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="close-help game-modal-close" aria-label="Close game" onClick={() => setActiveGameModal(null)}>✕</button>
-            <VerseBuilderGame embedded onClose={() => setActiveGameModal(null)} />
+            {renderGameModal(activeGameModal, () => setActiveGameModal(null))}
           </div>
         </div>
       )}

@@ -64,23 +64,28 @@
   --kid-locked:#eef3f7; --kid-locked-text:#7c8fa0;
 }
 :root {
-  /* Teen Dashboard — "Lion's Den" palette: Playful Premium + Adventure, scoped to .teen-access-page/.teen-dashboard surfaces.
-     Values now alias the canonical brand tokens above instead of duplicating raw hex. */
-  --teen-cobalt:var(--blue-dark); --teen-cobalt-dark:var(--blue-darker); /* primary actions — used as small text/links/badges throughout, needs Deep Blue's 6.70:1, not Vibrant Blue's 3.68:1 */
-  --teen-emerald:var(--green); --teen-emerald-dark:var(--green-dark); /* growth; -dark is text-safe */
-  --teen-gold:var(--yellow); --teen-gold-dark:var(--yellow-dark);     /* XP/achievement; -dark is text-safe */
-  --teen-orange:var(--yellow-dark); --teen-orange-dark:var(--yellow-dark); /* streak accent, distinct amber tone */
-  --teen-violet:var(--purple-dark); --teen-violet-dark:var(--purple-hover); /* league/gems, text-safe */
-  --teen-coral:var(--error); --teen-coral-dark:var(--error-dark);     /* rare alerts/errors */
-  --teen-ink:var(--navy);                                             /* primary text */
+  /* Teen Dashboard — "Lion's Den" palette: Mature Dark Navy, scoped to .teen-access-page/.teen-dashboard surfaces
+     and any component that reads these --teen-* tokens (chat panel, daily card, story reader in teen mode, etc).
+     Kept in sync with the hand-tuned hex values used directly inside the .teen-dashboard rules below. */
+  --teen-cobalt:#1D4ED8; --teen-cobalt-dark:#1E40AF; /* solid-fill blue — safe as a BACKGROUND with white text (5.2:1+); do not use as text-on-navy */
+  --teen-accent:#60A5FA; --teen-accent-light:#93C5FD; /* light blue — safe as TEXT/icon/border on navy surfaces (6.7:1+) */
+  --teen-emerald:var(--green); --teen-emerald-dark:#4ADE80; /* growth; -dark is text-safe on navy */
+  --teen-gold:var(--yellow); --teen-gold-dark:#FDE047;     /* XP/achievement; -dark is text-safe on navy */
+  --teen-orange:var(--yellow-dark); --teen-orange-dark:#FB923C; /* streak accent, distinct amber tone, text-safe on navy */
+  --teen-violet:var(--purple-dark); --teen-violet-dark:#C084FC; /* league/gems, text-safe on navy */
+  --teen-coral:var(--error); --teen-coral-dark:#F87171;     /* rare alerts/errors, text-safe on navy */
+  --teen-ink:var(--navy);                                             /* dark navy surface (also used as a bg on teen-access-page) */
 
-  --teen-bg:#FFFFFF; --teen-surface:#FFFFFF; --teen-surface-alt:#F4F8FC; --teen-surface-raised:#FFFFFF;
-  --teen-well:#F6F9FC; --teen-surface-hover:#EEF3FA;
-  --teen-border:var(--border); --teen-border-alt:var(--border-alt); --teen-divider:#E9EEF4;
-  --teen-text:var(--navy); --teen-text-secondary:var(--slate); --teen-text-muted:var(--slate); --teen-text-tertiary:var(--slate); --teen-text-label:var(--slate); --teen-text-light:var(--navy);
-  --teen-success:var(--green); --teen-success-text:var(--green-dark); --teen-success-bg:var(--green-tint);
-  --teen-warning-bg:var(--yellow-tint); --teen-warning-text:var(--yellow-dark);
-  --teen-error-bg:var(--error-bg); --teen-error-text:var(--error-dark);
+  --teen-bg:#0B1120; --teen-surface:#0F172A; --teen-surface-alt:#1E293B; --teen-surface-raised:#1E293B;
+  --teen-well:#0B1120; --teen-surface-hover:#253349;
+  --teen-border:#334155; --teen-border-alt:#1E293B; --teen-divider:#1E293B;
+  --teen-text:#FFFFFF; --teen-text-secondary:#CBD5E1; --teen-text-muted:#94A3B8; --teen-text-tertiary:#94A3B8; --teen-text-label:#94A3B8; --teen-text-light:#FFFFFF;
+  --teen-success:var(--green); --teen-success-text:#4ADE80; --teen-success-bg:rgba(34,197,94,.16);
+  --teen-warning-bg:rgba(217,119,6,.18); --teen-warning-text:#FBBF24;
+  --teen-error-bg:rgba(220,38,38,.18); --teen-error-text:#F87171;
+
+  /* Primary/brand CTA — white on navy (readable, clickable, pops), replacing blue as the primary button color */
+  --teen-cta-bg:#FFFFFF; --teen-cta-text:#0F172A; --teen-cta-hover:#E2E8F0;
 }
 :root {
   /* Parent Dashboard — Trustworthy/Warm/Modern/Premium/Calm palette, scoped to .parent-dashboard-page.
@@ -720,10 +725,22 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   color: var(--navy);
   box-shadow: 2.5px 2.5px 0 var(--navy);
   transition: transform 120ms ease, background 120ms ease;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
 }
 .kid-static-character-link:hover {
   transform: translateY(-1px);
   background: #dbeafe;
+}
+.kid-static-character-link.active {
+  background: var(--kid-blue, #155eef);
+  color: #ffffff;
+}
+.kid-static-character-link.active .kid-char-kicker,
+.kid-static-character-link.active small {
+  color: #eff6ff;
 }
 
 .kid-static-character-avatar {
@@ -2246,6 +2263,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 @media(max-width:620px){.child-help-confirmation{left:14px;right:14px;bottom:14px}.parent-dashboard-page small,.parent-dashboard-page .parent-dash-kicker,.child-dashboard small,.child-dashboard .child-kicker{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.child-help-confirmation,.dashboard-loading>span{animation:none!important}}
 .parent-child-rows article>button{min-width:44px}
+.dashboard-loading-teen{background:#0b1120;color:#ffffff}
+.dashboard-loading-teen>span{border-color:#334155;border-top-color:#60a5fa}
 
 /* Comfortable secondary controls and readable dashboard metadata */
 .demo-credentials button,.password-control button,.access-home-link,.leave-onboarding,.family-exit,.activity-card a,footer a,.parent-attention-panel>button,.parent-sidebar-bottom a,.parent-settings-links a,.child-profile-tabs>a,.single-child-head>a{min-height:44px;display:inline-flex;align-items:center}.dashboard-filters button{min-height:44px}.parent-attention-panel>button{justify-content:center}.demo-credentials span,.family-kicker,.family-privacy-note span,.family-summary span,.parent-dashboard-top>div>span,.parent-dash-kicker,.parent-metric-grid span,.parent-metric-grid small,.parent-child-rows small,.flagged-activity small,.recent-learning small,.recent-learning article>b,.child-report-list small,.child-report-list b,.assignment-builder small,.message-layout small{font-size:12px}
@@ -2402,6 +2421,23 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   .family-modal-meta{grid-template-columns:1fr;gap:6px}
   .family-summary-modal{padding:26px 16px}
 }
+
+/* ── Teen-mode overrides for the Family Progress modal (help-dialog is shared with the kid dashboard) ── */
+.teen-dashboard .help-dialog{border-color:var(--teen-border);background:var(--teen-surface);box-shadow:0 24px 56px rgba(0,0,0,.45);color:var(--teen-text)}
+.teen-dashboard .help-dialog .close-help{border-color:var(--teen-border);background:var(--teen-well);color:var(--teen-text)}
+.teen-dashboard .help-dialog h2{color:var(--teen-text)}
+.teen-dashboard .help-dialog .child-kicker{color:var(--teen-accent)}
+.teen-dashboard .family-modal-badge{border-color:var(--teen-border)}
+.teen-dashboard .family-score-card{border-color:var(--teen-border);background:var(--teen-surface-alt)}
+.teen-dashboard .fam-card-avatar{color:#0f172a}
+.teen-dashboard .family-score-card.current{border-color:#ffffff;background:var(--teen-surface-hover);box-shadow:none}
+.teen-dashboard .fam-card-info strong{color:var(--teen-text)}
+.teen-dashboard .fam-card-info small{color:var(--teen-text-muted)}
+.teen-dashboard .fam-card-points b{color:var(--teen-text)}
+.teen-dashboard .fam-card-points small{color:var(--teen-text-muted)}
+.teen-dashboard .you-tag{color:var(--teen-accent-light)}
+.teen-dashboard .family-modal-close-btn{border-color:var(--teen-border);background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:none}
+.teen-dashboard .family-modal-close-btn:hover{background:var(--teen-cta-hover)}
 
 /* ── Interactive Scripture Reader & Chip ───────────────── */
 .scripture-chip-btn{width:fit-content;display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:2px solid var(--navy);border-radius:999px;background:var(--sky);color:var(--navy);font-family:var(--font-nunito);cursor:pointer;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease;text-align:left;box-shadow:3px 3px 0 var(--navy)}
@@ -2846,8 +2882,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-keypad-btn:hover{background:rgba(255,255,255,.12)}
 .teen-keypad-util{font-size:11px}
 .teen-access-error{margin:0;padding:10px 12px;border:1px solid var(--teen-coral);border-radius:9px;background:rgba(255,91,110,.14);color:#ffb3bc;font-size:13px;font-weight:800}
-.teen-submit-btn{min-height:50px;border:0;border-radius:12px;background:var(--teen-cobalt);color:var(--white);font:900 15px var(--font-nunito);cursor:pointer;transition:background 150ms ease,transform 150ms ease}
-.teen-submit-btn:hover{background:var(--teen-cobalt-dark);transform:translateY(-1px)}
+.teen-submit-btn{min-height:50px;border:0;border-radius:12px;background:var(--teen-cta-bg);color:var(--teen-cta-text);font:900 15px var(--font-nunito);cursor:pointer;transition:background 150ms ease,transform 150ms ease}
+.teen-submit-btn:hover{background:var(--teen-cta-hover);transform:translateY(-1px)}
 .teen-submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .teen-access-footer{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);text-align:center;font-size:13px;color:#9fb3c8;font-weight:800;display:flex;flex-direction:column;gap:6px}
 .teen-access-footer a{color:var(--teen-gold);text-decoration:underline}
@@ -3023,8 +3059,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #3b82f6;
-  color: #ffffff;
+  background: #ffffff;
+  color: #0f172a;
   font-weight: 900;
   font-size: 13px;
 }
@@ -3199,11 +3235,11 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 }
 
 .teen-nav-item.active {
-  background: #3b82f6;
-  color: #ffffff;
-  border-color: #3b82f6;
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #ffffff;
   font-weight: 900;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .teen-nav-icon {
@@ -3540,8 +3576,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   padding: 0 20px;
   border: 0;
   border-radius: 12px;
-  background: #3b82f6;
-  color: #ffffff;
+  background: #ffffff;
+  color: #0f172a;
   font: 900 14px var(--font-nunito);
   cursor: pointer;
   text-decoration: none;
@@ -3549,7 +3585,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
   white-space: nowrap;
 }
 .teen-primary-btn:hover {
-  background: #1d4ed8;
+  background: #e2e8f0;
   transform: translateY(-1px);
 }
 .teen-primary-btn:disabled {
@@ -4740,7 +4776,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .chat-launcher:hover{transform:translateY(-2px)}
 .chat-launcher span{font-size:18px}
 .chat-launcher-child{border:2px solid var(--navy);background:var(--gold);color:var(--navy);box-shadow:0 5px 0 var(--gold-dark)}
-.chat-launcher-teen{border:0;background:var(--teen-cobalt);color:var(--white);box-shadow:0 10px 24px rgba(40,100,240,.32)}
+.chat-launcher-teen{border:0;background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.chat-launcher-teen:hover{background:var(--teen-cta-hover)}
 
 .chat-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:flex-end;padding:18px;background:rgba(8,31,51,.35)}
 .chat-panel{width:min(100%,420px);max-height:min(78vh,720px);display:flex;flex-direction:column;border-radius:22px;overflow:hidden;animation:modal-rise 220ms cubic-bezier(.2,.8,.25,1)}
@@ -4753,7 +4790,7 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .chat-persona-mark{width:38px;height:38px;display:grid;place-items:center;border:2px solid var(--navy);border-radius:50%;background:var(--gold);font-size:17px}
 .chat-panel-teen .chat-persona-mark{border-color:var(--teen-cobalt);background:var(--teen-well)}
 .chat-persona strong{display:block;font:700 15px var(--font-fredoka)}
-.chat-panel-teen .chat-persona strong{color:var(--teen-ink)}
+.chat-panel-teen .chat-persona strong{color:var(--teen-text)}
 .chat-persona small{display:block;color:var(--muted);font-size:11px;font-weight:800}
 .chat-panel-teen .chat-persona small{color:var(--teen-text-muted)}
 .chat-close{width:36px;height:36px;border:2px solid var(--navy);border-radius:50%;background:var(--white);color:var(--navy);font-weight:900;cursor:pointer;flex-shrink:0}
@@ -4782,14 +4819,15 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .chat-bubble-ai>div p{margin:0;color:var(--navy);font-size:14px;line-height:1.6}
 .chat-panel-teen .chat-bubble-ai>div p{color:var(--teen-text)}
 .chat-bubble-caring>div{border-color:var(--blue);background:#eaf2fb}
-.chat-panel-teen .chat-bubble-caring>div{border-color:var(--teen-cobalt);background:var(--teen-sky-tint,#EFF6FF)}
+.chat-panel-teen .chat-bubble-caring>div{border-color:var(--teen-accent);background:rgba(96,165,250,.14)}
+.chat-panel-teen .chat-bubble-caring>div p{color:var(--teen-text)}
 .chat-caring-note{display:block;margin-top:8px;color:var(--blue);font-size:11px;font-weight:800;line-height:1.4}
-.chat-panel-teen .chat-caring-note{color:var(--teen-cobalt-dark)}
+.chat-panel-teen .chat-caring-note{color:var(--teen-accent-light)}
 
 .chat-verse-link{border:0;background:none;padding:0;color:var(--blue);font-size:14px;font-weight:800;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .chat-verse-link:hover{color:var(--navy)}
-.chat-panel-teen .chat-verse-link{color:var(--teen-cobalt-dark)}
-.chat-panel-teen .chat-verse-link:hover{color:var(--teen-ink)}
+.chat-panel-teen .chat-verse-link{color:var(--teen-accent-light)}
+.chat-panel-teen .chat-verse-link:hover{color:#ffffff}
 
 .chat-typing{display:flex;align-items:center;gap:4px;padding:14px 16px;border-radius:14px 14px 14px 3px;border:1px solid #d8e5ed;background:var(--sky)}
 .chat-panel-teen .chat-typing{border-color:var(--teen-border);background:var(--teen-surface)}
@@ -4803,7 +4841,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .chat-input-row input{flex:1;min-height:44px;padding:0 14px;border:2px solid #b9cdd9;border-radius:11px;background:var(--white);color:var(--navy);font-size:14px}
 .chat-panel-teen .chat-input-row input{border-color:var(--teen-border);background:var(--teen-well);color:var(--teen-text)}
 .chat-input-row button{min-height:44px;padding:0 18px;border:0;border-radius:11px;background:var(--teal);color:var(--white);font:900 13px var(--font-nunito);cursor:pointer}
-.chat-panel-teen .chat-input-row button{background:var(--teen-cobalt)}
+.chat-panel-teen .chat-input-row button{background:var(--teen-cta-bg);color:var(--teen-cta-text)}
+.chat-panel-teen .chat-input-row button:hover:not(:disabled){background:var(--teen-cta-hover)}
 .chat-input-row button:disabled{opacity:.5;cursor:not-allowed}
 .chat-safety-note{margin:0;padding:8px 14px 12px;color:var(--muted);font-size:10px;line-height:1.4;background:var(--white)}
 .chat-panel-teen .chat-safety-note{color:var(--teen-text-muted);background:var(--teen-surface)}
@@ -4815,6 +4854,12 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .chat-verse-text{margin:0 0 14px;color:var(--navy);font-style:italic;font-weight:700;font-size:17px;line-height:1.55}
 .chat-verse-text span{margin-left:8px;color:var(--muted);font-size:11px;font-style:normal;font-weight:900;text-transform:uppercase}
 .chat-verse-meaning{margin:0;padding-top:14px;border-top:1px solid #e1e9ee;color:var(--muted);font-size:13px;line-height:1.55}
+.chat-verse-modal-teen{border-color:var(--teen-border);background:var(--teen-surface);box-shadow:0 24px 56px rgba(0,0,0,.45)}
+.chat-verse-modal-teen .chat-close{border-color:var(--teen-border);background:var(--teen-well);color:var(--teen-text)}
+.chat-verse-modal-teen .chat-verse-ref{color:var(--teen-accent-light)}
+.chat-verse-modal-teen .chat-verse-text{color:var(--teen-text)}
+.chat-verse-modal-teen .chat-verse-text span{color:var(--teen-text-muted)}
+.chat-verse-modal-teen .chat-verse-meaning{border-top-color:var(--teen-divider);color:var(--teen-text-secondary)}
 
 @media(max-width:600px){
   .chat-overlay{padding:0}
@@ -5258,7 +5303,8 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-char-btn-row{display:flex;flex-wrap:wrap;gap:10px}
 .teen-char-action-btn{padding:10px 18px;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:opacity 150ms,transform 150ms}
 .teen-char-action-btn:hover{transform:translateY(-1px)}
-.teen-char-action-btn.primary{background:var(--teen-cobalt);color:var(--white);font-weight:900}
+.teen-char-action-btn.primary{background:var(--teen-cta-bg);color:var(--teen-cta-text);font-weight:900}
+.teen-char-action-btn.primary:hover{background:var(--teen-cta-hover)}
 .teen-char-action-btn.secondary{background:transparent;border:1.5px solid rgba(255,255,255,.28);color:#e7edf4}
 
 @media(max-width:768px){
@@ -5307,6 +5353,63 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .char-transaction-list li{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px}
 .char-tx-positive{font-weight:800;color:#047857}
 .char-tx-negative{font-weight:800;color:#b91c1c}
+
+/* Teen mode — Lion's Den navy theme (kept separate from .adventure-page's
+   base child styling, which is shared with /arcade and /daily-quests) */
+.adventure-page.char-page.teen{background:var(--teen-bg);color:var(--teen-text);min-height:100vh}
+.char-page.teen .child-topbar{background:var(--teen-surface);border-bottom-color:var(--teen-border)}
+.char-page.teen .child-logo{color:var(--teen-text)}
+.char-page.teen .child-logo small{color:var(--teen-accent-light)}
+.char-page.teen .char-nav-btn{background:var(--teen-surface-alt);color:var(--teen-text);border-color:var(--teen-border)}
+.char-page.teen .char-nav-btn:hover{background:var(--teen-surface-hover)}
+.char-page.teen .char-hero{background:var(--teen-surface);border-color:var(--teen-border);box-shadow:6px 6px 0 var(--teen-well)}
+.char-page.teen .char-name-edit h1{color:var(--teen-text)}
+.char-page.teen .char-name-edit small{color:var(--teen-accent-light)}
+.char-page.teen .char-title-line{color:var(--teen-text-secondary)}
+.char-page.teen .char-title-line b{color:var(--teen-text)}
+.char-page.teen .char-xp-caption{color:var(--teen-text-muted)}
+.char-page.teen .char-xp-bar{background:var(--teen-surface-alt);border-color:var(--teen-border)}
+.char-page.teen .char-wallet-chip{background:var(--teen-surface-alt);border-color:var(--teen-border);color:var(--teen-text)}
+.char-page.teen .child-kicker{color:var(--teen-accent-light)}
+.char-page.teen .child-nav{background:var(--teen-surface-alt);border-color:var(--teen-border)}
+.char-page.teen .child-nav button{color:var(--teen-text-secondary)}
+.char-page.teen .child-nav button:hover{background:var(--teen-surface-hover);color:var(--teen-text)}
+.char-page.teen .child-nav button.active{background:var(--teen-cta-bg);color:var(--teen-cta-text)}
+.char-page.teen .char-panel{background:var(--teen-surface);border-color:var(--teen-border);box-shadow:4px 4px 0 var(--teen-well)}
+.char-page.teen .char-stat-chip{background:var(--teen-surface);border-color:var(--teen-border);box-shadow:3px 3px 0 var(--teen-well)}
+.char-page.teen .char-stat-chip strong{color:var(--teen-text)}
+.char-page.teen .char-stat-chip small{color:var(--teen-text-muted)}
+.char-page.teen .char-companion-title{color:var(--teen-text)}
+.char-page.teen .char-companion-line{color:var(--teen-text-secondary)}
+.char-page.teen .char-companion-display,
+.char-page.teen .char-companion-empty-box{background:var(--teen-surface-alt);border-color:var(--teen-border)}
+.char-page.teen .char-companion-icon-frame,
+.char-page.teen .char-companion-empty-icon{background:var(--teen-surface);border-color:var(--teen-border)}
+.char-page.teen .char-companion-info strong,
+.char-page.teen .char-companion-empty-info strong{color:var(--teen-text)}
+.char-page.teen .char-companion-empty-info p{color:var(--teen-text-secondary)}
+.char-page.teen .char-region-row{background:var(--teen-surface-alt);border-color:var(--teen-border);color:var(--teen-text)}
+.char-page.teen .char-region-row small{color:var(--teen-text-muted)}
+.char-page.teen .char-swatch{background:var(--teen-surface-alt);border-color:var(--teen-border)}
+.char-page.teen .char-swatch.active{border-color:var(--teen-text);outline-color:var(--teen-gold-dark);background:var(--teen-surface-hover)}
+.char-page.teen .char-swatch small{color:var(--teen-text-secondary)}
+.char-page.teen .char-slot-tabs button{background:var(--teen-surface-alt);border-color:var(--teen-border);color:var(--teen-text-secondary)}
+.char-page.teen .char-slot-tabs button.active{background:var(--teen-cta-bg);color:var(--teen-cta-text)}
+.char-page.teen .char-item-card{background:var(--teen-surface-alt);border-color:var(--teen-border);color:var(--teen-text)}
+.char-page.teen .char-item-icon-wrap{background:var(--teen-surface);border-color:var(--teen-border)}
+.char-page.teen .char-item-body small{color:var(--teen-text-muted)}
+.char-page.teen .char-shop-card{background:var(--teen-surface-alt);border-color:var(--teen-border);color:var(--teen-text)}
+.char-page.teen .char-shop-card.gated{background:var(--teen-surface);opacity:.75}
+.char-page.teen .char-shop-icon-wrap{background:var(--teen-surface);border-color:var(--teen-border)}
+.char-page.teen .char-wallet-row .char-wallet-chip{background:var(--teen-surface-alt)}
+.char-page.teen .button-primary{background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:none}
+.char-page.teen .button-primary:hover{background:var(--teen-cta-hover)}
+.char-page.teen .button-secondary{background:var(--teen-surface-alt);color:var(--teen-text);box-shadow:none;border-color:var(--teen-border)}
+.char-page.teen .button-secondary:hover{background:var(--teen-surface-hover)}
+.char-page.teen .char-skill-row span{color:var(--teen-text)}
+.char-page.teen .char-game-performance-row strong{color:var(--teen-text)}
+.char-page.teen .char-game-performance-bar{background:var(--teen-surface-alt)}
+.char-page.teen .teen-main-canvas{padding:0 0 40px}
 
 
 @media(max-width:620px){
@@ -5415,8 +5518,34 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .teen-daily-card{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:20px 24px;margin-top:20px;border:1px solid var(--teen-border);border-radius:18px;background:var(--teen-surface)}
 .teen-daily-head{display:flex;align-items:center;gap:12px}
 .teen-daily-head>span{font-size:28px}
-.teen-daily-head strong{display:block;color:var(--teen-ink);font:700 16px var(--font-fredoka)}
+.teen-daily-head strong{display:block;color:var(--teen-text);font:700 16px var(--font-fredoka)}
 .teen-daily-head small{color:var(--teen-text-muted);font-size:12px;font-weight:700}
+
+/* ── Learning Journey card (adaptive recommendation) ─────────────── */
+.learning-journey-card{margin-top:20px;padding:22px 24px;border:2px solid var(--navy);border-radius:18px;background:var(--white);box-shadow:5px 5px 0 var(--navy)}
+.learning-journey-card h2{margin:0 0 14px;font:700 20px var(--font-fredoka);color:var(--navy)}
+.learning-journey-recommend{padding:16px;border-radius:14px;background:var(--sky)}
+.learning-journey-kicker{display:block;margin-bottom:4px;color:var(--teal-dark);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.learning-journey-recommend strong{display:block;font:700 17px var(--font-fredoka);color:var(--navy)}
+.learning-journey-recommend p{margin:4px 0 12px;color:var(--muted);font-size:13px;line-height:1.5}
+.learning-journey-lists{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.learning-journey-lists>div>span{display:block;margin-bottom:6px;color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.learning-journey-lists ul{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.learning-journey-lists li{font-size:13px;font-weight:700;color:var(--navy)}
+.learning-journey-review-count{margin:14px 0 0;color:var(--teal-dark);font-size:13px;font-weight:800}
+
+.learning-journey-teen{border:1.5px solid var(--teen-border-alt);border-radius:18px;background:var(--teen-surface);box-shadow:0 4px 16px rgba(0,0,0,0.25)}
+.learning-journey-teen h2{color:var(--teen-text)}
+.learning-journey-teen .learning-journey-recommend{background:var(--teen-surface-alt)}
+.learning-journey-teen .learning-journey-kicker{color:var(--teen-accent)}
+.learning-journey-teen .learning-journey-recommend strong{color:var(--teen-text)}
+.learning-journey-teen .learning-journey-recommend p{color:var(--teen-text-muted)}
+.learning-journey-teen .learning-journey-lists>div>span{color:var(--teen-text-muted)}
+.learning-journey-teen .learning-journey-lists li{color:var(--teen-text)}
+.learning-journey-teen .learning-journey-review-count{color:var(--teen-accent-light)}
+.learning-journey-teen .button-primary{background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:none}
+.learning-journey-teen .button-primary:hover{background:var(--teen-cta-hover)}
+@media(max-width:560px){.learning-journey-lists{grid-template-columns:1fr}}
 
 @media(max-width:620px){
   .daily-hero{flex-direction:column;align-items:stretch}
@@ -5435,6 +5564,32 @@ footer { padding:56px max(24px,calc((100vw - 1192px)/2)) 28px; display:grid; gri
 .arcade-featured-icon{font-size:34px}
 .arcade-featured-body strong{display:block;font:700 18px var(--font-fredoka)}
 .arcade-featured-body p{margin:2px 0 0;color:var(--muted);font-weight:700;font-size:13px}
+
+/* Teen mode — Lion's Den navy theme (kept separate from .adventure-page's
+   base child styling, which is shared with /character and /daily-quests) */
+.adventure-page.arcade-page.teen{background:var(--teen-bg);color:var(--teen-text);min-height:100vh}
+.arcade-page.teen .child-topbar{background:var(--teen-surface);border-bottom-color:var(--teen-border)}
+.arcade-page.teen .child-logo{color:var(--teen-text)}
+.arcade-page.teen .child-logo small{color:var(--teen-accent-light)}
+.arcade-page.teen .help-button{background:var(--teen-surface-alt);color:var(--teen-text);border-color:var(--teen-border)}
+.arcade-page.teen .help-button:hover{background:var(--teen-surface-hover)}
+.arcade-page.teen .daily-intro h1{color:var(--teen-text)}
+.arcade-page.teen .daily-intro>p{color:var(--teen-text-secondary)}
+.arcade-page.teen .child-kicker{color:var(--teen-accent-light)}
+.arcade-page.teen .arcade-featured-card{background:var(--teen-surface-alt);border-color:var(--teen-border);box-shadow:5px 5px 0 var(--teen-well)}
+.arcade-page.teen .arcade-featured-body strong{color:var(--teen-text)}
+.arcade-page.teen .arcade-featured-body p{color:var(--teen-text-secondary)}
+.arcade-page.teen .arcade-game-card{background:var(--teen-surface);border-color:var(--teen-border);box-shadow:4px 4px 0 var(--teen-well)}
+.arcade-page.teen .arcade-game-card h3{color:var(--teen-text)}
+.arcade-page.teen .arcade-game-card p{color:var(--teen-text-secondary)}
+.arcade-page.teen .arcade-game-meta{color:var(--teen-text-secondary)}
+.arcade-page.teen .arcade-skill-chip{background:var(--teen-surface-alt);color:var(--teen-accent-light)}
+.arcade-page.teen .arcade-coming-soon{background:var(--teen-surface-alt);color:var(--teen-text-muted)}
+.arcade-page.teen .button-primary{background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:none}
+.arcade-page.teen .button-primary:hover{background:var(--teen-cta-hover)}
+.arcade-page.teen .button-secondary{background:var(--teen-surface-alt);color:var(--teen-text);box-shadow:none;border-color:var(--teen-border)}
+.arcade-page.teen .button-secondary:hover{background:var(--teen-surface-hover)}
+.arcade-page.teen .teen-main-canvas{padding:0 0 40px}
 
 .arcade-grid{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .arcade-game-card{display:flex;flex-direction:column;padding:20px;border:2px solid var(--navy);border-radius:18px;background:var(--white);box-shadow:4px 4px 0 var(--navy)}
