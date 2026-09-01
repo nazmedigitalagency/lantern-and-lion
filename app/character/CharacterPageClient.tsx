@@ -46,7 +46,7 @@ import type { CharacterAppearance, CharacterEquipment, EquipmentItem, EquipmentS
 
 type Tab = 'overview' | 'customize' | 'shop' | 'inventory' | 'skills';
 
-export default function CharacterPage() {
+export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
@@ -65,7 +65,7 @@ export default function CharacterPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!hasActiveSession()) {
-        router.replace('/');
+        if (!embedded) router.replace('/');
         return;
       }
       const activeProfile = readActiveProfile();
@@ -77,7 +77,7 @@ export default function CharacterPage() {
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [router]);
+  }, [router, embedded]);
 
   const achievements = useMemo(() => getAchievementsSummary(ctx), [ctx]);
   const dashboardHref = profile?.kind === 'teen' ? '/teen-dashboard' : '/child-dashboard';
@@ -148,31 +148,8 @@ export default function CharacterPage() {
     );
   }
 
-  return (
-    <main className="adventure-page char-page">
-      <header className="child-topbar adv-topbar">
-        <Link href={dashboardHref} className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Character &amp; Style</strong>
-            <small>{profile.kind === 'teen' ? 'Lion’s Den' : 'Lantern Club'}</small>
-          </span>
-        </Link>
-        <div className="adv-topbar-center">
-          <GameHUD level={levelInfo.level} wallet={wallet} />
-        </div>
-        <div className="child-header-actions char-topbar-actions">
-          <Link href="/adventure" className="char-nav-btn char-nav-adventure">
-            <span aria-hidden="true">🗺️</span>
-            <span>Adventure</span>
-          </Link>
-          <Link href={dashboardHref} className="char-nav-btn char-nav-back">
-            <span aria-hidden="true">←</span>
-            <span>Dashboard</span>
-          </Link>
-        </div>
-      </header>
-
+  const body = (
+    <>
       <div className="adv-body char-body">
         <section className="char-hero">
           <div className="char-avatar-hero-display">
@@ -514,6 +491,40 @@ export default function CharacterPage() {
           onContinue={dismissLevelUp}
         />
       )}
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page char-page">
+      <header className="child-topbar adv-topbar">
+        <Link href={dashboardHref} className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Character &amp; Style</strong>
+            <small>{profile.kind === 'teen' ? 'Lion’s Den' : 'Lantern Club'}</small>
+          </span>
+        </Link>
+        <div className="adv-topbar-center">
+          <GameHUD level={levelInfo.level} wallet={wallet} />
+        </div>
+        <div className="child-header-actions char-topbar-actions">
+          <Link href="/adventure" className="char-nav-btn char-nav-adventure">
+            <span aria-hidden="true">🗺️</span>
+            <span>Adventure</span>
+          </Link>
+          <Link href={dashboardHref} className="char-nav-btn char-nav-back">
+            <span aria-hidden="true">←</span>
+            <span>Dashboard</span>
+          </Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function CharacterPage() {
+  return <CharacterBuilder />;
 }

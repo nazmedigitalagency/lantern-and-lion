@@ -44,7 +44,7 @@ import type { RegionId, RegionStatus, StoryChapter } from './types';
 
 type LocationTab = 'chapters' | 'games' | 'memory-verse' | 'boss' | 'secrets';
 
-export default function AdventurePage() {
+export function AdventureWorld({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
@@ -83,14 +83,14 @@ export default function AdventurePage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!hasActiveSession()) {
-        router.replace('/child-access');
+        if (!embedded) router.replace('/child-access');
         return;
       }
       refresh();
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [router]);
+  }, [router, embedded]);
 
   const regions = useMemo(() => getRegions(), []);
   const selectedRegion = useMemo(() => getRegion(selectedRegionId) || canonicalRegions[0], [selectedRegionId]);
@@ -163,32 +163,10 @@ export default function AdventurePage() {
     window.setTimeout(() => setNotice(null), 3500);
   }
 
-  return (
-    <main style={{ minHeight: '100vh', background: '#FEF9F3', color: '#1E293B', paddingBottom: '4rem' }}>
-      {/* Top Header */}
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '1rem 1.5rem',
-          borderBottom: '2px solid #1E293B',
-          background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(8px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-        }}
-      >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#1E293B' }}>
-          <Image src="/lantern-lion-logo.png" alt="" width={42} height={42} priority />
-          <div>
-            <strong style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Lantern &amp; Lion</strong>
-            <small style={{ color: '#64748B', fontSize: '0.75rem' }}>Bible Adventure World</small>
-          </div>
-        </Link>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+  const body = (
+    <>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
           <button
             type="button"
             className="button button-secondary"
@@ -197,13 +175,7 @@ export default function AdventurePage() {
           >
             🎒 Collectibles ({collectibles.length})
           </button>
-          <Link href={dashboardHref} className="button button-secondary" style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}>
-            ← Back to Dashboard
-          </Link>
         </div>
-      </header>
-
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         {notice && (
           <div
             style={{
@@ -613,6 +585,47 @@ export default function AdventurePage() {
         />
       )}
       <XPToastStack toasts={toasts} onDismiss={dismissToast} />
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main style={{ minHeight: '100vh', background: '#FEF9F3', color: '#1E293B', paddingBottom: '4rem' }}>
+      {/* Top Header */}
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1rem 1.5rem',
+          borderBottom: '2px solid #1E293B',
+          background: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(8px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+        }}
+      >
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#1E293B' }}>
+          <Image src="/lantern-lion-logo.png" alt="" width={42} height={42} priority />
+          <div>
+            <strong style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Lantern &amp; Lion</strong>
+            <small style={{ color: '#64748B', fontSize: '0.75rem' }}>Bible Adventure World</small>
+          </div>
+        </Link>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Link href={dashboardHref} className="button button-secondary" style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}>
+            ← Back to Dashboard
+          </Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function AdventurePage() {
+  return <AdventureWorld />;
 }
