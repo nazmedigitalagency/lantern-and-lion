@@ -110,6 +110,10 @@ export const MAZE_QUESTIONS: Record<DifficultyLevel, MazeQuestion[]> = {
     { prompt: 'Who wrote the majority of the New Testament letters?', options: ['Paul', 'Peter', 'John'], correct: 0 },
     { prompt: 'What covenant sign did God give Noah?', options: ['The rainbow', 'Circumcision', 'The Sabbath'], correct: 0 },
     { prompt: 'What does "sanctification" mean?', options: ['The ongoing process of being made holy', 'The moment of first belief', 'Final resurrection'], correct: 0 },
+    { prompt: 'What did the Jerusalem Council in Acts 15 decide about Gentile believers?', options: ['They did not need to be circumcised to follow Christ', 'They had to relocate to Jerusalem', 'They could not become church leaders', 'They needed a separate covenant'], correct: 0 },
+    { prompt: 'What does "justification" mean in Paul’s letters?', options: ['Being declared righteous before God through faith', 'Earning salvation through good works', 'A synonym for baptism', 'The final judgment at the end of time'], correct: 0 },
+    { prompt: 'In the book of Job, who finally answers Job’s questions about his suffering?', options: ['God, out of the whirlwind', 'His three friends', 'Elihu alone', 'No one answers him'], correct: 0 },
+    { prompt: 'What is the "thorn in the flesh" Paul asked God three times to remove?', options: ['A messenger of Satan sent to harass him', 'A physical enemy he names directly', 'A financial debt', 'He never mentions one'], correct: 0 },
   ],
 };
 

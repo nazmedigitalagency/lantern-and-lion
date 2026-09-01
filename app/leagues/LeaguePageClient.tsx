@@ -118,19 +118,27 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
   const body = (
     <>
       <div style={{ maxWidth: embedded ? 'none' : '1300px', width: '100%', margin: '0 auto', padding: '1.5rem 1rem', boxSizing: 'border-box' }}>
+        {onClose && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '1rem' }}>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={onClose}
+              style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
+            >
+              ✕ Close
+            </button>
+          </div>
+        )}
         {/* Season Hero Banner */}
         <section
+          className="league-hero-card"
           style={{
             background: c.cardBg,
             border: `2px solid ${c.cardBorder}`,
             borderRadius: '20px',
             padding: '1.75rem',
             boxShadow: `6px 6px 0 ${progress.currentTier.badgeTone}`,
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr auto',
-            gap: '1.5rem',
-            alignItems: 'center',
-            marginBottom: '1.5rem',
           }}
         >
           <div style={{ fontSize: '3.5rem', textAlign: 'center' }} aria-hidden="true">
@@ -202,7 +210,7 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
         )}
 
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', borderBottom: `1px solid ${c.rowBorder}`, marginBottom: '1.25rem' }}>
+        <div className="league-tab-bar" style={{ borderBottom: `1px solid ${c.rowBorder}`, marginBottom: '1.25rem' }}>
           <button
             type="button"
             className={`button ${tab === 'leaderboard' ? 'button-primary' : 'button-secondary'}`}
@@ -232,7 +240,7 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
         {/* TAB 1: POD LEADERBOARD */}
         {tab === 'leaderboard' && (
           <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <p style={{ margin: 0, fontSize: '0.8rem', color: c.textMuted }}>
                   Pod: <strong>{pod.tier.toUpperCase()} · {pod.ageGroup === 'teen' ? 'Teens (13–17)' : 'Children (5–12)'}</strong>
@@ -252,11 +260,8 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
                 return (
                   <React.Fragment key={String(p.id)}>
                     <article
+                      className="league-leaderboard-row"
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: '40px auto 1fr auto auto',
-                        gap: '0.85rem',
-                        alignItems: 'center',
                         background: p.isCurrentUser
                           ? c.rowActiveBg
                           : c.rowBg,

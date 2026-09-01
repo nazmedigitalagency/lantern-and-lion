@@ -13,6 +13,7 @@ import { GAME_DEFINITIONS, getGameDefinition } from './catalog';
 import { getFeaturedGameId } from './progression';
 import { getPersonalBest } from './storage';
 import type { GameId } from './types';
+import TeenSidebar from '../teen-dashboard/TeenSidebar';
 
 const GAME_ROUTES: Partial<Record<GameId, string>> = {
   'scripture-maze': '/arcade/scripture-maze',
@@ -29,6 +30,7 @@ export default function ArcadePage() {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -59,18 +61,31 @@ export default function ArcadePage() {
   const featuredId = getFeaturedGameId(getTodayDateKey());
   const featuredGame = getGameDefinition(featuredId);
   const featuredBest = getPersonalBest(profile.id, featuredId);
+  const isTeen = profile.kind === 'teen';
   void refreshTick;
 
-  return (
-    <main className="adventure-page arcade-page">
+  const pageContent = (
+    <>
       <header className="child-topbar adv-topbar">
-        <Link href={dashboardHref} className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Lantern Arcade</strong>
-            <small>Lantern &amp; Lion</small>
-          </span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {isTeen && (
+            <button
+              type="button"
+              className="teen-menu-trigger"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Toggle navigation menu"
+            >
+              ☰
+            </button>
+          )}
+          <Link href={dashboardHref} className="child-logo">
+            <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+            <span>
+              <strong>Lantern Arcade</strong>
+              <small>Lantern &amp; Lion</small>
+            </span>
+          </Link>
+        </div>
         <div className="adv-topbar-center">
           <GameHUD level={levelInfo.level} wallet={wallet} />
         </div>
@@ -96,7 +111,13 @@ export default function ArcadePage() {
                 <p>{featuredBest ? `Beat your previous score of ${featuredBest.score}.` : 'Play today and set your first score.'}</p>
               </div>
             </div>
-            <Link className="button button-primary" href={GAME_ROUTES[featuredGame.id] || '/arcade'}>Play now →</Link>
+            <Link
+              className="button button-primary"
+              href={GAME_ROUTES[featuredGame.id] || '/arcade'}
+              style={isTeen ? { background: 'var(--teen-cta-bg)', color: 'var(--teen-cta-text)', boxShadow: 'none' } : undefined}
+            >
+              Play now →
+            </Link>
           </section>
         )}
 
@@ -105,6 +126,23 @@ export default function ArcadePage() {
             <GameCard key={game.id} game={game} best={getPersonalBest(profile.id, game.id)} href={GAME_ROUTES[game.id] || null} />
           ))}
         </div>
+      </div>
+    </>
+  );
+
+  if (!isTeen) {
+    return <main className="adventure-page arcade-page">{pageContent}</main>;
+  }
+
+  return (
+    <main className="adventure-page arcade-page teen">
+      <div className="teen-body-container">
+        <TeenSidebar
+          activeItem="arcade"
+          mobileMenuOpen={mobileMenuOpen}
+          onCloseMobileMenu={() => setMobileMenuOpen(false)}
+        />
+        <div className="teen-main-canvas">{pageContent}</div>
       </div>
     </main>
   );

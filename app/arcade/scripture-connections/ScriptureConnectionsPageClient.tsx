@@ -8,7 +8,7 @@ import { logGameEvent } from '../../lib/analytics';
 import { getTodayDateKey } from '../../lib/date';
 import { useDialogA11y } from '../../lib/use-dialog';
 import { DifficultyPicker } from '../components';
-import { defaultDifficultyForAge } from '../catalog';
+import { allowedDifficultiesFor, defaultDifficultyFor } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
 import type { DifficultyLevel, GameOutcome } from '../types';
 import { getDailyStreak, markDailyCompleted } from './daily-history';
@@ -59,7 +59,7 @@ export function ScriptureConnectionsGame({ embedded = false, onClose }: { embedd
       if (!hasActiveSession()) { window.location.href = '/'; return; }
       const activeProfile = readActiveProfile();
       setProfile(activeProfile);
-      setDifficulty(defaultDifficultyForAge(activeProfile.age));
+      setDifficulty(defaultDifficultyFor(activeProfile));
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -255,7 +255,7 @@ export function ScriptureConnectionsGame({ embedded = false, onClose }: { embedd
               </div>
             )}
 
-            {mode === 'practice' && <DifficultyPicker value={difficulty} onChange={setDifficulty} />}
+            {mode === 'practice' && <DifficultyPicker value={difficulty} onChange={setDifficulty} allowedLevels={profile ? allowedDifficultiesFor(profile.kind) : undefined} />}
 
             <button type="button" className="button button-primary arcade-start-btn" onClick={() => startPuzzle(mode)}>
               {mode === 'daily' ? 'Play today’s puzzle' : 'Start practice puzzle'}

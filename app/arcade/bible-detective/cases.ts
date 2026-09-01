@@ -250,6 +250,167 @@ export const CASE_BANK: CaseDefinition[] = [
     explanation:
       'Esther used her position with courage at the exact moment her people needed her most — fasting and preparing, then exposing Haman’s plot directly to the king when the timing gave her the strongest chance of being heard.',
   },
+  {
+    id: 'persecutor-who-changed',
+    title: 'The Persecutor Who Changed',
+    intro: 'A man who dragged believers to prison suddenly starts preaching the faith he tried to destroy. His old allies call it treason. His new allies don’t trust him either. Detective, work out what actually happened on that road — and why nobody could talk him out of it afterward.',
+    reference: 'Acts 9:1-22',
+    ageGroup: 'teens',
+    difficulty: 'expert',
+    skills: ['critical-thinking', 'reading', 'bible-knowledge', 'attention'],
+    xpReward: 130,
+    stages: [
+      {
+        id: 'stage-1',
+        clues: [
+          { id: 'saul-character-1', type: 'character', title: 'The Persecutor', content: 'Saul of Tarsus was "breathing threats and murder" against the church, and had obtained letters authorizing him to arrest believers in Damascus.' },
+          { id: 'saul-timeline-1', type: 'timeline', title: 'The Road', content: 'Near Damascus, a light from heaven flashed around him, he fell to the ground, and heard a voice: "Saul, Saul, why are you persecuting me?"' },
+        ],
+        question: {
+          id: 'q1',
+          prompt: 'Why is it significant that the voice said "why are you persecuting ME" rather than "my people"?',
+          options: [
+            'It was likely a translation error in the account',
+            'It identifies Jesus as personally bound up with the church he was attacking — an early claim about who Jesus is',
+            'It means Saul had personally met Jesus before',
+            'It has no real significance, just a figure of speech',
+          ],
+          correctIndex: 1,
+          hint: 'Think about what it implies for Jesus to speak as if attacks on believers are attacks on himself.',
+        },
+      },
+      {
+        id: 'stage-2',
+        clues: [
+          { id: 'saul-object-1', type: 'object', title: 'Three Days Blind', content: 'Saul was blind for three days and neither ate nor drank, until Ananias — a believer he likely would have arrested days earlier — was sent to heal him.' },
+          { id: 'saul-character-2', type: 'character', title: 'A Reluctant Healer', content: 'Ananias initially objected: "Lord, I have heard from many about this man, how much evil he has done to your saints."' },
+        ],
+        question: {
+          id: 'q2',
+          prompt: 'What does Ananias’s objection, and his obedience anyway, tell a careful reader?',
+          options: [
+            'That the early church didn’t really trust the resurrection accounts',
+            'That reconciliation here required real risk and real forgiveness, not just a change of Saul’s mind',
+            'That Ananias secretly wanted Saul to stay blind',
+            'That the account is likely legendary, since no one would risk this',
+          ],
+          correctIndex: 1,
+          hint: 'Ananias had every reason to refuse. Notice that he went anyway — what does obedience under real risk suggest about how seriously he took the instruction?',
+        },
+      },
+      {
+        id: 'stage-3',
+        clues: [
+          { id: 'saul-scripture-1', type: 'scripture', title: 'Immediate Reversal', content: '"And immediately he proclaimed Jesus in the synagogues, saying, \'He is the Son of God.\'" (Acts 9:20) — in the very synagogues he’d planned to use for arrests.' },
+        ],
+        question: {
+          id: 'q3',
+          prompt: 'Which explanation best accounts for a persecutor immediately preaching in the exact synagogues he came to raid, at cost to his own safety and reputation?',
+          options: [
+            'He was pressured into it by the apostles',
+            'He calculated it would benefit his career',
+            'Something happened on that road serious enough to reverse a violent conviction overnight, with no material benefit to him — the opposite, in fact',
+            'The account was written much later and exaggerated for effect',
+          ],
+          correctIndex: 2,
+          hint: 'Ask what a persecutor-turned-preacher actually gained materially from this reversal. Then ask what could explain a conviction that strong changing that fast.',
+        },
+      },
+    ],
+    finalAnswer: {
+      prompt: 'Detective, what is the most consistent explanation for Saul’s reversal?',
+      options: [
+        'A genuine encounter with the risen Jesus, confirmed by his blindness, Ananias’s costly obedience, and his immediate, costly public preaching',
+        'A political calculation to infiltrate the church',
+        'A mental breakdown brought on by the stress of persecuting believers',
+        'A legend added generations later with no basis in the earliest accounts',
+      ],
+      correctIndex: 0,
+      hint: 'Weigh all three clues together — physical evidence, a witness who had every reason to lie or refuse, and behavior with no personal upside.',
+    },
+    explanation:
+      'Every piece of corroborating evidence — Saul’s physical blindness, Ananias’s reluctant-but-real obedience despite personal risk, and Saul’s immediate public preaching at cost to his own safety — points toward a real encounter, not a calculated move or a later legend. A persecutor doesn’t usually reverse course this completely for nothing to gain and everything to lose.',
+  },
+  {
+    id: 'brother-who-stayed',
+    title: 'The Brother Who Stayed',
+    intro: 'Everyone remembers the son who left and came home. Fewer notice the son who never left — and refused to celebrate when his brother did. Detective, this parable has two suspects in the wrong, not one. Find the second.',
+    reference: 'Luke 15:11-32',
+    ageGroup: 'teens',
+    difficulty: 'expert',
+    skills: ['critical-thinking', 'reading', 'bible-knowledge'],
+    xpReward: 120,
+    stages: [
+      {
+        id: 'stage-1',
+        clues: [
+          { id: 'prodigal-character-1', type: 'character', title: 'The Younger Son', content: 'He demanded his inheritance early — effectively treating his father as if already dead — squandered it, and returned only when starving, rehearsing an apology.' },
+          { id: 'prodigal-character-2', type: 'character', title: 'The Older Son', content: 'He stayed, worked the land faithfully for years, and refused to join the celebration when his brother returned, telling his father: "I never disobeyed your command."' },
+        ],
+        question: {
+          id: 'q1',
+          prompt: 'Why might the parable include the older son’s complaint at all, instead of ending at the celebration?',
+          options: [
+            'It’s an unrelated addition with no purpose',
+            'It shows that self-righteous resentment is its own form of distance from the father, even without ever "leaving"',
+            'It proves the older son was right to be angry',
+            'It’s meant to make the younger son look worse by comparison',
+          ],
+          correctIndex: 1,
+          hint: 'Consider whether physically staying home guarantees someone is actually close to their father in the way that matters.',
+        },
+      },
+      {
+        id: 'stage-2',
+        clues: [
+          { id: 'prodigal-scripture-1', type: 'scripture', title: 'The Father’s Response', content: '"Son, you are always with me, and all that is mine is yours. It was fitting to celebrate and be glad, for this your brother was dead, and is alive." (Luke 15:31-32)' },
+        ],
+        question: {
+          id: 'q2',
+          prompt: 'What does the father’s response to the older son reveal about his complaint?',
+          options: [
+            'That the father agrees the younger son doesn’t deserve grace',
+            'That the older son had misunderstood his relationship with his father as a wage-earning arrangement rather than a given inheritance',
+            'That the father is choosing the younger son over the older one',
+            'That the older son should have left home too',
+          ],
+          correctIndex: 1,
+          hint: 'Notice the father doesn’t deny the older son anything — he points out everything was already his. What does that suggest about how the older son had been viewing his own place in the family?',
+        },
+      },
+      {
+        id: 'stage-3',
+        clues: [
+          { id: 'prodigal-timeline-1', type: 'timeline', title: 'Where the Story Ends', content: 'The parable ends without telling us whether the older brother ever goes inside to the feast — it’s left open.' },
+        ],
+        question: {
+          id: 'q3',
+          prompt: 'Why might Jesus deliberately leave the older brother’s decision unresolved?',
+          options: [
+            'The original ending was lost',
+            'It puts the real question to the listener — originally the religious leaders grumbling about Jesus welcoming sinners — rather than resolving it for them',
+            'It was a mistake in how the parable was recorded',
+            'The older brother is not actually important to the story',
+          ],
+          correctIndex: 1,
+          hint: 'Remember who Jesus was originally telling this story to (Luke 15:1-2) — a challenge left open often means the challenge is aimed at the listener.',
+        },
+      },
+    ],
+    finalAnswer: {
+      prompt: 'Detective, who is this parable actually confronting?',
+      options: [
+        'Only the younger son, for wasting his inheritance',
+        'Both sons — the younger for open rebellion, and the older for a self-righteous, transactional view of his father that kept him distant even while staying home',
+        'Neither son — the parable is only about the father’s generosity',
+        'The servants, for organizing the celebration too quickly',
+      ],
+      correctIndex: 1,
+      hint: 'Weigh the open ending and the father’s correction to the older son alongside the younger son’s obvious failure — the parable has two targets, not one.',
+    },
+    explanation:
+      'The younger son’s rebellion is obvious; the older son’s is quieter but just as real — a resentful, transactional relationship with his father that left him just as distant, without ever leaving home. Jesus leaves his decision unresolved on purpose, aiming the question at whoever is listening and grumbling like he was.',
+  },
 ];
 
 export function getCaseDefinition(id: string): CaseDefinition | undefined {

@@ -4,6 +4,7 @@
 // chapters, games, memory verses, Knowledge Bosses, and collectibles.
 
 import type { AdventureQuest, Region, RegionId } from './types';
+import { teenAdventureQuests, teenRegions } from './world-data-teen';
 
 export type WorldKind = 'child' | 'teen';
 
@@ -1073,17 +1074,13 @@ export const canonicalRegions: Region[] = [
 
 /** Get list of regions for world */
 export function getRegions(kind?: WorldKind): Region[] {
-  if (kind) {
-    // Canonical 8 biblical regions for all tracks
-  }
+  if (kind === 'teen') return teenRegions;
   return canonicalRegions;
 }
 
 /** Lookup a single region by id */
 export function getRegion(id: RegionId, kind?: WorldKind): Region | undefined {
-  if (kind) {
-    // Canonical 8 biblical regions for all tracks
-  }
+  if (kind === 'teen') return teenRegions.find((r) => r.id === id);
   return canonicalRegions.find((r) => r.id === id);
 }
 
@@ -1300,15 +1297,11 @@ export const adventureQuests: AdventureQuest[] = [
 ];
 
 export function getQuestsForRegion(regionId: RegionId, kind?: WorldKind): AdventureQuest[] {
-  if (kind) {
-    // Quests mapped for track
-  }
-  return adventureQuests.filter((q) => q.regionId === regionId);
+  const quests = kind === 'teen' ? teenAdventureQuests : adventureQuests;
+  return quests.filter((q) => q.regionId === regionId);
 }
 
 export function getQuest(id: string, kind?: WorldKind): AdventureQuest | undefined {
-  if (kind) {
-    // Quest lookup for track
-  }
-  return adventureQuests.find((q) => q.id === id);
+  const quests = kind === 'teen' ? teenAdventureQuests : adventureQuests;
+  return quests.find((q) => q.id === id);
 }

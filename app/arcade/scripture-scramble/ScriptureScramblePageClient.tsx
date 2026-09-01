@@ -7,7 +7,7 @@ import { hasActiveSession, readActiveProfile, type PlayerProfile } from '../../a
 import StudioAudioPlayer from '../../components/StudioAudioPlayer';
 import { pickRandomUnique, shuffle } from '../../lib/shuffle';
 import { DifficultyPicker, GameResultModal } from '../components';
-import { DIFFICULTY_LABEL, SCRAMBLE_ROUNDS_PER_SESSION, SCRAMBLE_WORD_POOLS, defaultDifficultyForAge } from '../catalog';
+import { DIFFICULTY_LABEL, SCRAMBLE_ROUNDS_PER_SESSION, SCRAMBLE_WORD_POOLS, allowedDifficultiesFor, defaultDifficultyFor } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
 import type { DifficultyLevel, GameOutcome } from '../types';
 
@@ -48,7 +48,7 @@ export function ScriptureScrambleGame({ embedded = false, onClose }: { embedded?
       if (!hasActiveSession()) { window.location.href = '/'; return; }
       const activeProfile = readActiveProfile();
       setProfile(activeProfile);
-      setDifficulty(defaultDifficultyForAge(activeProfile.age));
+      setDifficulty(defaultDifficultyFor(activeProfile));
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -167,7 +167,7 @@ export function ScriptureScrambleGame({ embedded = false, onClose }: { embedded?
             <span className="arcade-setup-icon" aria-hidden="true">🔤</span>
             <h1>Scripture Scramble</h1>
             <p>Unscramble {SCRAMBLE_ROUNDS_PER_SESSION} Bible words. {best && `Your best score: ${best.score}.`}</p>
-            <DifficultyPicker value={difficulty} onChange={setDifficulty} />
+            <DifficultyPicker value={difficulty} onChange={setDifficulty} allowedLevels={profile ? allowedDifficultiesFor(profile.kind) : undefined} />
             <p className="arcade-setup-note">
               {difficulty === 'easy' || difficulty === 'medium' ? 'Hints and audio pronunciation available.' : 'No hints, no audio — timed rounds.'}
             </p>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { blogPosts, getBlogPost } from '../../blog-data';
 import { SITE_URL } from '../../lib/site';
+import SiteFooter from '../../components/SiteFooter';
 
 export function generateStaticParams() {
   return blogPosts.map((post) => ({ slug: post.slug }));
@@ -80,7 +81,7 @@ export default async function BlogPostPage({
         </div>
       </header>
 
-      <article style={{ padding: '48px max(24px,calc((100vw - 900px)/2)) 20px', maxWidth: 900, margin: '0 auto' }}>
+      <article className="blog-article-shell">
         <p style={{ margin: 0, fontSize: 14 }}><Link href="/blog">Blog</Link> {' › '} <span>{post.category}</span></p>
         <p className="eyebrow" style={{ marginTop: 18 }}><span>✎</span>{post.category} · {post.readingTime}</p>
         <h1 style={{ fontSize: 'clamp(32px,4vw,48px)' }}>{post.title}</h1>
@@ -122,29 +123,7 @@ export default async function BlogPostPage({
         )}
       </article>
 
-      <footer>
-        <div className="footer-brand">
-          <Image src="/lantern-lion-logo.png" alt="" width={76} height={76} />
-          <div><strong>Lantern &amp; Lion</strong><p>Bible play for growing minds.</p></div>
-        </div>
-        <div>
-          <b>Explore</b>
-          <Link href="/curriculum">Curriculum</Link>
-          <Link href="/arcade">Bible games</Link>
-          <Link href="/churches">Churches &amp; Schools</Link>
-        </div>
-        <div>
-          <b>Sign in</b>
-          <Link href="/parent-access">Parent sign in</Link>
-          <Link href="/teacher-access">Teacher sign in</Link>
-        </div>
-        <div>
-          <b>Safety &amp; Mission</b>
-          <Link href="/safety">Family safety promises</Link>
-          <Link href="/about">Our Faith &amp; Mission</Link>
-        </div>
-        <p className="copyright">© 2026 Lantern &amp; Lion. Built with care for families.</p>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

@@ -10,10 +10,11 @@ import { DIFFICULTY_LABEL } from './catalog';
 import { DIFFICULTY_ORDER } from './types';
 import type { DifficultyLevel, GameDefinition, PersonalBest } from './types';
 
-export function DifficultyPicker({ value, onChange }: { value: DifficultyLevel; onChange: (level: DifficultyLevel) => void }) {
+export function DifficultyPicker({ value, onChange, allowedLevels }: { value: DifficultyLevel; onChange: (level: DifficultyLevel) => void; allowedLevels?: DifficultyLevel[] }) {
+  const levels = allowedLevels ?? DIFFICULTY_ORDER;
   return (
     <div className="arcade-difficulty-picker" role="group" aria-label="Difficulty">
-      {DIFFICULTY_ORDER.map((level) => (
+      {levels.map((level) => (
         <button key={level} type="button" className={value === level ? 'active' : ''} aria-pressed={value === level} onClick={() => onChange(level)}>
           {DIFFICULTY_LABEL[level]}
         </button>

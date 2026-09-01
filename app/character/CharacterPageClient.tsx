@@ -43,6 +43,7 @@ import {
   type PlayerProfile,
 } from './storage';
 import type { CharacterAppearance, CharacterEquipment, EquipmentItem, EquipmentSlot } from './types';
+import TeenSidebar from '../teen-dashboard/TeenSidebar';
 
 type Tab = 'overview' | 'customize' | 'shop' | 'inventory' | 'skills';
 
@@ -61,6 +62,7 @@ export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boo
   const [shopCategory, setShopCategory] = useState<EquipmentSlot>('clothing');
   const [shopNotice, setShopNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -151,6 +153,18 @@ export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boo
   const body = (
     <>
       <div className="adv-body char-body">
+        {onClose && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '1rem' }}>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={onClose}
+              style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
+            >
+              ✕ Close
+            </button>
+          </div>
+        )}
         <section className="char-hero">
           <div className="char-avatar-hero-display">
             <CharacterAvatar appearance={appearance} equipment={equipment} size="large" showPedestal={true} />
@@ -496,31 +510,66 @@ export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boo
 
   if (embedded) return body;
 
-  return (
-    <main className="adventure-page char-page">
-      <header className="child-topbar adv-topbar">
+  const isTeen = profile.kind === 'teen';
+
+  const header = (
+    <header className="child-topbar adv-topbar">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {isTeen && (
+          <button
+            type="button"
+            className="teen-menu-trigger"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Toggle navigation menu"
+          >
+            ☰
+          </button>
+        )}
         <Link href={dashboardHref} className="child-logo">
           <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
           <span>
             <strong>Character &amp; Style</strong>
-            <small>{profile.kind === 'teen' ? 'Lion’s Den' : 'Lantern Club'}</small>
+            <small>{isTeen ? 'Lion’s Den' : 'Lantern Club'}</small>
           </span>
         </Link>
-        <div className="adv-topbar-center">
-          <GameHUD level={levelInfo.level} wallet={wallet} />
+      </div>
+      <div className="adv-topbar-center">
+        <GameHUD level={levelInfo.level} wallet={wallet} />
+      </div>
+      <div className="child-header-actions char-topbar-actions">
+        <Link href="/adventure" className="char-nav-btn char-nav-adventure">
+          <span aria-hidden="true">🗺️</span>
+          <span>Adventure</span>
+        </Link>
+        <Link href={dashboardHref} className="char-nav-btn char-nav-back">
+          <span aria-hidden="true">←</span>
+          <span>Dashboard</span>
+        </Link>
+      </div>
+    </header>
+  );
+
+  if (!isTeen) {
+    return (
+      <main className="adventure-page char-page">
+        {header}
+        {body}
+      </main>
+    );
+  }
+
+  return (
+    <main className="adventure-page char-page teen">
+      <div className="teen-body-container">
+        <TeenSidebar
+          mobileMenuOpen={mobileMenuOpen}
+          onCloseMobileMenu={() => setMobileMenuOpen(false)}
+        />
+        <div className="teen-main-canvas">
+          {header}
+          {body}
         </div>
-        <div className="child-header-actions char-topbar-actions">
-          <Link href="/adventure" className="char-nav-btn char-nav-adventure">
-            <span aria-hidden="true">🗺️</span>
-            <span>Adventure</span>
-          </Link>
-          <Link href={dashboardHref} className="char-nav-btn char-nav-back">
-            <span aria-hidden="true">←</span>
-            <span>Dashboard</span>
-          </Link>
-        </div>
-      </header>
-      {body}
+      </div>
     </main>
   );
 }

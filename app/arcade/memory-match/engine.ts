@@ -96,6 +96,12 @@ const WORD_DEFINITION_PAIRS: PairSeed[] = [
   { id: 'prophet', a: { kind: 'text', value: 'Prophet' }, b: { kind: 'text', value: 'Someone who speaks God’s message' } },
   { id: 'sanctuary', a: { kind: 'text', value: 'Sanctuary' }, b: { kind: 'text', value: 'A sacred, set-apart place of worship' } },
   { id: 'parable', a: { kind: 'text', value: 'Parable' }, b: { kind: 'text', value: 'A short story that teaches a lesson' } },
+  { id: 'propitiation', a: { kind: 'text', value: 'Propitiation' }, b: { kind: 'text', value: 'The sacrifice that satisfies God’s just wrath against sin' } },
+  { id: 'justification', a: { kind: 'text', value: 'Justification' }, b: { kind: 'text', value: 'Being declared righteous before God through faith' } },
+  { id: 'sanctification', a: { kind: 'text', value: 'Sanctification' }, b: { kind: 'text', value: 'The ongoing process of being made holy' } },
+  { id: 'incarnation', a: { kind: 'text', value: 'Incarnation' }, b: { kind: 'text', value: 'God the Son taking on human flesh in Jesus' } },
+  { id: 'eschatology', a: { kind: 'text', value: 'Eschatology' }, b: { kind: 'text', value: 'The study of the last things and Christ’s return' } },
+  { id: 'omniscient', a: { kind: 'text', value: 'Omniscient' }, b: { kind: 'text', value: 'All-knowing — one of God’s attributes' } },
 ];
 
 // ── MODE 6: Place ↔ event ────────────────────────────────────────
@@ -105,6 +111,13 @@ const PLACE_EVENT_PAIRS: PairSeed[] = [
   { id: 'bethlehem', a: { kind: 'text', value: 'Bethlehem' }, b: { kind: 'text', value: 'Where Jesus was born' } },
   { id: 'sinai', a: { kind: 'text', value: 'Mount Sinai' }, b: { kind: 'text', value: 'Moses received the Ten Commandments' } },
   { id: 'jordan', a: { kind: 'text', value: 'The Jordan River' }, b: { kind: 'text', value: 'Where Jesus was baptized' } },
+  { id: 'carmel', a: { kind: 'text', value: 'Mount Carmel' }, b: { kind: 'text', value: 'Elijah confronted the prophets of Baal here' } },
+  { id: 'damascus', a: { kind: 'text', value: 'Damascus Road' }, b: { kind: 'text', value: 'Saul encountered the risen Jesus and was struck blind' } },
+  { id: 'babylon', a: { kind: 'text', value: 'Babylon' }, b: { kind: 'text', value: 'Where Israel’s leaders were exiled after Jerusalem fell' } },
+  { id: 'areopagus', a: { kind: 'text', value: 'The Areopagus' }, b: { kind: 'text', value: 'Paul preached to the philosophers of Athens here' } },
+  { id: 'patmos', a: { kind: 'text', value: 'Patmos' }, b: { kind: 'text', value: 'The island where John received the Revelation' } },
+  { id: 'corinth', a: { kind: 'text', value: 'Corinth' }, b: { kind: 'text', value: 'A church Paul wrote two major letters to correct and encourage' } },
+  { id: 'gethsemane', a: { kind: 'text', value: 'Gethsemane' }, b: { kind: 'text', value: 'Jesus prayed here in anguish before his arrest' } },
 ];
 
 export const MATCH_MODES: Record<MatchModeId, MatchModeDefinition> = {

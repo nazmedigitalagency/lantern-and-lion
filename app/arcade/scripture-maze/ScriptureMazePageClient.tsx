@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { hasActiveSession, readActiveProfile, type PlayerProfile } from '../../adventure/storage';
 import { useDialogA11y } from '../../lib/use-dialog';
 import { DifficultyPicker, GameResultModal } from '../components';
-import { defaultDifficultyForAge } from '../catalog';
+import { allowedDifficultiesFor, defaultDifficultyFor } from '../catalog';
 import { canMove, DIRECTION_DELTA, generateMaze, pickQuestions, type MazeLayout, type MazeQuestion } from '../maze-engine';
 import { getPersonalBest, recordGameSession } from '../storage';
 import type { DifficultyLevel, GameOutcome } from '../types';
@@ -42,7 +42,7 @@ export function ScriptureMazeGame({ embedded = false, onClose }: { embedded?: bo
       if (!hasActiveSession()) { window.location.href = '/'; return; }
       const activeProfile = readActiveProfile();
       setProfile(activeProfile);
-      setDifficulty(defaultDifficultyForAge(activeProfile.age));
+      setDifficulty(defaultDifficultyFor(activeProfile));
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -172,7 +172,7 @@ export function ScriptureMazeGame({ embedded = false, onClose }: { embedded?: bo
             <span className="arcade-setup-icon" aria-hidden="true">🌀</span>
             <h1>Scripture Maze</h1>
             <p>Collect Scripture fragments and answer every checkpoint to reach the exit. {best && `Your best score: ${best.score}.`}</p>
-            <DifficultyPicker value={difficulty} onChange={setDifficulty} />
+            <DifficultyPicker value={difficulty} onChange={setDifficulty} allowedLevels={profile ? allowedDifficultiesFor(profile.kind) : undefined} />
             <button type="button" className="button button-primary arcade-start-btn" onClick={startGame}>Start game</button>
           </section>
         )}

@@ -7,7 +7,7 @@ import { hasActiveSession, readActiveProfile, type PlayerProfile } from '../../a
 import { logGameEvent } from '../../lib/analytics';
 import { useDialogA11y } from '../../lib/use-dialog';
 import { DifficultyPicker } from '../components';
-import { defaultDifficultyForAge, getGameDefinition } from '../catalog';
+import { allowedDifficultiesFor, defaultDifficultyFor, getGameDefinition } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
 import type { DifficultyLevel, GameOutcome } from '../types';
 import {
@@ -60,7 +60,7 @@ export function LightningQuizGame({ embedded = false, onClose }: { embedded?: bo
       if (!hasActiveSession()) { window.location.href = '/'; return; }
       const activeProfile = readActiveProfile();
       setProfile(activeProfile);
-      setDifficulty(defaultDifficultyForAge(activeProfile.age));
+      setDifficulty(defaultDifficultyFor(activeProfile));
       setMode(defaultModeForAge(activeProfile.age));
       setHydrated(true);
     }, 0);
@@ -257,7 +257,7 @@ export function LightningQuizGame({ embedded = false, onClose }: { embedded?: bo
             </div>
             <p className="arcade-setup-note">{modeDef.description}</p>
 
-            <DifficultyPicker value={difficulty} onChange={setDifficulty} />
+            <DifficultyPicker value={difficulty} onChange={setDifficulty} allowedLevels={profile ? allowedDifficultiesFor(profile.kind) : undefined} />
 
             <div className="lq-category-picker" role="group" aria-label="Category">
               <button type="button" className={category === 'all' ? 'active' : ''} aria-pressed={category === 'all'} onClick={() => setCategory('all')}>

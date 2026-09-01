@@ -1,8 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { readActiveProfile } from '../adventure/storage';
+import TeenSidebar from '../teen-dashboard/TeenSidebar';
 import { getItemsUnlockedInLevelRange } from '../character/progression';
 import type { EquipmentItem } from '../character/types';
 import { LevelUpModal, XPToastStack } from '../lib/economy/components';
@@ -40,6 +42,7 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
   const [toasts, setToasts] = useState<ToastEvent[]>([]);
   const [levelUpEvent, setLevelUpEvent] = useState<LevelUpEvent | null>(null);
   const [walletXp, setWalletXp] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -138,11 +141,54 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
   }
 
   const kind = profile.kind;
-  const dashboardHref = kind === 'teen' ? '/teen-dashboard' : '/child-dashboard';
+  const isTeen = kind === 'teen';
+  const dashboardHref = isTeen ? '/teen-dashboard' : '/child-dashboard';
+
+  // On the teen side, wrap the page content in the same sidebar + navy
+  // shell as the rest of the Lion's Den so navigation isn't lost; children
+  // keep the original single-column story-shell exactly as before.
+  function withTeenShell(children: ReactNode) {
+    if (!isTeen) return <main className="story-shell">{children}</main>;
+    return (
+      <main className="teen-dashboard">
+        <header className="teen-topbar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              className="teen-menu-trigger"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Toggle navigation menu"
+            >
+              ☰
+            </button>
+            <Link href="/teen-dashboard" className="teen-logo" aria-label="Lantern and Lion - Lion's Den">
+              <div className="teen-logo-mark">
+                <Image src="/lantern-lion-logo.png" alt="" width={44} height={44} priority />
+              </div>
+              <span className="teen-logo-text">
+                <strong>Lion’s Den</strong>
+                <small>Interactive Stories</small>
+              </span>
+            </Link>
+          </div>
+        </header>
+        <div className="teen-body-container">
+          <TeenSidebar
+            activeItem="stories"
+            mobileMenuOpen={mobileMenuOpen}
+            onCloseMobileMenu={() => setMobileMenuOpen(false)}
+          />
+          <div className="teen-main-canvas">
+            <div className="story-shell teen">{children}</div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (showComplete && reward) {
-    return (
-      <main className={`story-shell ${kind === 'teen' ? 'teen' : ''}`}>
+    return withTeenShell(
+      <>
         <div className="story-complete-card">
           <span style={{ fontSize: 48 }}>🎉</span>
           <h2>Story Complete!</h2>
@@ -171,12 +217,12 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
           />
         )}
         <XPToastStack toasts={toasts} onDismiss={dismissToast} />
-      </main>
+      </>
     );
   }
 
-  return (
-    <main className={`story-shell ${kind === 'teen' ? 'teen' : ''}`}>
+  return withTeenShell(
+    <>
       <div className="story-topbar">
         <h1>
           {story.heroEmoji} {story.title}
@@ -219,6 +265,6 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
       )}
 
       <XPToastStack toasts={toasts} onDismiss={dismissToast} />
-    </main>
+    </>
   );
 }

@@ -64,22 +64,30 @@ export function TeenSidebar({
   const showCharacterCard = Boolean(charAppearance && charEquipment && charDisplayName);
 
   return (
-    <aside className={`teen-sidebar ${mobileMenuOpen ? 'teen-sidebar-open' : ''}`}>
-      <div className="teen-sidebar-mobile-head">
-        <div className="teen-sidebar-mobile-title">
-          <strong>Lion&rsquo;s Den Menu</strong>
-        </div>
-        <button
-          type="button"
-          className="teen-sidebar-close-btn"
+    <>
+      {mobileMenuOpen && (
+        <div
+          className="teen-mobile-backdrop"
           onClick={onCloseMobileMenu}
-          aria-label="Close navigation"
-        >
-          ✕
-        </button>
-      </div>
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`teen-sidebar ${mobileMenuOpen ? 'teen-sidebar-open' : ''}`}>
+        <div className="teen-sidebar-mobile-head">
+          <div className="teen-sidebar-mobile-title">
+            <strong>Lion&rsquo;s Den Menu</strong>
+          </div>
+          <button
+            type="button"
+            className="teen-sidebar-close-btn"
+            onClick={onCloseMobileMenu}
+            aria-label="Close navigation"
+          >
+            ✕
+          </button>
+        </div>
 
-      <nav className="teen-sidebar-nav" aria-label="Teen Dashboard Navigation">
+        <nav className="teen-sidebar-nav" aria-label="Teen Dashboard Navigation">
         {NAV_ENTRIES.map((entry) => {
           const isActive = activeItem === entry.id;
           if (entry.href) {
@@ -142,6 +150,7 @@ export function TeenSidebar({
         </div>
       )}
     </aside>
+    </>
   );
 }
 

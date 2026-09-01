@@ -7,7 +7,7 @@ import { hasActiveSession, readActiveProfile, type PlayerProfile } from '../../a
 import { logGameEvent } from '../../lib/analytics';
 import { useDialogA11y } from '../../lib/use-dialog';
 import { DifficultyPicker } from '../components';
-import { defaultDifficultyForAge, getGameDefinition } from '../catalog';
+import { allowedDifficultiesFor, defaultDifficultyFor, getGameDefinition } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
 import type { DifficultyLevel, GameOutcome } from '../types';
 import {
@@ -42,7 +42,7 @@ export function MemoryMatchGame({ embedded = false, onClose }: { embedded?: bool
       if (!hasActiveSession()) { window.location.href = '/'; return; }
       const activeProfile = readActiveProfile();
       setProfile(activeProfile);
-      setDifficulty(defaultDifficultyForAge(activeProfile.age));
+      setDifficulty(defaultDifficultyFor(activeProfile));
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -159,7 +159,7 @@ export function MemoryMatchGame({ embedded = false, onClose }: { embedded?: bool
             <span className="arcade-setup-icon" aria-hidden="true">🃏</span>
             <h1>Memory Match</h1>
             <p>Flip cards to match Bible characters to their icon. {best && `Your best score: ${best.score}.`}</p>
-            <DifficultyPicker value={difficulty} onChange={setDifficulty} />
+            <DifficultyPicker value={difficulty} onChange={setDifficulty} allowedLevels={profile ? allowedDifficultiesFor(profile.kind) : undefined} />
             {hasTimeChallenge(difficulty) && <p className="arcade-setup-note">⏱ Expert includes a soft time challenge — no penalty for going over, just a fun target.</p>}
             <button type="button" className="button button-primary arcade-start-btn" onClick={startGame}>Start game</button>
           </section>

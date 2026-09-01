@@ -67,6 +67,12 @@ export const PUZZLE_BANK: PuzzleDefinition[] = [
     ['Titles for Jesus', ['SHEPHERD', 'LAMB', 'LIGHT', 'VINE'], 'These are images or titles Scripture uses to describe Jesus.'],
     ['Armor of God', ['SHIELD', 'HELMET', 'BREASTPLATE', 'SWORD'], 'These are named as pieces of the armor of God in Ephesians 6:10-17.'],
   ]),
+  puzzle('theology-in-focus', 'Theology in Focus', 'teens', 'expert', 130, [
+    ['Names for the Holy Spirit', ['COMFORTER', 'ADVOCATE', 'COUNSELOR', 'HELPER'], 'These are all titles Scripture uses for the Holy Spirit, especially in Jesus’ teaching in John 14-16.'],
+    ['Witnesses of the Resurrection', ['MARY MAGDALENE', 'THOMAS', 'CLEOPAS', 'PETER'], 'Each of these is named in the Gospels as a witness to the risen Jesus.'],
+    ['Early Church Leaders', ['STEPHEN', 'BARNABAS', 'TIMOTHY', 'PRISCILLA'], 'These were leaders and co-workers in the early church described in Acts and the Epistles.'],
+    ['Attributes of God', ['OMNISCIENT', 'IMMUTABLE', 'SOVEREIGN', 'HOLY'], 'These are theological terms describing God’s unchanging nature and character.'],
+  ]),
 ];
 
 export function getPuzzleDefinition(id: string): PuzzleDefinition | undefined {

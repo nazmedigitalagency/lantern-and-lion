@@ -158,7 +158,7 @@ export default function ChatAssistant({ mode, name, onSafetyFlag }: { mode: Chat
 
       {activeVerse && (
         <div className="chat-verse-overlay" role="dialog" aria-modal="true" aria-label={`${activeVerse.ref} verse`} onClick={() => setActiveVerse(null)}>
-          <div className="chat-verse-modal" onClick={(event) => event.stopPropagation()}>
+          <div className={mode === 'teen' ? 'chat-verse-modal chat-verse-modal-teen' : 'chat-verse-modal'} onClick={(event) => event.stopPropagation()}>
             <button className="chat-close" onClick={() => setActiveVerse(null)} aria-label="Close verse">✕</button>
             <p className="chat-verse-ref">{activeVerse.ref}</p>
             <p className="chat-verse-text">“{activeVerse.text}”<span> WEB</span></p>

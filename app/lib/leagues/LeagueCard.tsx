@@ -160,7 +160,16 @@ export function LeagueCard({ pod, currentParticipant, isTeen = false }: LeagueCa
           <Link
             href="/leagues"
             className="button button-primary"
-            style={{ flex: 1, textAlign: 'center', padding: '0.65rem 1rem', fontSize: '0.9rem', fontWeight: 700 }}
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '0.65rem 1rem',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              background: '#ffffff',
+              color: '#0f172a',
+              boxShadow: 'none',
+            }}
           >
             🏆 View League Standings &amp; Rewards →
           </Link>

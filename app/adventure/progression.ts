@@ -16,8 +16,6 @@ import type {
   WorldCollectible,
 } from './types';
 import {
-  adventureQuests,
-  canonicalRegions,
   getQuest,
   getQuestsForRegion,
   getRegion,
@@ -64,7 +62,9 @@ export function getQuestEstimatedMinutes(quest: AdventureQuest): number {
 }
 
 export function getTotalQuestsCompleted(ctx: WorldContext): number {
-  return adventureQuests.filter((q) => isQuestModuleComplete(q.moduleId, ctx.moduleProgress)).length;
+  return getRegions(ctx.kind)
+    .flatMap((r) => getQuestsForRegion(r.id, ctx.kind))
+    .filter((q) => isQuestModuleComplete(q.moduleId, ctx.moduleProgress)).length;
 }
 
 export function isBossDefeated(bossId: string, ctx: WorldContext): boolean {
@@ -90,15 +90,15 @@ function requirementMet(requirement: UnlockRequirement, ctx: WorldContext): bool
     case 'level':
       return getPlayerLevelInfo(ctx).level >= requirement.minLevel;
     case 'region-complete': {
-      const region = getRegion(requirement.regionId);
+      const region = getRegion(requirement.regionId, ctx.kind);
       if (!region) return false;
       const isBossDone = isBossDefeated(region.boss.id, ctx);
-      const quests = getQuestsForRegion(requirement.regionId);
+      const quests = getQuestsForRegion(requirement.regionId, ctx.kind);
       const completedQuests = quests.filter((q) => isQuestModuleComplete(q.moduleId, ctx.moduleProgress)).length;
       return isBossDone || completedQuests >= requirement.minQuestsCompleted;
     }
     case 'quest-complete': {
-      const quest = getQuest(requirement.questId);
+      const quest = getQuest(requirement.questId, ctx.kind);
       return Boolean(quest && isQuestModuleComplete(quest.moduleId, ctx.moduleProgress));
     }
     default:
@@ -135,7 +135,7 @@ export function getRegionStatus(region: Region, ctx: WorldContext): RegionStatus
   const bossDone = isBossDefeated(region.boss.id, ctx);
   if (bossDone) return 'completed';
 
-  const quests = getQuestsForRegion(region.id);
+  const quests = getQuestsForRegion(region.id, ctx.kind);
   const someStarted = quests.some(
     (q) => (ctx.moduleProgress[q.moduleId]?.completedIndices.length ?? 0) > 0
   ) || (ctx.completedChapterIds?.some((c) => c.startsWith(region.id)) ?? false);
@@ -152,7 +152,7 @@ export function getQuestStatus(quest: AdventureQuest, ctx: WorldContext): QuestS
 }
 
 export function getRegionCompletionPercent(region: Region, ctx: WorldContext): number {
-  const quests = getQuestsForRegion(region.id);
+  const quests = getQuestsForRegion(region.id, ctx.kind);
   const totalPoints = quests.length + region.chapters.length + 1; // quests + chapters + boss
   let earnedPoints = 0;
 
@@ -174,7 +174,7 @@ export function getRegionQuestSummary(region: Region, ctx: WorldContext): {
   total: number;
   isComplete: boolean;
 } {
-  const quests = getQuestsForRegion(region.id);
+  const quests = getQuestsForRegion(region.id, ctx.kind);
   const completed = quests.filter((q) => isQuestModuleComplete(q.moduleId, ctx.moduleProgress)).length;
   const isBossDone = isBossDefeated(region.boss.id, ctx);
   return {
@@ -185,7 +185,7 @@ export function getRegionQuestSummary(region: Region, ctx: WorldContext): {
 }
 
 export function getCurrentRegionId(ctx: WorldContext): RegionId {
-  const regions = getRegions();
+  const regions = getRegions(ctx.kind);
   // Find first unlocked but incomplete region
   for (const region of regions) {
     const status = getRegionStatus(region, ctx);
@@ -197,7 +197,7 @@ export function getCurrentRegionId(ctx: WorldContext): RegionId {
 }
 
 export function getCollectedCollectibles(ctx: WorldContext): WorldCollectible[] {
-  const regions = getRegions();
+  const regions = getRegions(ctx.kind);
   const found: WorldCollectible[] = [];
 
   regions.forEach((r) => {
@@ -216,7 +216,9 @@ export function getCollectedCollectibles(ctx: WorldContext): WorldCollectible[] 
 
 export function getTotalXpEarned(ctx: WorldContext): number {
   let xp = 0;
-  adventureQuests.forEach((q) => {
+  const regions = getRegions(ctx.kind);
+  const quests = regions.flatMap((r) => getQuestsForRegion(r.id, ctx.kind));
+  quests.forEach((q) => {
     if (isQuestModuleComplete(q.moduleId, ctx.moduleProgress)) {
       xp += q.reward.xp;
     }
@@ -224,7 +226,7 @@ export function getTotalXpEarned(ctx: WorldContext): number {
       xp += 50;
     }
   });
-  canonicalRegions.forEach((r) => {
+  regions.forEach((r) => {
     if (isBossDefeated(r.boss.id, ctx)) {
       xp += r.boss.reward.xp;
     }
@@ -240,7 +242,8 @@ export function getNextMissionRecommendation(ctx: WorldContext): {
   actionHref: string;
 } {
   const currentRegId = getCurrentRegionId(ctx);
-  const region = getRegion(currentRegId) || canonicalRegions[0];
+  const regions = getRegions(ctx.kind);
+  const region = getRegion(currentRegId, ctx.kind) || regions[0];
 
   // Check uncompleted chapters
   const uncompletedChapter = region.chapters.find((ch) => !isChapterCompleted(ch.id, ctx));
@@ -266,8 +269,8 @@ export function getNextMissionRecommendation(ctx: WorldContext): {
   }
 
   // Next region
-  const nextIdx = canonicalRegions.findIndex((r) => r.id === region.id) + 1;
-  const nextRegion = canonicalRegions[nextIdx] || region;
+  const nextIdx = regions.findIndex((r) => r.id === region.id) + 1;
+  const nextRegion = regions[nextIdx] || region;
   return {
     region: nextRegion,
     title: `Explore ${nextRegion.name}`,

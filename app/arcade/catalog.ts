@@ -32,6 +32,21 @@ export function defaultDifficultyForAge(age: number): DifficultyLevel {
   return 'expert';
 }
 
+/**
+ * Same as defaultDifficultyForAge, but floors teen accounts at 'hard' —
+ * a teen never lands on 'easy'/'medium' even if age data is missing or wrong.
+ */
+export function defaultDifficultyFor(profile: { kind: 'child' | 'teen'; age: number }): DifficultyLevel {
+  const base = defaultDifficultyForAge(profile.age);
+  if (profile.kind === 'teen' && (base === 'easy' || base === 'medium')) return 'hard';
+  return base;
+}
+
+/** Difficulty levels a player is allowed to pick — teens can't drop to easy/medium. */
+export function allowedDifficultiesFor(kind: 'child' | 'teen'): DifficultyLevel[] {
+  return kind === 'teen' ? DIFFICULTY_ORDER.filter((level) => level === 'hard' || level === 'expert') : DIFFICULTY_ORDER;
+}
+
 export const DIFFICULTY_LABEL: Record<DifficultyLevel, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' };
 
 /**
@@ -55,7 +70,7 @@ export const SCRAMBLE_WORD_POOLS: Record<DifficultyLevel, string[]> = {
   easy: ['NOAH', 'DAVID', 'MOSES', 'MARY', 'PETER', 'JOHN', 'ADAM', 'EVE'],
   medium: ['JERICHO', 'SAMUEL', 'ESTHER', 'DANIEL', 'GOLIATH', 'SHEPHERD', 'DISCIPLE'],
   hard: ['NEBUCHADNEZZAR', 'RESURRECTION', 'TABERNACLE', 'PHILISTINES', 'JERUSALEM'],
-  expert: ['TRANSFIGURATION', 'RIGHTEOUSNESS', 'MELCHIZEDEK', 'RECONCILIATION', 'SANCTIFICATION'],
+  expert: ['TRANSFIGURATION', 'RIGHTEOUSNESS', 'MELCHIZEDEK', 'RECONCILIATION', 'SANCTIFICATION', 'PROPITIATION', 'JUSTIFICATION', 'OMNISCIENCE', 'ESCHATOLOGY', 'INCARNATION'],
 };
 
 export const SCRAMBLE_ROUNDS_PER_SESSION = 5;
@@ -80,6 +95,9 @@ export const VERSE_POOLS: Record<DifficultyLevel, { reference: string; text: str
   expert: [
     { reference: 'Ephesians 2:8-9', text: 'For by grace you have been saved through faith, and that not of yourselves, it is the gift of God, not of works, so that no one may boast.' },
     { reference: 'Romans 12:2', text: 'Do not be conformed to this world, but be transformed by the renewal of your mind, so you may discern what is the good and acceptable and perfect will of God.' },
+    { reference: 'Hebrews 11:1', text: 'Now faith is the assurance of things hoped for, the conviction of things not seen.' },
+    { reference: 'Romans 8:38-39', text: 'For I am sure that neither death nor life, nor angels nor rulers, nor things present nor things to come, nor powers, nor height nor depth, nor anything else in all creation, will be able to separate us from the love of God in Christ Jesus our Lord.' },
+    { reference: '2 Corinthians 5:17', text: 'Therefore, if anyone is in Christ, he is a new creation. The old has passed away; behold, the new has come.' },
   ],
 };
 

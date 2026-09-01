@@ -25,6 +25,7 @@ import { getNextMissionRecommendation } from '../adventure/progression';
 import { loadWorldContext } from '../adventure/storage';
 import { getWallet } from '../lib/economy/wallet-service';
 import type { Wallet } from '../lib/economy/types';
+import TeenSidebar from './TeenSidebar';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Tab = 'home' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
@@ -464,6 +465,19 @@ export default function TeenDashboardPage() {
         const currentTeenId = savedId && teenList.some((t) => t.id === savedId) ? savedId : teenList[0]?.id || fallbackTeens[0].id;
         setActiveId(currentTeenId);
 
+        // Persist the resolved identity every time this effect runs, so
+        // other pages that independently call readActiveProfile() (e.g.
+        // /character, /adventure, /arcade) agree on who is logged in
+        // instead of falling back to the hardcoded demo profile.
+        const matchedForSession = teenList.find((t) => t.id === currentTeenId);
+        localStorage.setItem('lanternLionActiveChildId', String(currentTeenId));
+        localStorage.setItem('lanternLionTeenSession', JSON.stringify({
+          teenId: currentTeenId,
+          username: matchedForSession?.username || session?.username,
+          name: matchedForSession?.name || session?.name,
+          age: matchedForSession?.age || session?.age,
+        }));
+
         const teenModuleProgress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}')?.[currentTeenId] || {};
         const todaySet = getOrCreateTodaySet(currentTeenId, { moduleProgress: teenModuleProgress, masteredQuestIds: [], kind: 'teen' });
         setDailyQuestSummary({
@@ -496,6 +510,12 @@ export default function TeenDashboardPage() {
         } else {
           setWallet({ xp: progress.points, coins: w.coins || 45, gems: w.gems || 12 });
         }
+
+        // Arriving from a subpage's sidebar (e.g. /adventure) via
+        // /teen-dashboard?tab=journey should land on that tab.
+        const requestedTab = new URLSearchParams(window.location.search).get('tab') as Tab | null;
+        const validTabs: Tab[] = ['home', 'decision', 'cases', 'askword', 'learn', 'journey', 'profile'];
+        if (requestedTab && validTabs.includes(requestedTab)) setActiveTab(requestedTab);
       } catch { /* keep demo defaults */ }
       setHydrated(true);
     }, 0);
@@ -639,7 +659,7 @@ export default function TeenDashboardPage() {
 
   if (!hydrated) {
     return (
-      <main className="dashboard-loading" aria-live="polite">
+      <main className="dashboard-loading dashboard-loading-teen" aria-live="polite">
         <span />
         <p>Opening the Lion’s Den…</p>
       </main>
@@ -746,147 +766,22 @@ export default function TeenDashboardPage() {
       {/* ── APP BODY: SIDEBAR NAVIGATION + MAIN CANVAS ── */}
       <div className="teen-body-container">
         {/* ── LEFT SIDEBAR NAVIGATION DOCK ── */}
-        <aside className={`teen-sidebar ${mobileMenuOpen ? 'teen-sidebar-open' : ''}`}>
-          <div className="teen-sidebar-mobile-head">
-            <div className="teen-sidebar-mobile-title">
-              <strong>Lion’s Den Menu</strong>
-            </div>
-            <button
-              type="button"
-              className="teen-sidebar-close-btn"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-label="Close navigation"
-            >
-              ✕
-            </button>
-          </div>
-
-          <nav className="teen-sidebar-nav" aria-label="Teen Dashboard Navigation">
-            {/* 1. Today / Home */}
-            <button
-              type="button"
-              className={`teen-nav-item ${activeTab === 'home' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }}
-            >
-              <span className="teen-nav-icon">🏠</span>
-              <span>Today</span>
-            </button>
-
-            {/* 2. Adventure World */}
-            <Link
-              href="/adventure"
-              className="teen-nav-item"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="teen-nav-icon">🗺️</span>
-              <span>Adventure</span>
-            </Link>
-
-            {/* 3. Interactive Stories */}
-            <Link
-              href="/stories"
-              className="teen-nav-item"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="teen-nav-icon">📖</span>
-              <span>Stories</span>
-            </Link>
-
-            {/* 4. Lantern Arcade */}
-            <Link
-              href="/arcade"
-              className="teen-nav-item"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="teen-nav-icon">🎮</span>
-              <span>Arcade</span>
-            </Link>
-
-            {/* 5. Weekly Leagues */}
-            <Link
-              href="/leagues"
-              className="teen-nav-item"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="teen-nav-icon">🏆</span>
-              <span>Leagues</span>
-            </Link>
-
-            {/* 6. Decision Lab */}
-            <button
-              type="button"
-              className={`teen-nav-item ${activeTab === 'decision' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('decision'); setActiveScenario(null); setMobileMenuOpen(false); }}
-            >
-              <span className="teen-nav-icon">⚖️</span>
-              <span>Decision Lab</span>
-            </button>
-
-            {/* 7. Case Files */}
-            <button
-              type="button"
-              className={`teen-nav-item ${activeTab === 'cases' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('cases'); setActiveCase(null); setMobileMenuOpen(false); }}
-            >
-              <span className="teen-nav-icon">🔍</span>
-              <span>Case Files</span>
-            </button>
-
-            {/* 8. Ask the Word */}
-            <button
-              type="button"
-              className={`teen-nav-item ${activeTab === 'askword' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('askword'); setQuizStarted(false); setQuizDone(false); setMobileMenuOpen(false); }}
-            >
-              <span className="teen-nav-icon">⏱️</span>
-              <span>Ask the Word</span>
-            </button>
-
-            {/* 9. Learn & Notes */}
-            <button
-              type="button"
-              className={`teen-nav-item ${activeTab === 'learn' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('learn'); setMobileMenuOpen(false); }}
-            >
-              <span className="teen-nav-icon">📚</span>
-              <span>Learn &amp; Notes</span>
-            </button>
-
-            {/* 10. Scripture Journey */}
-            <button
-              type="button"
-              className={`teen-nav-item ${activeTab === 'journey' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('journey'); setMobileMenuOpen(false); }}
-            >
-              <span className="teen-nav-icon">🧭</span>
-              <span>Journey</span>
-            </button>
-
-            {/* 11. Profile & Security */}
-            <button
-              type="button"
-              className={`teen-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }}
-            >
-              <span className="teen-nav-icon">🧑</span>
-              <span>Profile &amp; PIN</span>
-            </button>
-          </nav>
-
-          {/* ── STATIC CHARACTER CARD AT BOTTOM OF SIDEBAR ── */}
-          <div className="teen-sidebar-static-character">
-            <Link href="/character" className="teen-static-character-link" onClick={() => setMobileMenuOpen(false)}>
-              <div className="teen-static-character-avatar">
-                <CharacterAvatar appearance={charAppearance} equipment={charEquipment} size="small" showPedestal={false} />
-              </div>
-              <div className="teen-static-character-info">
-                <p className="teen-char-kicker">⚔️ Character</p>
-                <strong>{charDisplayName}</strong>
-                <small>{level.name} · Lvl {Math.floor(points / 100) + 1}</small>
-              </div>
-            </Link>
-          </div>
-        </aside>
+        <TeenSidebar
+          activeItem={activeTab}
+          onTabSelect={(tab) => {
+            setActiveTab(tab);
+            if (tab === 'decision') setActiveScenario(null);
+            if (tab === 'cases') setActiveCase(null);
+            if (tab === 'askword') { setQuizStarted(false); setQuizDone(false); }
+          }}
+          mobileMenuOpen={mobileMenuOpen}
+          onCloseMobileMenu={() => setMobileMenuOpen(false)}
+          charAppearance={charAppearance}
+          charEquipment={charEquipment}
+          charDisplayName={charDisplayName}
+          levelName={level.name}
+          points={points}
+        />
 
         {/* ── MAIN CANVAS AREA ── */}
         <div className="teen-main-canvas">

@@ -9,6 +9,7 @@ const BossCompleteSchema = z.object({
   locationId: z.enum(['creation', 'eden', 'noah', 'egypt', 'wilderness', 'jerusalem', 'gospels', 'early-church']),
   bossId: z.string().min(1).max(64),
   score: z.number().int().min(1),
+  kind: z.enum(['child', 'teen']).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -23,8 +24,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { childId, locationId, bossId, score } = parsed.data;
-    const region = getRegion(locationId as RegionId);
+    const { childId, locationId, bossId, score, kind } = parsed.data;
+    const region = getRegion(locationId as RegionId, kind);
 
     if (!region || region.boss.id !== bossId) {
       return NextResponse.json(

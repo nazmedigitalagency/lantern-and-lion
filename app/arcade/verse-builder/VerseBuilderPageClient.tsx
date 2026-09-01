@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { hasActiveSession, readActiveProfile, type PlayerProfile } from '../../adventure/storage';
 import { pickRandomUnique, shuffle } from '../../lib/shuffle';
 import { DifficultyPicker, GameResultModal } from '../components';
-import { VERSE_POOLS, VERSE_ROUNDS_PER_SESSION, defaultDifficultyForAge } from '../catalog';
+import { VERSE_POOLS, VERSE_ROUNDS_PER_SESSION, allowedDifficultiesFor, defaultDifficultyFor } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
 import type { DifficultyLevel, GameOutcome } from '../types';
 
@@ -51,7 +51,7 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
       if (!hasActiveSession()) { window.location.href = '/'; return; }
       const activeProfile = readActiveProfile();
       setProfile(activeProfile);
-      setDifficulty(defaultDifficultyForAge(activeProfile.age));
+      setDifficulty(defaultDifficultyFor(activeProfile));
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -178,7 +178,7 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
             <span className="arcade-setup-icon" aria-hidden="true">🧱</span>
             <h1>Verse Builder</h1>
             <p>Arrange {VERSE_ROUNDS_PER_SESSION} verses in the right order. {best && `Your best score: ${best.score}.`}</p>
-            <DifficultyPicker value={difficulty} onChange={setDifficulty} />
+            <DifficultyPicker value={difficulty} onChange={setDifficulty} allowedLevels={profile ? allowedDifficultiesFor(profile.kind) : undefined} />
             <button type="button" className="button button-primary arcade-start-btn" onClick={startGame}>Start game</button>
           </section>
         )}

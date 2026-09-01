@@ -202,7 +202,17 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
   const body = (
     <>
       <div style={{ maxWidth: embedded ? 'none' : '1400px', width: '100%', margin: '0 auto', padding: '1.5rem 1rem', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: onClose ? 'space-between' : 'flex-end', marginBottom: '1rem', alignItems: 'center' }}>
+          {onClose && (
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={onClose}
+              style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
+            >
+              ✕ Close
+            </button>
+          )}
           <button
             type="button"
             className="button button-secondary"

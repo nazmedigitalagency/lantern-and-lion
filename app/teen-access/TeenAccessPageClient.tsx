@@ -137,7 +137,7 @@ export default function TeenAccessPage() {
     void validateLogin(username, pin);
   }
 
-  if (!hydrated) return <main className="dashboard-loading" aria-live="polite"><span /><p>Opening the Lion’s Den…</p></main>;
+  if (!hydrated) return <main className="dashboard-loading dashboard-loading-teen" aria-live="polite"><span /><p>Opening the Lion’s Den…</p></main>;
 
   return (
     <main className="teen-access-page">

@@ -177,6 +177,31 @@ export const STORY_BANK: StoryDefinition[] = [
       { 2: 'Think about what happened to Joseph right after he arrived in Egypt.', 5: 'Think about whose dream Joseph was asked to explain.' },
     ),
   },
+  {
+    id: 'elijah-horeb',
+    title: 'Elijah at Horeb',
+    description: 'After his greatest victory, the prophet collapses into despair — and God meets him in a whisper, not a storm.',
+    reference: '1 Kings 19:1-18',
+    ageGroup: 'teens',
+    difficulty: 'expert',
+    skills: ['sequencing', 'critical-thinking', 'bible-knowledge', 'reading'],
+    xpReward: 130,
+    summary: 'Right after his biggest victory, Elijah collapses into exhaustion and fear — and God doesn’t rebuke him for it. God feeds him, lets him rest, and finally meets him not in the dramatic wind or fire, but in a low whisper.',
+    events: events(
+      'elijah',
+      [
+        'Elijah defeats the prophets of Baal on Mount Carmel in a dramatic public victory.',
+        'Queen Jezebel threatens to kill him, and Elijah flees into the wilderness, afraid and exhausted.',
+        'Alone under a tree, Elijah asks God to let him die, convinced his mission has failed.',
+        'An angel wakes him twice to eat and rest before the long journey ahead.',
+        'Elijah travels forty days to Horeb, the mountain of God, and hides in a cave.',
+        'A great wind, an earthquake, and a fire pass by the mountain — but God is not in any of them.',
+        'Elijah hears a low whisper, and God asks him: "What are you doing here, Elijah?"',
+        'God gives Elijah a renewed mission, and tells him he is not as alone as he believes.',
+      ],
+      { 2: 'Think about what Elijah says he wants, right after the biggest win of his career.', 5: 'Notice what happens right before the whisper — and where God turns out not to be.' },
+    ),
+  },
 ];
 
 export function getStoryDefinition(id: string): StoryDefinition | undefined {
