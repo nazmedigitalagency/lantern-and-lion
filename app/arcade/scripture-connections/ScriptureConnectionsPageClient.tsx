@@ -31,7 +31,7 @@ const MISTAKE_PAUSE_MS = 1300;
 type Mode = 'daily' | 'practice';
 type ResolvedGroup = { group: ConnectionsGroup; way: 'solved' | 'revealed' };
 
-export default function ScriptureConnectionsPage() {
+export function ScriptureConnectionsGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'setup' | 'playing' | 'result'>('setup');
@@ -235,21 +235,7 @@ export default function ScriptureConnectionsPage() {
     );
   }
 
-  return (
-    <main className="adventure-page arcade-page">
-      <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Scripture Connections</strong>
-            <small>Lantern Arcade</small>
-          </span>
-        </Link>
-        <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
-        </div>
-      </header>
-
+  const body = (
       <div className="adv-body arcade-body arcade-game-body">
         {phase === 'setup' && (
           <section className="sc-setup">
@@ -352,11 +338,35 @@ export default function ScriptureConnectionsPage() {
             streak={streak}
             onPlayAgain={() => startPuzzle(mode)}
             onSwitchMode={() => setPhase('setup')}
+            {...(embedded && onClose ? { onBack: onClose } : {})}
           />
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page arcade-page">
+      <header className="child-topbar adv-topbar">
+        <Link href="/arcade" className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Scripture Connections</strong>
+            <small>Lantern Arcade</small>
+          </span>
+        </Link>
+        <div className="child-header-actions">
+          <Link href="/arcade" className="help-button">← Arcade</Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function ScriptureConnectionsPage() {
+  return <ScriptureConnectionsGame />;
 }
 
 function ConnectionsResultScreen({
@@ -367,6 +377,7 @@ function ConnectionsResultScreen({
   streak,
   onPlayAgain,
   onSwitchMode,
+  onBack,
 }: {
   result: { outcome: GameOutcome; wasRevealed: boolean };
   puzzle: PuzzleDefinition;
@@ -375,6 +386,7 @@ function ConnectionsResultScreen({
   streak: ReturnType<typeof getDailyStreak> | null;
   onPlayAgain: () => void;
   onSwitchMode: () => void;
+  onBack?: () => void;
 }) {
   const dialogRef = useDialogA11y<HTMLElement>(true, onSwitchMode);
   const { session, isNewBest } = result.outcome;
@@ -412,7 +424,11 @@ function ConnectionsResultScreen({
         <div className="arcade-result-actions">
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           <button type="button" className="button button-secondary" onClick={onSwitchMode}>Change mode</button>
-          <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          {onBack ? (
+            <button type="button" className="button button-secondary" onClick={onBack}>Back to Arcade</button>
+          ) : (
+            <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          )}
         </div>
       </section>
     </div>

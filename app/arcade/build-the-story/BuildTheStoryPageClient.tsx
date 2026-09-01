@@ -33,7 +33,7 @@ function speak(text: string) {
   window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
-export default function BuildTheStoryPage() {
+export function BuildTheStoryGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'browse' | 'playing' | 'result'>('browse');
@@ -229,21 +229,7 @@ export default function BuildTheStoryPage() {
     );
   }
 
-  return (
-    <main className="adventure-page arcade-page">
-      <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Build the Story</strong>
-            <small>Lantern Arcade</small>
-          </span>
-        </Link>
-        <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
-        </div>
-      </header>
-
+  const body = (
       <div className="adv-body arcade-body arcade-game-body">
         {phase === 'browse' && (
           <section className="bts-browse">
@@ -346,11 +332,35 @@ export default function BuildTheStoryPage() {
             best={best}
             onPlayAgain={() => openStory(story)}
             onChooseAnother={() => setPhase('browse')}
+            {...(embedded && onClose ? { onBack: onClose } : {})}
           />
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page arcade-page">
+      <header className="child-topbar adv-topbar">
+        <Link href="/arcade" className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Build the Story</strong>
+            <small>Lantern Arcade</small>
+          </span>
+        </Link>
+        <div className="child-header-actions">
+          <Link href="/arcade" className="help-button">← Arcade</Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function BuildTheStoryPage() {
+  return <BuildTheStoryGame />;
 }
 
 function StoryResultScreen({
@@ -359,12 +369,14 @@ function StoryResultScreen({
   best,
   onPlayAgain,
   onChooseAnother,
+  onBack,
 }: {
   outcome: GameOutcome;
   story: StoryDefinition;
   best: ReturnType<typeof getPersonalBest>;
   onPlayAgain: () => void;
   onChooseAnother: () => void;
+  onBack?: () => void;
 }) {
   const dialogRef = useDialogA11y<HTMLElement>(true, onChooseAnother);
   const { session, isNewBest, previousBest } = outcome;
@@ -400,7 +412,11 @@ function StoryResultScreen({
         <div className="arcade-result-actions">
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           <button type="button" className="button button-secondary" onClick={onChooseAnother}>Choose another story</button>
-          <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          {onBack ? (
+            <button type="button" className="button button-secondary" onClick={onBack}>Back to Arcade</button>
+          ) : (
+            <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          )}
         </div>
       </section>
     </div>

@@ -40,7 +40,7 @@ function speak(text: string) {
 
 type Subphase = 'clues' | 'question' | 'final';
 
-export default function BibleDetectivePage() {
+export function BibleDetectiveGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'browse' | 'case' | 'result'>('browse');
@@ -291,21 +291,7 @@ export default function BibleDetectivePage() {
     );
   }
 
-  return (
-    <main className="adventure-page arcade-page">
-      <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Bible Detective</strong>
-            <small>Lantern Arcade</small>
-          </span>
-        </Link>
-        <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
-        </div>
-      </header>
-
+  const body = (
       <div className="adv-body arcade-body arcade-game-body">
         {phase === 'browse' && (
           <section className="bd-browse">
@@ -439,11 +425,35 @@ export default function BibleDetectivePage() {
             badgeEarned={result.badgeEarned}
             onPlayAgain={() => openCase(caseDef)}
             onChooseAnother={() => setPhase('browse')}
+            {...(embedded && onClose ? { onBack: onClose } : {})}
           />
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page arcade-page">
+      <header className="child-topbar adv-topbar">
+        <Link href="/arcade" className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Bible Detective</strong>
+            <small>Lantern Arcade</small>
+          </span>
+        </Link>
+        <div className="child-header-actions">
+          <Link href="/arcade" className="help-button">← Arcade</Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function BibleDetectivePage() {
+  return <BibleDetectiveGame />;
 }
 
 function CaseResultScreen({
@@ -453,6 +463,7 @@ function CaseResultScreen({
   badgeEarned,
   onPlayAgain,
   onChooseAnother,
+  onBack,
 }: {
   outcome: GameOutcome;
   caseDef: CaseDefinition;
@@ -460,6 +471,7 @@ function CaseResultScreen({
   badgeEarned: boolean;
   onPlayAgain: () => void;
   onChooseAnother: () => void;
+  onBack?: () => void;
 }) {
   const dialogRef = useDialogA11y<HTMLElement>(true, onChooseAnother);
   const { session, isNewBest } = outcome;
@@ -491,7 +503,11 @@ function CaseResultScreen({
         <div className="arcade-result-actions">
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           <button type="button" className="button button-secondary" onClick={onChooseAnother}>Choose another case</button>
-          <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          {onBack ? (
+            <button type="button" className="button button-secondary" onClick={onBack}>Back to Arcade</button>
+          ) : (
+            <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          )}
         </div>
       </section>
     </div>

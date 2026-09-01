@@ -23,7 +23,7 @@ const GAME_DEF = getGameDefinition('memory-match');
 const MISMATCH_PAUSE_MS = 800;
 const MATCH_PAUSE_MS = 450;
 
-export default function MemoryMatchPage() {
+export function MemoryMatchGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'setup' | 'playing' | 'result'>('setup');
@@ -152,21 +152,7 @@ export default function MemoryMatchPage() {
     );
   }
 
-  return (
-    <main className="adventure-page arcade-page">
-      <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Memory Match</strong>
-            <small>Lantern Arcade</small>
-          </span>
-        </Link>
-        <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
-        </div>
-      </header>
-
+  const body = (
       <div className="adv-body arcade-body arcade-game-body">
         {phase === 'setup' && (
           <section className="arcade-setup-card">
@@ -218,11 +204,35 @@ export default function MemoryMatchPage() {
             best={getPersonalBest(profile.id, 'memory-match')}
             onPlayAgain={startGame}
             onChangeDifficulty={() => setPhase('setup')}
+            {...(embedded && onClose ? { onBack: onClose } : {})}
           />
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page arcade-page">
+      <header className="child-topbar adv-topbar">
+        <Link href="/arcade" className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Memory Match</strong>
+            <small>Lantern Arcade</small>
+          </span>
+        </Link>
+        <div className="child-header-actions">
+          <Link href="/arcade" className="help-button">← Arcade</Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function MemoryMatchPage() {
+  return <MemoryMatchGame />;
 }
 
 function MemoryResultScreen({
@@ -230,11 +240,13 @@ function MemoryResultScreen({
   best,
   onPlayAgain,
   onChangeDifficulty,
+  onBack,
 }: {
   outcome: GameOutcome;
   best: ReturnType<typeof getPersonalBest>;
   onPlayAgain: () => void;
   onChangeDifficulty: () => void;
+  onBack?: () => void;
 }) {
   const dialogRef = useDialogA11y<HTMLElement>(true, onChangeDifficulty);
   const { session, isNewBest, previousBest } = outcome;
@@ -265,7 +277,11 @@ function MemoryResultScreen({
         <div className="arcade-result-actions">
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           <button type="button" className="button button-secondary" onClick={onChangeDifficulty}>Change difficulty</button>
-          <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          {onBack ? (
+            <button type="button" className="button button-secondary" onClick={onBack}>Back to Arcade</button>
+          ) : (
+            <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+          )}
         </div>
       </section>
     </div>

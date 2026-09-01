@@ -24,7 +24,7 @@ function pickWords(difficulty: DifficultyLevel, count: number): string[] {
   return pickRandomUnique(SCRAMBLE_WORD_POOLS[difficulty], count);
 }
 
-export default function ScriptureScramblePage() {
+export function ScriptureScrambleGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'setup' | 'playing' | 'result'>('setup');
@@ -160,21 +160,7 @@ export default function ScriptureScramblePage() {
     );
   }
 
-  return (
-    <main className="adventure-page arcade-page">
-      <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
-          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
-          <span>
-            <strong>Scripture Scramble</strong>
-            <small>Lantern Arcade</small>
-          </span>
-        </Link>
-        <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
-        </div>
-      </header>
-
+  const body = (
       <div className="adv-body arcade-body arcade-game-body">
         {phase === 'setup' && (
           <section className="arcade-setup-card">
@@ -229,10 +215,33 @@ export default function ScriptureScramblePage() {
             xpEarned={outcome.session.xpEarned}
             coinsEarned={outcome.session.coinsEarned}
             onPlayAgain={() => setPhase('setup')}
-            backHref="/arcade"
+            {...(embedded && onClose ? { onBack: onClose } : { backHref: '/arcade' })}
           />
         )}
       </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="adventure-page arcade-page">
+      <header className="child-topbar adv-topbar">
+        <Link href="/arcade" className="child-logo">
+          <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
+          <span>
+            <strong>Scripture Scramble</strong>
+            <small>Lantern Arcade</small>
+          </span>
+        </Link>
+        <div className="child-header-actions">
+          <Link href="/arcade" className="help-button">← Arcade</Link>
+        </div>
+      </header>
+      {body}
     </main>
   );
+}
+
+export default function ScriptureScramblePage() {
+  return <ScriptureScrambleGame />;
 }
