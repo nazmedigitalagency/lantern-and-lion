@@ -27,6 +27,7 @@ import { awardCoins, awardXP, getWallet } from '../lib/economy/wallet-service';
 import type { Wallet } from '../lib/economy/types';
 import { signOutOfPersona } from '../lib/session';
 import { useDialogA11y } from '../lib/use-dialog';
+import LanternCodesPanel from '../lib/codes/LanternCodesPanel';
 import TeenSidebar from './TeenSidebar';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
@@ -1523,6 +1524,10 @@ export default function TeenDashboardPage() {
                     </Link>
                   </div>
                 </div>
+              </section>
+
+              <section className="teen-panel">
+                <LanternCodesPanel variant="teen" />
               </section>
 
               <section className="teen-panel">

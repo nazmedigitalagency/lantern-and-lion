@@ -7,8 +7,9 @@ import { useEffect, useState } from 'react';
 import { getTierForXp, LEAGUE_TIERS } from '../lib/leagues/config';
 import { canonicalRegions } from '../adventure/world-data';
 import { signOutOfPersona } from '../lib/session';
+import StudentsPanel from './StudentsPanel';
 
-type Page = 'overview' | 'classes' | 'assignments' | 'messages' | 'safety';
+type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
 type Classroom = { id: number; name: string; ageBand: string; code: string; students: Student[]; teacherEmail: string; teacherName: string };
 type Assignment = { id: number; classId: number; title: string; due: string; completed: number };
@@ -312,6 +313,7 @@ export default function TeacherDashboardPage() {
 
   const nav: Array<[Page, string, string]> = [
     ['overview', 'O', 'Overview'],
+    ['students', 'St', 'My Students'],
     ['classes', 'C', 'Classes'],
     ['assignments', 'A', 'Assignments'],
     ['messages', 'M', 'Parent messages'],
@@ -603,23 +605,24 @@ export default function TeacherDashboardPage() {
                       ))}
                     </div>
 
-                    <div style={{ marginTop: '1.25rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.5rem 0' }}>
+                    <div style={{ margin: '1.5rem 20px 0', padding: '1.1rem 0 1.4rem', borderTop: '1px solid #e2e8f0' }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.75rem 0' }}>
                         🗺️ Bible Adventure World — 8 Canonical Lands
                       </p>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
                         {canonicalRegions.map((reg) => (
                           <span
                             key={reg.id}
                             style={{
                               background: '#f8fafc',
                               border: '1px solid #cbd5e1',
-                              borderRadius: '6px',
-                              padding: '0.25rem 0.5rem',
-                              fontSize: '0.75rem',
+                              borderRadius: '8px',
+                              padding: '0.45rem 0.85rem',
+                              fontSize: '0.8rem',
+                              lineHeight: 1.4,
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '0.3rem',
+                              gap: '0.45rem',
                             }}
                           >
                             <span aria-hidden="true">{reg.icon}</span>
@@ -637,6 +640,17 @@ export default function TeacherDashboardPage() {
                     <button onClick={() => setPage('safety')}>Review help flags</button>
                   </aside>
                 </div>
+              </div>
+            )}
+
+            {page === 'students' && (
+              <div className="teacher-content">
+                <div className="teacher-title">
+                  <p className="teacher-kicker">My Students</p>
+                  <h1>Every learner, at a glance.</h1>
+                  <p>See who&apos;s active, who&apos;s progressing, and who could use a check-in — across every class you teach.</p>
+                </div>
+                <StudentsPanel onGoToClasses={() => setPage('classes')} />
               </div>
             )}
 

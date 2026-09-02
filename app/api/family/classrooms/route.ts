@@ -17,7 +17,7 @@ export async function GET() {
 
   const { data: memberships } = await admin
     .from('classroom_students')
-    .select('classroom_id, child_id, approved, needs_help, joined_at, classrooms(id, name)')
+    .select('classroom_id, child_id, approved, needs_help, joined_at, requested_by, classrooms(id, name)')
     .in('child_id', childIds);
 
   const result = (memberships || []).map((m) => ({
@@ -28,6 +28,7 @@ export async function GET() {
     approved: m.approved,
     needsHelp: m.needs_help,
     joinedAt: m.joined_at,
+    requestedBy: (m.requested_by as 'child' | 'teacher' | undefined) || 'child',
   }));
 
   return NextResponse.json({ memberships: result });

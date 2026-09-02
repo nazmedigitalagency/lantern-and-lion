@@ -37,6 +37,7 @@ import { CharacterBuilder } from '../character/CharacterPageClient';
 import { STORY_CATALOG } from '../stories/catalog';
 import { signOutOfPersona } from '../lib/session';
 import { useDialogA11y } from '../lib/use-dialog';
+import LanternCodesPanel from '../lib/codes/LanternCodesPanel';
 
 // Every implemented arcade game now opens as an in-dashboard popup instead
 // of navigating to its own page (see VerseBuilderGame's `embedded` mode).
@@ -93,6 +94,9 @@ export default function ChildDashboardPage() {
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const closeFamilyModal = useCallback(() => setShowFamilyModal(false), []);
   const familyModalRef = useDialogA11y<HTMLDivElement>(showFamilyModal, closeFamilyModal);
+  const [showCodesModal, setShowCodesModal] = useState(false);
+  const closeCodesModal = useCallback(() => setShowCodesModal(false), []);
+  const codesModalRef = useDialogA11y<HTMLDivElement>(showCodesModal, closeCodesModal);
   const [hydrated, setHydrated] = useState(false);
   const [helpNotice, setHelpNotice] = useState('');
   const [filter, setFilter] = useState<ModuleFilter>('All lessons');
@@ -484,6 +488,13 @@ export default function ChildDashboardPage() {
                   onClick={() => { setShowFamilyModal(true); setShowProfiles(false); }}
                 >
                   👨‍👩‍👧 Family Progress Overview
+                </button>
+                <button
+                  type="button"
+                  className="child-family-summary-btn"
+                  onClick={() => { setShowCodesModal(true); setShowProfiles(false); }}
+                >
+                  🔑 My Lantern &amp; Lion Codes
                 </button>
                 <Link
                   href="/child-access"
@@ -1058,6 +1069,21 @@ export default function ChildDashboardPage() {
             </p>
             <button type="button" className="family-modal-close-btn" onClick={closeFamilyModal}>
               Close Overview
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MY LANTERN & LION CODES MODAL ── */}
+      {showCodesModal && (
+        <div className="help-overlay" role="dialog" aria-modal="true">
+          <div ref={codesModalRef} className="help-dialog codes-modal-dialog">
+            <button type="button" className="close-help" onClick={closeCodesModal} aria-label="Close">
+              ✕
+            </button>
+            <LanternCodesPanel variant="child" />
+            <button type="button" className="family-modal-close-btn" onClick={closeCodesModal}>
+              Close
             </button>
           </div>
         </div>

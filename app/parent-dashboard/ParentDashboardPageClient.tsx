@@ -142,7 +142,7 @@ export default function ParentDashboardPage() {
   const [activityTimezone, setActivityTimezone] = useState('UTC');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedActivityChild, setSelectedActivityChild] = useState<string | null>(null);
-  const [classMemberships, setClassMemberships] = useState<{ classroomId: string; classroomName: string; childId: string; childName: string; approved: boolean }[]>([]);
+  const [classMemberships, setClassMemberships] = useState<{ classroomId: string; classroomName: string; childId: string; childName: string; approved: boolean; requestedBy?: 'child' | 'teacher' }[]>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -465,7 +465,11 @@ export default function ParentDashboardPage() {
                 <ul className="parent-notification-list">
                   {classMemberships.filter((m) => !m.approved).map((m) => (
                     <li key={`${m.classroomId}-${m.childId}`}>
-                      <strong>{m.childName}</strong> wants to join <strong>{m.classroomName}</strong>
+                      {m.requestedBy === 'teacher' ? (
+                        <>A teacher wants to add <strong>{m.childName}</strong> to <strong>{m.classroomName}</strong></>
+                      ) : (
+                        <><strong>{m.childName}</strong> wants to join <strong>{m.classroomName}</strong></>
+                      )}
                       <div style={{ marginTop: 8 }}>
                         <button className="button button-primary" onClick={() => approveClassroom(m.classroomId, m.childId, true)}>Approve</button>
                       </div>
