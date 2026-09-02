@@ -5,6 +5,7 @@ import type { AssignmentBucket, AssignmentDetail, AssignmentListItem, Submission
 import { isAutoScoredType } from '../lib/assignments/types';
 import CreateAssignmentModal from './CreateAssignmentModal';
 import SaveTemplateModal from './SaveTemplateModal';
+import PublishAssignmentModal from './PublishAssignmentModal';
 
 const BUCKET_TABS: { value: AssignmentBucket; label: string }[] = [
   { value: 'draft', label: 'Drafts' },
@@ -143,6 +144,7 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
   const [duplicateBusy, setDuplicateBusy] = useState(false);
   const [duplicated, setDuplicated] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
 
   function load() {
     fetch(`/api/assignments/${assignmentId}`)
@@ -242,10 +244,22 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
           </p>
         </div>
         <div className="assignment-detail-actions">
+          {detail.status === 'draft' && (
+            <button type="button" className="assignment-publish-button" onClick={() => setPublishOpen(true)}>Publish</button>
+          )}
           <button type="button" onClick={() => setSaveTemplateOpen(true)}>Save as template</button>
           <button type="button" onClick={duplicate} disabled={duplicateBusy}>{duplicateBusy ? 'Duplicating…' : duplicated ? 'Duplicated ✓' : 'Duplicate'}</button>
         </div>
       </header>
+
+      {publishOpen && (
+        <PublishAssignmentModal
+          assignmentId={assignmentId}
+          defaultClassroomId={detail.classroom?.id || null}
+          onClose={() => setPublishOpen(false)}
+          onPublished={() => { setPublishOpen(false); load(); }}
+        />
+      )}
 
       {saveTemplateOpen && (
         <SaveTemplateModal
