@@ -33,7 +33,7 @@ function speak(text: string) {
   window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
-export function BuildTheStoryGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
+export function BuildTheStoryGame({ embedded = false, onClose, presetStoryId }: { embedded?: boolean; onClose?: () => void; presetStoryId?: string } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'browse' | 'playing' | 'result'>('browse');
@@ -59,8 +59,13 @@ export function BuildTheStoryGame({ embedded = false, onClose }: { embedded?: bo
       setProfile(activeProfile);
       setAgeFilter(ageBandForAge(activeProfile.age));
       setHydrated(true);
+      if (presetStoryId) {
+        const preset = STORY_BANK.find((s) => s.id === presetStoryId);
+        if (preset) openStory(preset);
+      }
     }, 0);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function openStory(def: StoryDefinition) {

@@ -43,6 +43,34 @@ import {
 import { canonicalRegions, getQuestsForRegion, getRegion, getRegions } from './world-data';
 import type { RegionId, RegionStatus, StoryChapter } from './types';
 import TeenSidebar from '../teen-dashboard/TeenSidebar';
+import { VerseBuilderGame } from '../arcade/verse-builder/VerseBuilderPageClient';
+import { ScriptureMazeGame } from '../arcade/scripture-maze/ScriptureMazePageClient';
+import { ScriptureScrambleGame } from '../arcade/scripture-scramble/ScriptureScramblePageClient';
+import { LightningQuizGame } from '../arcade/lightning-quiz/LightningQuizPageClient';
+import { MemoryMatchGame } from '../arcade/memory-match/MemoryMatchPageClient';
+import { BuildTheStoryGame } from '../arcade/build-the-story/BuildTheStoryPageClient';
+import { BibleDetectiveGame } from '../arcade/bible-detective/BibleDetectivePageClient';
+import { ScriptureConnectionsGame } from '../arcade/scripture-connections/ScriptureConnectionsPageClient';
+
+// A quest's linked arcade game now always opens in place (as a popup over the
+// region view) instead of navigating to its own page — so "back"/"close"
+// always returns to the region the player was just in, never a different
+// page. `contentId` (when the target game supports it) launches that exact
+// story/case directly, skipping the game's own picker screen.
+function renderQuestGameModal(href: string, contentId: string | undefined, onClose: () => void) {
+  const gameId = href.replace('/arcade/', '');
+  switch (gameId) {
+    case 'verse-builder': return <VerseBuilderGame embedded onClose={onClose} />;
+    case 'scripture-maze': return <ScriptureMazeGame embedded onClose={onClose} />;
+    case 'scripture-scramble': return <ScriptureScrambleGame embedded onClose={onClose} />;
+    case 'lightning-quiz': return <LightningQuizGame embedded onClose={onClose} />;
+    case 'memory-match': return <MemoryMatchGame embedded onClose={onClose} />;
+    case 'build-the-story': return <BuildTheStoryGame embedded onClose={onClose} presetStoryId={contentId} />;
+    case 'bible-detective': return <BibleDetectiveGame embedded onClose={onClose} presetCaseId={contentId} />;
+    case 'scripture-connections': return <ScriptureConnectionsGame embedded onClose={onClose} />;
+    default: return null;
+  }
+}
 
 // Teen ("Lion's Den") vs. child color tokens for this page's inline styles.
 // Kept as a small palette object rather than a class-based theme since most
@@ -98,6 +126,16 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
   const [showPouch, setShowPouch] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeGameModal, setActiveGameModal] = useState<{ href: string; contentId?: string } | null>(null);
+  const launchQuestGame = useCallback((linked: { href: string; contentId?: string }) => {
+    setShowRegionModal(false);
+    setActiveGameModal({ href: linked.href, contentId: linked.contentId });
+  }, []);
+  const closeGameModal = useCallback(() => {
+    setActiveGameModal(null);
+    setShowRegionModal(true);
+  }, []);
+  const gameModalRef = useDialogA11y<HTMLDivElement>(!!activeGameModal, closeGameModal);
 
   function refresh() {
     const active = readActiveProfile();
@@ -550,15 +588,20 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
                           estimatedMinutes={qMins}
                           onSelect={() => {
                             if (quest.linkedArcadeGame) {
-                              router.push(quest.linkedArcadeGame.href);
+                              launchQuestGame(quest.linkedArcadeGame);
                             }
                           }}
                         />
                         {quest.linkedArcadeGame && (
                           <div style={{ marginTop: '0.75rem' }}>
-                            <Link href={quest.linkedArcadeGame.href} className="button button-primary" style={{ fontSize: '0.8rem', padding: '0.6rem 0.8rem', width: '100%', justifyContent: 'center', ...ctaStyle }}>
+                            <button
+                              type="button"
+                              className="button button-primary"
+                              style={{ fontSize: '0.8rem', padding: '0.6rem 0.8rem', width: '100%', justifyContent: 'center', ...ctaStyle }}
+                              onClick={() => launchQuestGame(quest.linkedArcadeGame!)}
+                            >
                               Launch Game →
-                            </Link>
+                            </button>
                           </div>
                         )}
                       </div>
@@ -662,6 +705,15 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           secrets={[]}
           onClose={() => setShowPouch(false)}
         />
+      )}
+
+      {activeGameModal && (
+        <div className="help-overlay" role="presentation" onClick={closeGameModal}>
+          <div ref={gameModalRef} className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="close-help game-modal-close" aria-label="Close game" onClick={closeGameModal}>✕</button>
+            {renderQuestGameModal(activeGameModal.href, activeGameModal.contentId, closeGameModal)}
+          </div>
+        </div>
       )}
 
       {levelUpEvent && (

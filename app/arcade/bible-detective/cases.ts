@@ -411,6 +411,328 @@ export const CASE_BANK: CaseDefinition[] = [
     explanation:
       'The younger son’s rebellion is obvious; the older son’s is quieter but just as real — a resentful, transactional relationship with his father that left him just as distant, without ever leaving home. Jesus leaves his decision unresolved on purpose, aiming the question at whoever is listening and grumbling like he was.',
   },
+  {
+    id: 'genesis-vs-babylon',
+    title: 'Genesis vs. Babylon: Manuscript Case File',
+    intro: 'Every ancient culture near Israel had its own origin story — gods fighting monsters, humans made as slave labor, a chaotic universe with no real order. Then Genesis 1 shows up, telling a strikingly different story. Detective, was Genesis just borrowing from its neighbors, or answering them?',
+    reference: 'Genesis 1:1-2:3',
+    ageGroup: 'teens',
+    difficulty: 'expert',
+    skills: ['critical-thinking', 'reading', 'bible-knowledge', 'attention'],
+    xpReward: 130,
+    stages: [
+      {
+        id: 'stage-1',
+        clues: [
+          { id: 'gen-character-1', type: 'character', title: 'The Rival Account', content: 'The Babylonian creation myth Enuma Elish describes the world formed from the corpse of a defeated goddess, and humans created as an afterthought — slave labor to free the gods from work.' },
+          { id: 'gen-scripture-1', type: 'scripture', title: 'A Different Opening Line', content: '"In the beginning, God created the heavens and the earth." (Genesis 1:1) — one sovereign God, speaking creation into being by word alone, with no divine battle at all.' },
+        ],
+        question: {
+          id: 'q1',
+          prompt: 'What is the most significant structural difference between the two accounts?',
+          options: [
+            'Genesis has more chapters',
+            'Genesis presents one sovereign God speaking calmly, not many gods locked in violent conflict',
+            'Genesis was written in a different language',
+            'There is no meaningful difference',
+          ],
+          correctIndex: 1,
+          hint: 'Compare how each account explains the mechanism of creation — conflict versus command.',
+        },
+      },
+      {
+        id: 'stage-2',
+        clues: [
+          { id: 'gen-object-1', type: 'object', title: 'The Sun and Moon, Demoted', content: 'Genesis never names the sun and moon — it calls them "the greater light" and "the lesser light." Neighboring cultures worshiped the sun and moon as gods.' },
+          { id: 'gen-timeline-1', type: 'timeline', title: 'Humanity’s Purpose', content: 'Genesis 1:27-28 says humans are made "in the image of God" and given a role of dignity, ruling and caring for creation — not created as an afterthought for slave labor.' },
+        ],
+        question: {
+          id: 'q2',
+          prompt: 'Why might Genesis deliberately avoid naming the sun and moon?',
+          options: [
+            'The author didn’t know their names',
+            'To strip them of the divine status neighboring cultures gave them — they are objects God made, not gods to worship',
+            'It was a scribal accident',
+            'Because the sun and moon are unimportant in the story',
+          ],
+          correctIndex: 1,
+          hint: 'Think about who was worshiping the sun and moon in the ancient world Genesis was written into — and what the text refuses to call them.',
+        },
+      },
+      {
+        id: 'stage-3',
+        clues: [
+          { id: 'gen-scripture-2', type: 'scripture', title: 'The Refrain', content: 'Six times, Genesis 1 repeats: "And God saw that it was good." The account ends: "God saw all that he had made, and it was very good."' },
+        ],
+        question: {
+          id: 'q3',
+          prompt: 'Taken together, what does the evidence suggest Genesis 1 is doing?',
+          options: [
+            'Copying Babylonian mythology with minor edits',
+            'Deliberately confronting the rival origin stories of its day with a claim of one good God, ordered creation, and human dignity',
+            'Providing a modern scientific account of the universe’s formation',
+            'Making no claims about neighboring religions at all',
+          ],
+          correctIndex: 1,
+          hint: 'Weigh every clue together — the calm sovereignty, the demoted sun and moon, and the repeated "it was good."',
+        },
+      },
+    ],
+    finalAnswer: {
+      prompt: 'Detective, what is Genesis 1 actually doing in its ancient context?',
+      options: [
+        'Answering rival origin myths point by point with a claim of order, goodness, and human dignity under one sovereign God',
+        'Simply retelling the Babylonian story with a new god’s name inserted',
+        'Avoiding any engagement with surrounding cultures',
+        'Presenting itself as a modern scientific textbook',
+      ],
+      correctIndex: 0,
+      hint: 'Consider the pattern across all three clues — this isn’t a story written in a vacuum.',
+    },
+    explanation:
+      'Read against its ancient backdrop, Genesis 1 reads less like folklore and more like a polemic — a calm, structured, repeated rebuttal of the chaotic, violent origin stories surrounding Israel. Where neighboring myths gave a fractured universe and disposable humans, Genesis insists on one good God, an ordered world, and people made to bear his image.',
+  },
+  {
+    id: 'serpents-logic',
+    title: 'Cross-Examining the Serpent’s Logic',
+    intro: 'Every good detective knows a con works by twisting something true. Detective, put the serpent’s exact words in Genesis 3 on the stand — not the version people remember, but what the text actually says — and find the seam where truth became temptation.',
+    reference: 'Genesis 3:1-7',
+    ageGroup: 'teens',
+    difficulty: 'expert',
+    skills: ['critical-thinking', 'reading', 'bible-knowledge', 'attention'],
+    xpReward: 130,
+    stages: [
+      {
+        id: 'stage-1',
+        clues: [
+          { id: 'serpent-scripture-1', type: 'scripture', title: 'The Opening Question', content: '"Did God actually say, \'You shall not eat of any tree in the garden\'?" (Genesis 3:1) — God had actually only restricted one tree, not "any tree."' },
+        ],
+        question: {
+          id: 'q1',
+          prompt: 'What rhetorical move does the serpent make in his very first line?',
+          options: [
+            'He states God’s command accurately, then argues against it',
+            'He exaggerates God’s command into something far more restrictive than it was, inviting Eve to correct him — and re-litigate it',
+            'He directly denies God exists',
+            'He asks a completely neutral, unloaded question',
+          ],
+          correctIndex: 1,
+          hint: 'Compare what God actually said in Genesis 2:16-17 to how the serpent phrases the question.',
+        },
+      },
+      {
+        id: 'stage-2',
+        clues: [
+          { id: 'serpent-character-1', type: 'character', title: 'Eve’s Reply', content: 'Eve responds: "...but God said, \'You shall not eat of it or touch it, lest you die.\'" — adding the word "touch," which God never said.' },
+          { id: 'serpent-scripture-2', type: 'scripture', title: 'The Direct Denial', content: '"You will not surely die," the serpent says next — a flat contradiction of God’s stated warning in Genesis 2:17.' },
+        ],
+        question: {
+          id: 'q2',
+          prompt: 'What does Eve’s addition of the word "touch" reveal about how the conversation is unfolding?',
+          options: [
+            'It proves Eve misremembered or overstated the command herself, and the serpent exploits that opening',
+            'It proves the serpent was right all along',
+            'It shows Eve was lying deliberately',
+            'It has no bearing on the exchange',
+          ],
+          correctIndex: 0,
+          hint: 'Notice that Eve’s version of the command is already slightly different from what God said in Genesis 2:16-17 — before the serpent even denies it.',
+        },
+      },
+      {
+        id: 'stage-3',
+        clues: [
+          { id: 'serpent-object-1', type: 'object', title: 'The Reframe', content: '"For God knows that when you eat of it your eyes will be opened, and you will be like God, knowing good and evil." (Genesis 3:5) — reframing obedience as God withholding something good from them out of insecurity.' },
+        ],
+        question: {
+          id: 'q3',
+          prompt: 'What is the final move in the serpent’s three-step tactic?',
+          options: [
+            'Distort the command, deny the consequence, then reframe God’s motive as selfish rather than protective',
+            'Offer clear scientific proof',
+            'Threaten Eve directly',
+            'Quote Scripture accurately to build trust',
+          ],
+          correctIndex: 0,
+          hint: 'Trace the sequence: first the command gets exaggerated, then the warning gets denied, then God’s character itself gets questioned.',
+        },
+      },
+    ],
+    finalAnswer: {
+      prompt: 'Detective, what is the serpent’s core tactic across the whole exchange?',
+      options: [
+        'Honest, straightforward disagreement with God’s command',
+        'A three-step manipulation: distort what God said, deny what he warned, then recast his character as withholding rather than good',
+        'A neutral philosophical debate with no persuasive intent',
+        'Physical intimidation',
+      ],
+      correctIndex: 1,
+      hint: 'Weigh all three clues in sequence — this isn’t one lie, it’s a built argument.',
+    },
+    explanation:
+      'The serpent never simply lies outright at first — he exaggerates the command, lets the exaggeration go uncorrected, denies the stated consequence, and finally reframes obedience itself as God’s insecurity rather than his care. It’s a pattern worth recognizing anywhere truth gets bent just enough to sound reasonable.',
+  },
+  {
+    id: 'forgotten-scroll',
+    title: 'The Forgotten Scroll Investigation',
+    intro: 'During temple repairs, a workman finds a scroll that had apparently been lost for generations. When the young king hears it read aloud, he tears his robes in grief. Detective, work out what was actually in that scroll — and why a forgotten document could shake a kingdom.',
+    reference: '2 Kings 22:1-23:3',
+    ageGroup: 'teens',
+    difficulty: 'expert',
+    skills: ['critical-thinking', 'reading', 'bible-knowledge', 'attention'],
+    xpReward: 150,
+    stages: [
+      {
+        id: 'stage-1',
+        clues: [
+          { id: 'josiah-character-1', type: 'character', title: 'The Boy King', content: 'Josiah became king at age eight, after generations of his predecessors led Judah into idol worship. By his eighteenth year, he ordered the long-neglected temple to be repaired.' },
+          { id: 'josiah-object-1', type: 'object', title: 'The Discovery', content: 'While clearing out the temple, the high priest Hilkiah found "the Book of the Law" — likely Deuteronomy — and sent it to be read to the king.' },
+        ],
+        question: {
+          id: 'q1',
+          prompt: 'What does it suggest that a core scroll of Israel’s law had to be "found," as if lost?',
+          options: [
+            'It suggests the document never existed until this moment',
+            'It suggests generations of neglect had let Israel’s own covenant documents fall out of use entirely',
+            'It suggests the priests were lying about finding it',
+            'It has no significance for understanding the period',
+          ],
+          correctIndex: 1,
+          hint: 'Consider what it means for a nation to lose track of its own founding legal and covenant document for that long.',
+        },
+      },
+      {
+        id: 'stage-2',
+        clues: [
+          { id: 'josiah-timeline-1', type: 'timeline', title: 'The King’s Reaction', content: 'When the scroll was read to Josiah, he tore his royal robes — a public sign of grief and alarm — and said: "great is the wrath of the Lord that is kindled against us, because our fathers have not obeyed."' },
+        ],
+        question: {
+          id: 'q2',
+          prompt: 'Why would hearing an old legal document produce that strong a reaction?',
+          options: [
+            'Josiah was performing for the court, without real conviction',
+            'The scroll revealed just how far the nation’s actual practice had drifted from what it had originally agreed to before God',
+            'The scroll contained a new law never agreed to before',
+            'Josiah disagreed with the scroll’s contents',
+          ],
+          correctIndex: 1,
+          hint: 'Think about the gap between what the nation had been doing under recent kings and what this rediscovered document required.',
+        },
+      },
+      {
+        id: 'stage-3',
+        clues: [
+          { id: 'josiah-scripture-1', type: 'scripture', title: 'The King’s Response', content: '"The king stood by the pillar and made a covenant before the Lord, to walk after the Lord and to keep his commandments... all the people joined in the covenant." (2 Kings 23:3)' },
+        ],
+        question: {
+          id: 'q3',
+          prompt: 'What was Josiah’s decisive response to the discovery, and what does it reveal about him?',
+          options: [
+            'He ignored the scroll and continued as before',
+            'He publicly renewed the nation’s covenant and led sweeping religious reform, rather than dismissing what the old document demanded',
+            'He destroyed the scroll to avoid controversy',
+            'He delegated the entire matter to the priests without personal involvement',
+          ],
+          correctIndex: 1,
+          hint: 'Notice that Josiah doesn’t just react emotionally — he acts, publicly and nationally, in direct response to what the text said.',
+        },
+      },
+    ],
+    finalAnswer: {
+      prompt: 'Detective, what does the case of the forgotten scroll ultimately reveal?',
+      options: [
+        'That a nation can drift so far from its own founding commitments that rediscovering them feels like a shock, and that real reform requires acting on what’s found, not just being moved by it',
+        'That the scroll was a forgery created to control Josiah',
+        'That written laws don’t matter as much as good intentions',
+        'That Josiah’s reaction was an overreaction with no real cause',
+      ],
+      correctIndex: 0,
+      hint: 'Weigh the neglect, the grief, and the concrete national reform together — not just one piece alone.',
+    },
+    explanation:
+      'The scroll wasn’t new information — it was a rediscovery of what the nation had already promised generations earlier and quietly abandoned. Josiah’s grief was proportionate to the gap between covenant and practice, and his reform shows the difference between being moved by truth and actually acting on it.',
+  },
+  {
+    id: 'empty-tomb-case',
+    title: 'The Empty Tomb: Full Case File',
+    intro: 'A sealed, guarded tomb. A missing body. And a movement that should have died with its leader instead exploding across the ancient world within a generation. Detective, this is the case that either makes or breaks the whole story — build it from the evidence, not the assumption.',
+    reference: 'Matthew 27-28; Luke 24; 1 Corinthians 15',
+    ageGroup: 'teens',
+    difficulty: 'expert',
+    skills: ['critical-thinking', 'reading', 'bible-knowledge', 'attention'],
+    xpReward: 160,
+    stages: [
+      {
+        id: 'stage-1',
+        clues: [
+          { id: 'tomb-object-1', type: 'object', title: 'The Roman Seal', content: 'Pilate posted a Roman guard and sealed the tomb with an official seal (Matthew 27:65-66). Breaking a Roman seal was a capital offense — not a risk casual grave robbers took.' },
+          { id: 'tomb-object-2', type: 'object', title: 'The Grave Clothes', content: 'When Peter and John reach the tomb, the linen wrappings are found lying in place, with the face cloth folded separately (John 20:6-7) — not the scene a hurried theft would leave.' },
+        ],
+        question: {
+          id: 'q1',
+          prompt: 'What does the state of the grave clothes argue against?',
+          options: [
+            'A rushed, panicked grave robbery',
+            'A resurrection',
+            'Nothing — it’s consistent with any explanation equally',
+            'The body ever being placed there at all',
+          ],
+          correctIndex: 0,
+          hint: 'Think about how someone in a hurry to steal a body would likely leave the wrappings — scattered, or folded?',
+        },
+      },
+      {
+        id: 'stage-2',
+        clues: [
+          { id: 'tomb-character-1', type: 'character', title: 'The First Witnesses', content: 'The first people to find the empty tomb and report it were women (Luke 24:1-10) — whose testimony carried little legal weight in that culture and wouldn’t have been chosen for a fabricated story.' },
+          { id: 'tomb-timeline-1', type: 'timeline', title: 'A Sudden Reversal', content: 'The disciples, who had scattered in fear at Jesus’ arrest, were within weeks publicly proclaiming his resurrection in the very city where he’d been executed — several later dying for refusing to recant.' },
+        ],
+        question: {
+          id: 'q2',
+          prompt: 'Why is the choice of women as first witnesses significant for evaluating whether the story was invented?',
+          options: [
+            'It isn’t significant at all',
+            'A fabricated story engineered to be believed would likely have used higher-status male witnesses instead, not a detail that weakened its credibility in that culture',
+            'It proves the women were lying',
+            'Women weren’t allowed near tombs in that period, so this detail is likely false',
+          ],
+          correctIndex: 1,
+          hint: 'Ask what a forger optimizing for believability would have chosen to write — and compare it to what’s actually there.',
+        },
+      },
+      {
+        id: 'stage-3',
+        clues: [
+          { id: 'tomb-scripture-1', type: 'scripture', title: 'The Early Creed', content: '"...he appeared to Cephas, then to the twelve. Then he appeared to more than five hundred brothers at one time, most of whom are still alive..." (1 Corinthians 15:5-6) — an extremely early tradition, naming living witnesses who could be questioned.' },
+        ],
+        question: {
+          id: 'q3',
+          prompt: 'What is significant about Paul naming over 500 witnesses, "most of whom are still alive"?',
+          options: [
+            'It invites readers to go check with the witnesses directly, which only makes sense if the claim was expected to hold up',
+            'It’s a rhetorical flourish with no real people behind it',
+            'It proves nothing about the resurrection either way',
+            'It was added centuries later and carries no evidential weight',
+          ],
+          correctIndex: 0,
+          hint: 'Consider why anyone would invite public fact-checking on a claim, unless they were confident the witnesses would confirm it.',
+        },
+      },
+    ],
+    finalAnswer: {
+      prompt: 'Detective, weighing the sealed tomb, the folded grave clothes, the low-status first witnesses, and the named living witnesses together — what verdict best fits the evidence?',
+      options: [
+        'The evidence is most consistent with a real, physical resurrection, not a theft, a hallucination, or a later legend',
+        'The disciples stole the body and fabricated the story',
+        'The whole account was invented generations later with no basis in eyewitness testimony',
+        'There is simply no way to weigh any of this evidence either way',
+      ],
+      correctIndex: 0,
+      hint: 'No single clue proves the case alone — but consider what explanation accounts for all four at once.',
+    },
+    explanation:
+      'A theft doesn’t explain a broken Roman seal or folded grave clothes. An invented legend doesn’t explain why the first witnesses were women, a credibility risk in that culture, or why Paul would invite readers to go question five hundred still-living witnesses. Taken together, the evidence doesn’t force belief — but it consistently points toward something that actually happened, not a story that merely grew over time.',
+  },
 ];
 
 export function getCaseDefinition(id: string): CaseDefinition | undefined {

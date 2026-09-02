@@ -1097,6 +1097,7 @@ export const adventureQuests: AdventureQuest[] = [
       href: '/arcade/build-the-story',
       title: 'Build the Creation Story',
       gameType: 'story_reconstruction',
+      contentId: 'creation',
     },
     reward: {
       xp: 60,
@@ -1225,8 +1226,9 @@ export const adventureQuests: AdventureQuest[] = [
     icon: '🏛️',
     linkedArcadeGame: {
       href: '/arcade/bible-detective',
-      title: 'Jerusalem Case File',
+      title: 'The Shepherd Boy Case File',
       gameType: 'detective',
+      contentId: 'giant-slayer',
     },
     reward: {
       xp: 120,
@@ -1253,6 +1255,7 @@ export const adventureQuests: AdventureQuest[] = [
       href: '/arcade/build-the-story',
       title: 'Resurrection Story Timeline',
       gameType: 'story_reconstruction',
+      contentId: 'resurrection',
     },
     reward: {
       xp: 140,

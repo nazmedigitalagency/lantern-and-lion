@@ -40,7 +40,7 @@ function speak(text: string) {
 
 type Subphase = 'clues' | 'question' | 'final';
 
-export function BibleDetectiveGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
+export function BibleDetectiveGame({ embedded = false, onClose, presetCaseId }: { embedded?: boolean; onClose?: () => void; presetCaseId?: string } = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'browse' | 'case' | 'result'>('browse');
@@ -73,8 +73,13 @@ export function BibleDetectiveGame({ embedded = false, onClose }: { embedded?: b
       setProfile(activeProfile);
       setAgeFilter(ageBandForAge(activeProfile.age));
       setHydrated(true);
+      if (presetCaseId) {
+        const preset = CASE_BANK.find((c) => c.id === presetCaseId);
+        if (preset) openCase(preset);
+      }
     }, 0);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function openCase(def: CaseDefinition) {

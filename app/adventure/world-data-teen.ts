@@ -1399,6 +1399,7 @@ export const teenAdventureQuests: AdventureQuest[] = [
       href: '/arcade/bible-detective',
       title: 'Genesis vs. Babylon: Manuscript Case File',
       gameType: 'detective',
+      contentId: 'genesis-vs-babylon',
     },
     reward: {
       xp: 100,
@@ -1425,6 +1426,7 @@ export const teenAdventureQuests: AdventureQuest[] = [
       href: '/arcade/bible-detective',
       title: 'Cross-Examining the Serpent’s Logic',
       gameType: 'detective',
+      contentId: 'serpents-logic',
     },
     reward: {
       xp: 110,
@@ -1529,6 +1531,7 @@ export const teenAdventureQuests: AdventureQuest[] = [
       href: '/arcade/bible-detective',
       title: 'The Forgotten Scroll Investigation',
       gameType: 'detective',
+      contentId: 'forgotten-scroll',
     },
     reward: {
       xp: 150,
@@ -1555,6 +1558,7 @@ export const teenAdventureQuests: AdventureQuest[] = [
       href: '/arcade/bible-detective',
       title: 'The Empty Tomb: Full Case File',
       gameType: 'detective',
+      contentId: 'empty-tomb-case',
     },
     reward: {
       xp: 170,

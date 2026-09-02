@@ -109,6 +109,8 @@ export type AdventureQuest = {
     href: string;
     title: string;
     gameType: string;
+    /** Story/case/puzzle id within the target game's own content bank — lets "Launch Game" open this exact piece of content instead of the game's generic picker. Only meaningful for content-id-based games (build-the-story, bible-detective, scripture-connections). */
+    contentId?: string;
   };
   reward: {
     xp: number;
