@@ -1,9 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Codes = { teacherCode: string; gameCode: string };
 type ToastMessage = { id: number; text: string };
+type LoadError = { kind: 'auth' | 'network'; message: string };
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -40,7 +42,7 @@ async function copyText(text: string): Promise<boolean> {
 export default function LanternCodesPanel({ variant }: { variant: 'child' | 'teen' }) {
   const [codes, setCodes] = useState<Codes | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<LoadError | null>(null);
   const [regenerating, setRegenerating] = useState(false);
   const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -56,11 +58,23 @@ export default function LanternCodesPanel({ variant }: { variant: 'child' | 'tee
 
   const loadCodes = useCallback(() => {
     setLoading(true);
-    setError('');
+    setError(null);
     fetch('/api/child/codes')
-      .then((res) => (res.ok ? (res.json() as Promise<Codes>) : Promise.reject()))
+      .then((res) => {
+        if (res.ok) return res.json() as Promise<Codes>;
+        if (res.status === 401) {
+          return Promise.reject({ kind: 'auth' as const });
+        }
+        return Promise.reject({ kind: 'network' as const });
+      })
       .then((data) => setCodes(data))
-      .catch(() => setError('We could not load your codes. Please check your connection and try again.'))
+      .catch((err: { kind?: 'auth' | 'network' } | undefined) => {
+        if (err?.kind === 'auth') {
+          setError({ kind: 'auth', message: 'Please sign in with your username and PIN to see your codes.' });
+        } else {
+          setError({ kind: 'network', message: 'We could not load your codes. Please check your connection and try again.' });
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -132,10 +146,14 @@ export default function LanternCodesPanel({ variant }: { variant: 'child' | 'tee
 
       {!loading && error && (
         <div className="ll-codes-error" role="alert">
-          <p>{error}</p>
-          <button type="button" onClick={loadCodes}>
-            Try again
-          </button>
+          <p>{error.message}</p>
+          {error.kind === 'auth' ? (
+            <Link href={variant === 'teen' ? '/teen-access' : '/child-access'}>Sign in</Link>
+          ) : (
+            <button type="button" onClick={loadCodes}>
+              Try again
+            </button>
+          )}
         </div>
       )}
 

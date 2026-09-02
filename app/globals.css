@@ -1987,6 +1987,10 @@ footer a:hover{color:var(--gold)}
 
 .family-modal-dialog { width: min(560px, 100%); }
 .codes-modal-dialog { width: min(680px, 100%); }
+.codes-modal-dialog .family-modal-close-btn { margin-top: 20px; }
+@media(max-width:640px){
+  .codes-modal-dialog{padding:26px 18px 22px}
+}
 
 /* ── In-dashboard game popup (pilot: launching an arcade game as a modal
    instead of navigating to its own page) ── */
@@ -7154,8 +7158,9 @@ footer a:hover{color:var(--gold)}
 .ll-codes-loading{display:flex;align-items:center;gap:12px;padding:20px;color:var(--muted);font-weight:800}
 .ll-codes-loading>span{width:28px;height:28px;border:4px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:loader-spin 700ms linear infinite}
 .ll-codes-error{display:flex;flex-direction:column;gap:10px;align-items:flex-start;padding:16px;border:2px solid var(--error-dark);border-radius:14px;background:var(--error-bg);color:var(--error-dark);font-weight:800}
-.ll-codes-error button{min-height:40px;padding:0 16px;border:2px solid var(--error-dark);border-radius:10px;background:var(--error);color:var(--white);font:900 13px var(--font-nunito);cursor:pointer}
-.ll-codes-error button:hover{background:var(--error-dark)}
+.ll-codes-error p{margin:0}
+.ll-codes-error button,.ll-codes-error a{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:2px solid var(--error-dark);border-radius:10px;background:var(--error);color:var(--white);font:900 13px var(--font-nunito);text-decoration:none;cursor:pointer}
+.ll-codes-error button:hover,.ll-codes-error a:hover{background:var(--error-dark)}
 
 .ll-codes-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .ll-code-card{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:18px;border:2px solid var(--navy);background:var(--white);box-shadow:5px 5px 0 var(--navy)}
@@ -7194,11 +7199,16 @@ footer a:hover{color:var(--gold)}
 .ll-codes-toast-stack{position:fixed;right:22px;bottom:22px;z-index:95;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .ll-codes-toast{padding:12px 16px;border-radius:12px;border:2px solid var(--navy);background:var(--white);color:var(--navy);font:800 13px var(--font-nunito);box-shadow:4px 4px 0 var(--navy);animation:toast-in 300ms cubic-bezier(.2,.8,.25,1)}
 
-@media(max-width:640px){
+/* Tablet: stack the two code cards once the modal is narrower than ~two comfortable columns. */
+@media(max-width:900px){
   .ll-codes-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
   .ll-code-actions button{flex:1 1 100%}
   .ll-codes-toast-stack{left:14px;right:14px;bottom:14px}
   .ll-codes-toast{box-shadow:3px 3px 0 var(--navy)}
+  .ll-codes-error{align-items:stretch;text-align:left}
+  .ll-codes-error button,.ll-codes-error a{justify-content:center}
 }
 
 /* Teen dark-navy variant */
