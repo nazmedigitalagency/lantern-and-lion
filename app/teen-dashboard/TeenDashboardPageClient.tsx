@@ -17,6 +17,7 @@ import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
 import { AssignmentsWidget } from '../lib/assignments/AssignmentsWidget';
 import { AssignmentsPage } from '../lib/assignments/AssignmentsPage';
+import { NotificationBell } from '../lib/notifications/NotificationBell';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
@@ -422,6 +423,7 @@ export default function TeenDashboardPage() {
   const [quizStarted, setQuizStarted] = useState(false);
 
   const [notes, setNotes] = useState<Record<number, string>>({});
+  const [focusAssignmentId, setFocusAssignmentId] = useState<string | null>(null);
   const [devotionOpen, setDevotionOpen] = useState(false);
   const [classCode, setClassCode] = useState('');
   const [connectedClass, setConnectedClass] = useState<{ name: string; code: string } | null>(null);
@@ -512,10 +514,14 @@ export default function TeenDashboardPage() {
         }
 
         // Arriving from a subpage's sidebar (e.g. /adventure) via
-        // /teen-dashboard?tab=journey should land on that tab.
-        const requestedTab = new URLSearchParams(window.location.search).get('tab') as Tab | null;
+        // /teen-dashboard?tab=journey should land on that tab, or from the
+        // notification center via ?tab=assignments&assignmentId=...
+        const dashboardSearchParams = new URLSearchParams(window.location.search);
+        const requestedTab = dashboardSearchParams.get('tab') as Tab | null;
         const validTabs: Tab[] = ['home', 'assignments', 'decision', 'cases', 'askword', 'learn', 'journey', 'profile'];
         if (requestedTab && validTabs.includes(requestedTab)) setActiveTab(requestedTab);
+        const requestedAssignmentId = dashboardSearchParams.get('assignmentId');
+        if (requestedAssignmentId) setFocusAssignmentId(requestedAssignmentId);
       } catch { /* keep demo defaults */ }
       setHydrated(true);
     }, 0);
@@ -726,6 +732,8 @@ export default function TeenDashboardPage() {
               💎 <strong>{wallet.gems.toLocaleString()}</strong>
             </span>
           </div>
+
+          <NotificationBell tone="teen" dashboardHref="/teen-dashboard" />
 
           {/* Profile Switcher Capsule */}
           <div className="teen-profile-switch">
@@ -1106,7 +1114,7 @@ export default function TeenDashboardPage() {
           {/* ── ASSIGNMENTS ── */}
           {activeTab === 'assignments' && (
             <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
-              <AssignmentsPage tone="teen" />
+              <AssignmentsPage tone="teen" initialOpenId={focusAssignmentId} onInitialOpenHandled={() => setFocusAssignmentId(null)} />
             </div>
           )}
 

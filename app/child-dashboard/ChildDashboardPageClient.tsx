@@ -16,6 +16,7 @@ import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
 import { AssignmentsWidget } from '../lib/assignments/AssignmentsWidget';
 import { AssignmentsPage } from '../lib/assignments/AssignmentsPage';
+import { NotificationBell } from '../lib/notifications/NotificationBell';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { getNextMissionRecommendation } from '../adventure/progression';
@@ -89,6 +90,7 @@ export default function ChildDashboardPage() {
   const [children, setChildren] = useState<Child[]>(fallbackChildren);
   const [activeId, setActiveId] = useState<number | string>(fallbackChildren[0].id);
   const [activeTab, setActiveTab] = useState<DashboardTab>('today');
+  const [focusAssignmentId, setFocusAssignmentId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [familyData, setFamilyData] = useState({ familyName: 'The Adeyemi Family', parentName: 'Jordan Adeyemi', country: 'Nigeria' });
   const [showHelp, setShowHelp] = useState(false);
@@ -193,8 +195,16 @@ export default function ChildDashboardPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const previewFlag = new URLSearchParams(window.location.search).get('preview') === '1';
+      const searchParams = new URLSearchParams(window.location.search);
+      const previewFlag = searchParams.get('preview') === '1';
       setIsPreview(previewFlag);
+
+      // Deep links from the notification center (?tab=assignments&assignmentId=...).
+      const requestedTab = searchParams.get('tab') as DashboardTab | null;
+      const validTabs: DashboardTab[] = ['today', 'assignments', 'adventure', 'stories', 'arcade', 'leagues', 'explore', 'progress', 'character'];
+      if (requestedTab && validTabs.includes(requestedTab)) setActiveTab(requestedTab);
+      const requestedAssignmentId = searchParams.get('assignmentId');
+      if (requestedAssignmentId) setFocusAssignmentId(requestedAssignmentId);
       const savedChildSession = localStorage.getItem('lanternLionActiveChild') || localStorage.getItem('lanternLionActiveChildId');
       const childSessionJson = localStorage.getItem('lanternLionChildSession');
       const storedFamilyRaw = localStorage.getItem('lanternLionDemoFamily') || localStorage.getItem('lanternLionFamilyData');
@@ -424,6 +434,8 @@ export default function ChildDashboardPage() {
             <span aria-hidden="true">💎</span>
             <strong>{wallet.gems.toLocaleString()}</strong>
           </div>
+
+          <NotificationBell tone="child" dashboardHref="/child-dashboard" />
 
           {/* Ask for Help Button */}
           <button
@@ -837,7 +849,9 @@ export default function ChildDashboardPage() {
           )}
 
           {/* TAB: ASSIGNMENTS */}
-          {activeTab === 'assignments' && <AssignmentsPage tone="child" />}
+          {activeTab === 'assignments' && (
+            <AssignmentsPage tone="child" initialOpenId={focusAssignmentId} onInitialOpenHandled={() => setFocusAssignmentId(null)} />
+          )}
 
           {/* TAB: ADVENTURE (BIBLE ADVENTURE WORLD) */}
           {activeTab === 'adventure' && (

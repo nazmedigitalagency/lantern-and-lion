@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../lib/supabase/server';
-import { notifyOnce } from '../../lib/activity/server';
+import { notifyChildOnce, notifyOnce } from '../../lib/activity/server';
 import { assignmentBucket, resolveTargetChildIds, syncAssignmentSubmissions } from '../../lib/assignments/server';
 import { referenceExists, referenceLabel } from '../../lib/assignments/content';
 import type { AssignmentListItem, AssignmentType } from '../../lib/assignments/types';
@@ -168,25 +168,33 @@ export async function POST(req: NextRequest) {
         { onConflict: 'assignment_id,child_id', ignoreDuplicates: true }
       );
 
-      // Children have no real auth.users id to notify directly (PIN-based
-      // sessions, same as every other child-facing flow in this app) — the
-      // parent gets the notification, matching the existing TEACHER_REQUEST
-      // pattern, and the child sees the assignment itself the next time
-      // they open their own dashboard.
+      // Parents get a notification the existing way; children/teens now
+      // also get one directly in their own notification center (child
+      // sessions have no auth.users id, so this uses recipient_child_id —
+      // see notifyChildOnce).
       const { data: childRows } = await admin.from('children').select('id, name, family_id').in('id', targetIds);
       const familyIds = Array.from(new Set((childRows || []).map((c) => c.family_id)));
       const { data: families } = familyIds.length ? await admin.from('families').select('id, owner_id').in('id', familyIds) : { data: [] as { id: string; owner_id: string }[] };
       for (const child of childRows || []) {
         const ownerId = families?.find((f) => f.id === child.family_id)?.owner_id;
-        if (!ownerId) continue;
-        await notifyOnce(admin, {
-          recipientId: ownerId,
+        if (ownerId) {
+          await notifyOnce(admin, {
+            recipientId: ownerId,
+            childId: child.id,
+            type: 'ASSIGNMENT',
+            title: 'New assignment',
+            body: `${child.name} was assigned “${data.title}”${classroomName ? ` in ${classroomName}` : ''}${data.dueDate ? ` — due ${new Date(`${data.dueDate}T00:00:00`).toLocaleDateString()}` : ''}.`,
+            payload: { assignmentId: assignment.id },
+            dedupeKey: `assignment:${assignment.id}:${child.id}`,
+          }).catch(() => {});
+        }
+        await notifyChildOnce(admin, {
           childId: child.id,
           type: 'ASSIGNMENT',
-          title: 'New assignment',
-          body: `${child.name} was assigned “${data.title}”${classroomName ? ` in ${classroomName}` : ''}${data.dueDate ? ` — due ${new Date(`${data.dueDate}T00:00:00`).toLocaleDateString()}` : ''}.`,
+          title: `New assignment${classroomName ? ` from ${classroomName}` : ''}`,
+          body: `“${data.title}” is ready for you${data.dueDate ? ` — due ${new Date(`${data.dueDate}T00:00:00`).toLocaleDateString()}` : ''}.`,
           payload: { assignmentId: assignment.id },
-          dedupeKey: `assignment:${assignment.id}:${child.id}`,
+          dedupeKey: `assignment_child:${assignment.id}:${child.id}`,
         }).catch(() => {});
       }
     }

@@ -4,6 +4,7 @@ import { createServerAdminClient } from '../../../lib/supabase/server';
 import { studentDueBucket, syncAssignmentSubmissions } from '../../../lib/assignments/server';
 import { contentLink, referenceLabel } from '../../../lib/assignments/content';
 import { sortByPriority } from '../../../lib/assignments/priority';
+import { notifyChildOnce } from '../../../lib/activity/server';
 import type { AssignmentType, StudentAssignment } from '../../../lib/assignments/types';
 
 /**
@@ -70,6 +71,33 @@ export async function GET() {
         dueBucket: studentDueBucket(a.due_date, r.status),
       };
     });
+
+  // Reminder notifications: fire once, ever, the first time a still-open
+  // assignment is found in the due-soon/due-today or overdue window —
+  // never on every dashboard load (dedupe_key has no timestamp, so the DB
+  // unique constraint silently no-ops on every subsequent read).
+  for (const a of result) {
+    if (a.status !== 'assigned' && a.status !== 'in_progress') continue;
+    if (a.dueBucket === 'due_soon' || a.dueBucket === 'due_today') {
+      await notifyChildOnce(admin, {
+        childId: session.childId,
+        type: 'ASSIGNMENT_DUE_SOON',
+        title: 'Assignment due soon',
+        body: `Your “${a.title}” is due ${a.dueBucket === 'due_today' ? 'today' : new Date(`${a.dueDate}T00:00:00`).toLocaleDateString(undefined, { weekday: 'long' })}.`,
+        payload: { assignmentId: a.id },
+        dedupeKey: `assignment_due_soon_child:${a.id}:${session.childId}`,
+      }).catch(() => {});
+    } else if (a.dueBucket === 'overdue') {
+      await notifyChildOnce(admin, {
+        childId: session.childId,
+        type: 'ASSIGNMENT_OVERDUE',
+        title: 'Still waiting for you',
+        body: `Your “${a.title}” is still waiting for you.`,
+        payload: { assignmentId: a.id },
+        dedupeKey: `assignment_overdue_child:${a.id}:${session.childId}`,
+      }).catch(() => {});
+    }
+  }
 
   return NextResponse.json({ assignments: sortByPriority(result) });
 }

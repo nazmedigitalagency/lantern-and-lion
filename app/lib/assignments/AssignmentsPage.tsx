@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStudentAssignments } from './useStudentAssignments';
 import { sortByPriority, tabForAssignment, TAB_LABEL, type AssignmentTab } from './priority';
 import { AssignmentCard } from './AssignmentCard';
@@ -16,7 +16,16 @@ const EMPTY_COPY: Record<AssignmentTab, string> = {
   completed: 'Your completed assignments will appear here.',
 };
 
-export function AssignmentsPage({ tone }: { tone: 'child' | 'teen' }) {
+export function AssignmentsPage({
+  tone,
+  initialOpenId,
+  onInitialOpenHandled,
+}: {
+  tone: 'child' | 'teen';
+  /** Deep-links from a notification: once assignments load, opens this one and switches to its tab. */
+  initialOpenId?: string | null;
+  onInitialOpenHandled?: () => void;
+}) {
   const { assignments, state, reload } = useStudentAssignments();
   const [tab, setTab] = useState<AssignmentTab>('to_do');
   const [openAssignment, setOpenAssignment] = useState<StudentAssignment | null>(null);
@@ -27,6 +36,18 @@ export function AssignmentsPage({ tone }: { tone: 'child' | 'teen' }) {
     for (const key of TABS) map[key] = sortByPriority(map[key]);
     return map;
   }, [assignments]);
+
+  useEffect(() => {
+    if (!initialOpenId || !assignments) return;
+    const match = assignments.find((a) => a.id === initialOpenId);
+    if (match) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link from a notification, only runs once per initialOpenId
+      setTab(tabForAssignment(match));
+      setOpenAssignment(match);
+    }
+    onInitialOpenHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialOpenId, assignments]);
 
   const overdueCount = (grouped.to_do || []).filter((a) => a.dueBucket === 'overdue').length;
 

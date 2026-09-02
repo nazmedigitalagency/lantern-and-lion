@@ -7305,5 +7305,55 @@ footer a:hover{color:var(--gold)}
 .teen-codes .ll-codes-confirm p{color:var(--teen-text)}
 .teen-codes .ll-codes-toast{background:var(--teen-surface-alt);border-color:var(--teen-border);color:var(--teen-text)}
 
+/* ===== Notification center (bell + dropdown, child/teen dashboards) ===== */
+.notif-bell-wrap{position:relative}
+.notif-bell-btn{position:relative;width:40px;height:40px;display:grid;place-items:center;border:2px solid var(--navy);border-radius:9999px;background:var(--white);color:var(--navy);font-size:18px;cursor:pointer;box-shadow:2px 2px 0 var(--navy)}
+.notif-bell-teen .notif-bell-btn{border-color:var(--teen-border,#334155);background:var(--teen-surface-alt,#1E293B);box-shadow:none}
+.notif-bell-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;display:grid;place-items:center;border-radius:9999px;background:var(--error);color:var(--white);font:900 10px var(--font-nunito);border:2px solid var(--white)}
+.notif-bell-teen .notif-bell-badge{border-color:var(--teen-bg,#0B1120)}
+
+.notif-panel{position:absolute;top:calc(100% + 10px);right:0;z-index:85;width:min(380px,92vw);max-height:70vh;display:flex;flex-direction:column;border:2px solid var(--navy);border-radius:16px;background:var(--white);box-shadow:6px 6px 0 var(--navy);overflow:hidden}
+.notif-bell-teen .notif-panel{border-color:var(--teen-border,#334155);background:var(--teen-surface,#0F172A);box-shadow:0 24px 56px rgba(0,0,0,.45)}
+.notif-panel-head{flex:0 0 auto;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:2px solid var(--navy)}
+.notif-bell-teen .notif-panel-head{border-color:var(--teen-border,#334155)}
+.notif-panel-head strong{font-size:15px;color:var(--navy)}
+.notif-bell-teen .notif-panel-head strong{color:var(--teen-text,#fff)}
+.notif-mark-all{min-height:32px;padding:0 10px;border:0;background:transparent;color:var(--blue-dark);font:800 12px var(--font-nunito);cursor:pointer}
+.notif-bell-teen .notif-mark-all{color:var(--teen-accent,#60A5FA)}
+.notif-panel-body{flex:1 1 auto;overflow-y:auto}
+
+.notif-empty{padding:36px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.notif-empty span{font-size:30px}
+.notif-empty strong{color:var(--navy);font-size:14px}
+.notif-bell-teen .notif-empty strong{color:var(--teen-text,#fff)}
+.notif-empty p{margin:0;color:var(--muted);font-size:12px;line-height:1.5;max-width:260px}
+.notif-bell-teen .notif-empty p{color:var(--teen-text-secondary,#CBD5E1)}
+
+.notif-group-label{margin:0;padding:10px 16px 4px;font-size:10px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--slate)}
+.notif-bell-teen .notif-group-label{color:var(--teen-text-muted,#94A3B8)}
+
+.notif-item{width:100%;padding:10px 16px;display:flex;align-items:flex-start;gap:10px;border:0;border-top:1px solid var(--border);background:transparent;text-align:left;cursor:pointer}
+.notif-bell-teen .notif-item{border-color:var(--teen-border,#334155)}
+.notif-item:hover{background:var(--sky)}
+.notif-bell-teen .notif-item:hover{background:var(--teen-surface-hover,#253349)}
+.notif-item.unread{background:var(--blue-tint)}
+.notif-bell-teen .notif-item.unread{background:rgba(59,130,246,.12)}
+.notif-item-icon{flex:0 0 auto;font-size:16px;line-height:1.4}
+.notif-item-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.notif-item-title{font-size:13px;font-weight:800;color:var(--navy)}
+.notif-bell-teen .notif-item-title{color:var(--teen-text,#fff)}
+.notif-item-text{font-size:12px;color:var(--slate);line-height:1.4}
+.notif-bell-teen .notif-item-text{color:var(--teen-text-secondary,#CBD5E1)}
+.notif-item-time{font-size:11px;color:var(--slate);opacity:.8}
+.notif-bell-teen .notif-item-time{color:var(--teen-text-muted,#94A3B8)}
+.notif-item.priority-important .notif-item-title{color:var(--blue-dark)}
+.notif-bell-teen .notif-item.priority-important .notif-item-title{color:var(--teen-accent,#60A5FA)}
+.notif-item-dot{flex:0 0 auto;width:8px;height:8px;margin-top:5px;border-radius:50%;background:var(--blue-dark)}
+.notif-bell-teen .notif-item-dot{background:var(--teen-accent,#60A5FA)}
+
+@media(max-width:480px){
+  .notif-panel{position:fixed;top:64px;right:8px;left:8px;width:auto;max-height:calc(100vh - 80px)}
+}
+
 
 

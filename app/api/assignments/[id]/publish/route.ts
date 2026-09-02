@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../../lib/supabase/server';
-import { notifyOnce } from '../../../../lib/activity/server';
+import { notifyChildOnce, notifyOnce } from '../../../../lib/activity/server';
 import { resolveTargetChildIds } from '../../../../lib/assignments/server';
 
 const PublishSchema = z.object({
@@ -52,15 +52,24 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const { data: families } = familyIds.length ? await admin.from('families').select('id, owner_id').in('id', familyIds) : { data: [] as { id: string; owner_id: string }[] };
   for (const child of childRows || []) {
     const ownerId = families?.find((f) => f.id === child.family_id)?.owner_id;
-    if (!ownerId) continue;
-    await notifyOnce(admin, {
-      recipientId: ownerId,
+    if (ownerId) {
+      await notifyOnce(admin, {
+        recipientId: ownerId,
+        childId: child.id,
+        type: 'ASSIGNMENT',
+        title: 'New assignment',
+        body: `${child.name} was assigned “${assignment.title}”${classroomName ? ` in ${classroomName}` : ''}${assignment.due_date ? ` — due ${new Date(`${assignment.due_date}T00:00:00`).toLocaleDateString()}` : ''}.`,
+        payload: { assignmentId: id },
+        dedupeKey: `assignment:${id}:${child.id}`,
+      }).catch(() => {});
+    }
+    await notifyChildOnce(admin, {
       childId: child.id,
       type: 'ASSIGNMENT',
-      title: 'New assignment',
-      body: `${child.name} was assigned “${assignment.title}”${classroomName ? ` in ${classroomName}` : ''}${assignment.due_date ? ` — due ${new Date(`${assignment.due_date}T00:00:00`).toLocaleDateString()}` : ''}.`,
+      title: `New assignment${classroomName ? ` from ${classroomName}` : ''}`,
+      body: `“${assignment.title}” is ready for you${assignment.due_date ? ` — due ${new Date(`${assignment.due_date}T00:00:00`).toLocaleDateString()}` : ''}.`,
       payload: { assignmentId: id },
-      dedupeKey: `assignment:${id}:${child.id}`,
+      dedupeKey: `assignment_child:${id}:${child.id}`,
     }).catch(() => {});
   }
 

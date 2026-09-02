@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { checkRateLimit, getClientIp } from '../../../lib/rate-limit';
 import { getChildSessionFromCookies } from '../../../lib/child-session';
 import { createServerAdminClient } from '../../../lib/supabase/server';
-import { bumpDailySummary, getFamilyForChild, notifyOnce, recordActivityEvent, type ActivityEventType } from '../../../lib/activity/server';
+import { bumpDailySummary, getFamilyForChild, notifyChildOnce, notifyOnce, recordActivityEvent, type ActivityEventType } from '../../../lib/activity/server';
 import { isStreakEligibleEvent } from '../../../lib/streak/config';
 import { qualifyStreakDay } from '../../../lib/streak/server';
 import { getConcept, resolveConceptId } from '../../../lib/adaptive/concepts';
@@ -135,6 +135,14 @@ export async function POST(req: NextRequest) {
                   payload: { conceptId: masteryResult.row.concept_id },
                   dedupeKey: `mastery:${session.childId}:${masteryResult.row.concept_id}`,
                 });
+                await notifyChildOnce(admin, {
+                  childId: session.childId,
+                  type: 'ACHIEVEMENT',
+                  title: 'You earned a new badge!',
+                  body: `You mastered "${label}"!`,
+                  payload: { conceptId: masteryResult.row.concept_id },
+                  dedupeKey: `mastery_child:${session.childId}:${masteryResult.row.concept_id}`,
+                }).catch(() => {});
               }
             }
           }
@@ -155,6 +163,14 @@ export async function POST(req: NextRequest) {
                 payload: { days: streakResult.newMilestone.days, coins: streakResult.newMilestone.coins, gems: streakResult.newMilestone.gems },
                 dedupeKey: `streak:${session.childId}:${streakResult.newMilestone.days}`,
               });
+              await notifyChildOnce(admin, {
+                childId: session.childId,
+                type: 'STREAK',
+                title: `You reached a ${streakResult.newMilestone.days}-day learning streak!`,
+                body: streakResult.newMilestone.label,
+                payload: { days: streakResult.newMilestone.days },
+                dedupeKey: `streak_child:${session.childId}:${streakResult.newMilestone.days}`,
+              }).catch(() => {});
             }
           }
         }

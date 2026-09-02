@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../../lib/supabase/server';
-import { bumpDailySummary, notifyOnce } from '../../../../lib/activity/server';
+import { bumpDailySummary, notifyChildOnce, notifyOnce } from '../../../../lib/activity/server';
 
 const GradeSchema = z.object({
   childId: z.string().uuid(),
@@ -80,6 +80,26 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         payload: { assignmentId: id, score },
         dedupeKey: `assignment_graded:${id}:${submission.child_id}:${nowIso}`,
       });
+    }
+
+    await notifyChildOnce(admin, {
+      childId: submission.child_id,
+      type: 'ASSIGNMENT_GRADED',
+      title: 'Your teacher graded your assignment',
+      body: `“${assignment.title}”${score !== null ? ` — ${score}%` : ''}`,
+      payload: { assignmentId: id, score },
+      dedupeKey: `assignment_graded_child:${id}:${submission.child_id}:${nowIso}`,
+    }).catch(() => {});
+
+    if (parsed.data.feedback && parsed.data.feedback.trim()) {
+      await notifyChildOnce(admin, {
+        childId: submission.child_id,
+        type: 'ASSIGNMENT_FEEDBACK',
+        title: 'Your teacher left feedback',
+        body: `On “${assignment.title}”: “${parsed.data.feedback.trim()}”`,
+        payload: { assignmentId: id },
+        dedupeKey: `assignment_feedback_child:${id}:${submission.child_id}:${nowIso}`,
+      }).catch(() => {});
     }
   }
 

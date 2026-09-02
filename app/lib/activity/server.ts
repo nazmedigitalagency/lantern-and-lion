@@ -115,13 +115,36 @@ export async function bumpDailySummary(
   return merged;
 }
 
-/** Inserts a notification at most once per (recipient, dedupeKey) — the anti-spam guarantee. */
+/**
+ * Every notification event the product can currently generate, for either
+ * addressing mode (parent/teacher via notifyOnce, or child/teen via
+ * notifyChildOnce). MULTIPLAYER_INVITATION and TEACHER_ANNOUNCEMENT are
+ * reserved for when a real multiplayer/announcement backend exists — no
+ * caller emits them today (see the child notification center's own notes).
+ */
+export type NotificationType =
+  | 'LOGIN'
+  | 'DAILY_SUMMARY'
+  | 'ACHIEVEMENT'
+  | 'QUEST'
+  | 'LEARNING'
+  | 'STREAK'
+  | 'TEACHER_REQUEST'
+  | 'ASSIGNMENT'
+  | 'ASSIGNMENT_DUE_SOON'
+  | 'ASSIGNMENT_OVERDUE'
+  | 'ASSIGNMENT_GRADED'
+  | 'ASSIGNMENT_FEEDBACK'
+  | 'MULTIPLAYER_INVITATION'
+  | 'TEACHER_ANNOUNCEMENT';
+
+/** Inserts a notification at most once per (recipient, dedupeKey) — the anti-spam guarantee. For a parent/teacher's own auth.users inbox. */
 export async function notifyOnce(
   admin: SupabaseClient,
   params: {
     recipientId: string;
     childId?: string | null;
-    type: 'LOGIN' | 'DAILY_SUMMARY' | 'ACHIEVEMENT' | 'QUEST' | 'LEARNING' | 'STREAK' | 'TEACHER_REQUEST' | 'ASSIGNMENT' | 'ASSIGNMENT_GRADED';
+    type: NotificationType;
     title: string;
     body: string;
     payload?: Record<string, unknown>;
@@ -140,4 +163,37 @@ export async function notifyOnce(
     },
     { onConflict: 'recipient_id,dedupe_key', ignoreDuplicates: true }
   );
+}
+
+/** Same guarantee as notifyOnce, but addressed directly to a child/teen's own notification center — never a parent/teacher inbox. */
+export async function notifyChildOnce(
+  admin: SupabaseClient,
+  params: {
+    childId: string;
+    type: NotificationType;
+    title: string;
+    body: string;
+    payload?: Record<string, unknown>;
+    dedupeKey: string;
+  }
+) {
+  await admin.from('notifications').upsert(
+    {
+      recipient_child_id: params.childId,
+      type: params.type,
+      title: params.title,
+      body: params.body,
+      payload: params.payload ?? {},
+      dedupe_key: params.dedupeKey,
+    },
+    { onConflict: 'recipient_child_id,dedupe_key', ignoreDuplicates: true }
+  );
+}
+
+/** Retention: notifications are messages, not the educational record — old ones are safe to drop without touching assignments/progress. */
+const CHILD_NOTIFICATION_RETENTION_DAYS = 45;
+
+export async function pruneOldChildNotifications(admin: SupabaseClient, childId: string) {
+  const cutoff = new Date(Date.now() - CHILD_NOTIFICATION_RETENTION_DAYS * 86_400_000).toISOString();
+  await admin.from('notifications').delete().eq('recipient_child_id', childId).lt('created_at', cutoff);
 }

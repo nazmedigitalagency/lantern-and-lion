@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { bumpDailySummary } from '../activity/server';
+import { bumpDailySummary, notifyChildOnce } from '../activity/server';
 import type { AssignmentBucket, AssignmentType } from './types';
 
 // "Due soon" mirrors the same short-horizon window used for "needs
@@ -34,6 +34,7 @@ export function studentDueBucket(dueDate: string | null, status: string): 'upcom
 
 type AssignmentRow = {
   id: string;
+  title: string;
   assignment_type: AssignmentType;
   reference_id: string | null;
   required_score: number | null;
@@ -158,5 +159,17 @@ export async function syncAssignmentSubmissions(admin: SupabaseClient, assignmen
     }).eq('id', submission.id);
     submission.status = 'graded';
     submission.score = found.score;
+
+    // Auto-scored types (story/reading/quiz/memory/game) never go through a
+    // teacher "return" action — this is the only signal the student gets
+    // that their work was scored, so it fires here rather than in a route.
+    await notifyChildOnce(admin, {
+      childId: submission.child_id,
+      type: 'ASSIGNMENT_GRADED',
+      title: 'Your assignment was graded',
+      body: `“${assignment.title}” — ${found.score}%`,
+      payload: { assignmentId: assignment.id, score: found.score },
+      dedupeKey: `assignment_graded_child:${assignment.id}:${submission.child_id}`,
+    }).catch(() => {});
   }
 }
