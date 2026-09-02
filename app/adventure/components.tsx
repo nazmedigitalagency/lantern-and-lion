@@ -114,6 +114,7 @@ export function WorldMapCanvas({
   playerAppearance,
   playerEquipment,
   onSelectRegion,
+  isTeen = false,
 }: {
   regions: Region[];
   currentRegionId: string;
@@ -122,10 +123,40 @@ export function WorldMapCanvas({
   playerAppearance?: CharacterAppearance;
   playerEquipment?: CharacterEquipment;
   onSelectRegion: (region: Region) => void;
+  isTeen?: boolean;
 }) {
   const MOBILE_ROW_HEIGHT = 150;
   const MOBILE_TOP_PAD = 50;
   const mobileMapHeight = MOBILE_TOP_PAD * 2 + regions.length * MOBILE_ROW_HEIGHT;
+
+  // The map was originally built with hardcoded light-mode hex values
+  // throughout (both the desktop canvas and the mobile vertical path) —
+  // this palette swap keeps every visual role (container/line/label/
+  // locked-node) consistent with the surrounding page instead of a light
+  // blue box floating on a dark navy teen page.
+  const m = isTeen
+    ? {
+        containerBg: 'var(--teen-surface)',
+        containerBorder: 'var(--teen-border)',
+        containerShadow: 'var(--teen-cobalt)',
+        lineStroke: 'var(--teen-text-muted)',
+        labelText: 'var(--teen-text)',
+        labelMuted: 'var(--teen-text-muted)',
+        lockedBg: 'var(--teen-surface-alt)',
+        lockedBorder: 'var(--teen-border)',
+        lockedIcon: 'var(--teen-text-muted)',
+      }
+    : {
+        containerBg: '#EFF6FF',
+        containerBorder: '#1E293B',
+        containerShadow: '#8B5CF6',
+        lineStroke: '#1E293B',
+        labelText: '#1E293B',
+        labelMuted: '#64748B',
+        lockedBg: '#eef3f7',
+        lockedBorder: '#7c8fa0',
+        lockedIcon: '#7c8fa0',
+      };
 
   return (
     <>
@@ -136,11 +167,11 @@ export function WorldMapCanvas({
           position: 'relative',
           width: '100%',
           minHeight: '440px',
-          background: '#EFF6FF',
+          background: m.containerBg,
           borderRadius: '20px',
-          border: '2px solid #1E293B',
+          border: `2px solid ${m.containerBorder}`,
           overflow: 'hidden',
-          boxShadow: '6px 6px 0 #8B5CF6',
+          boxShadow: `6px 6px 0 ${m.containerShadow}`,
           padding: '2rem 1rem',
         }}
       >
@@ -166,7 +197,7 @@ export function WorldMapCanvas({
                 y1={`${r.mapPosition.y}%`}
                 x2={`${next.mapPosition.x}%`}
                 y2={`${next.mapPosition.y}%`}
-                stroke="#1E293B"
+                stroke={m.lineStroke}
                 strokeWidth="3"
                 strokeDasharray="6 6"
                 opacity="0.35"
@@ -244,7 +275,7 @@ export function WorldMapCanvas({
                     height: '56px',
                     borderRadius: '50%',
                     background: isLocked
-                      ? '#eef3f7'
+                      ? m.lockedBg
                       : status === 'completed'
                       ? '#22C55E'
                       : isCurrent
@@ -255,9 +286,9 @@ export function WorldMapCanvas({
                       : status === 'completed'
                       ? '2px solid #15803D'
                       : isLocked
-                      ? '2px solid #7c8fa0'
-                      : '2px solid #1E293B',
-                    color: isLocked ? '#7c8fa0' : '#1E293B',
+                      ? `2px solid ${m.lockedBorder}`
+                      : `2px solid ${m.containerBorder}`,
+                    color: isLocked ? m.lockedIcon : '#1E293B',
                     fontSize: '1.6rem',
                     display: 'flex',
                     alignItems: 'center',
@@ -280,7 +311,7 @@ export function WorldMapCanvas({
                       display: 'block',
                       fontSize: '0.8rem',
                       fontWeight: 800,
-                      color: isLocked ? '#7c8fa0' : '#1E293B',
+                      color: isLocked ? m.lockedIcon : m.labelText,
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -289,7 +320,7 @@ export function WorldMapCanvas({
                   <small
                     style={{
                       fontSize: '0.68rem',
-                      color: status === 'completed' ? '#15803D' : '#64748B',
+                      color: status === 'completed' ? (isTeen ? 'var(--teen-success-text)' : '#15803D') : m.labelMuted,
                       display: 'block',
                     }}
                   >
@@ -309,10 +340,10 @@ export function WorldMapCanvas({
       <div
         style={{
           position: 'relative',
-          background: '#EFF6FF',
+          background: m.containerBg,
           borderRadius: '20px',
-          border: '2px solid #1E293B',
-          boxShadow: '6px 6px 0 #8B5CF6',
+          border: `2px solid ${m.containerBorder}`,
+          boxShadow: `6px 6px 0 ${m.containerShadow}`,
           overflow: 'hidden',
         }}
       >
@@ -333,7 +364,7 @@ export function WorldMapCanvas({
                 y1={y1}
                 x2={x2}
                 y2={y2}
-                stroke="#1E293B"
+                stroke={m.lineStroke}
                 strokeWidth="3"
                 strokeDasharray="6 6"
                 opacity="0.35"
@@ -412,7 +443,7 @@ export function WorldMapCanvas({
                     height: '56px',
                     borderRadius: '50%',
                     background: isLocked
-                      ? '#eef3f7'
+                      ? m.lockedBg
                       : status === 'completed'
                       ? '#22C55E'
                       : isCurrent
@@ -423,9 +454,9 @@ export function WorldMapCanvas({
                       : status === 'completed'
                       ? '2px solid #15803D'
                       : isLocked
-                      ? '2px solid #7c8fa0'
-                      : '2px solid #1E293B',
-                    color: isLocked ? '#7c8fa0' : '#1E293B',
+                      ? `2px solid ${m.lockedBorder}`
+                      : `2px solid ${m.containerBorder}`,
+                    color: isLocked ? m.lockedIcon : '#1E293B',
                     fontSize: '1.6rem',
                     display: 'flex',
                     alignItems: 'center',
@@ -448,7 +479,7 @@ export function WorldMapCanvas({
                       display: 'block',
                       fontSize: '0.8rem',
                       fontWeight: 800,
-                      color: isLocked ? '#7c8fa0' : '#1E293B',
+                      color: isLocked ? m.lockedIcon : m.labelText,
                     }}
                   >
                     {region.name}
@@ -456,7 +487,7 @@ export function WorldMapCanvas({
                   <small
                     style={{
                       fontSize: '0.68rem',
-                      color: status === 'completed' ? '#15803D' : '#64748B',
+                      color: status === 'completed' ? (isTeen ? 'var(--teen-success-text)' : '#15803D') : m.labelMuted,
                       display: 'block',
                     }}
                   >

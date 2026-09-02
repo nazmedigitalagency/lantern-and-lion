@@ -300,6 +300,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
             completionPercents={completionPercents}
             playerAppearance={appearance}
             playerEquipment={equipment}
+            isTeen={isTeen}
             onSelectRegion={(reg) => {
               setSelectedRegionId(reg.id);
               setLocationTab('chapters');

@@ -3788,13 +3788,25 @@ footer a:hover{color:var(--gold)}
 .teen-back {
   border: 0;
   background: transparent;
-  color: #60a5fa;
+  color: #f87171;
   font: 900 13px var(--font-nunito);
   cursor: pointer;
   text-decoration: underline;
   margin-bottom: 12px;
   padding: 0;
   display: inline-block;
+}
+.teen-back:hover { color: #fca5a5; }
+
+/* Exit/back CTA — same shape as .teen-primary-btn but red, for the rare
+   button whose job is leaving a feature (e.g. "Back to Home" after a
+   quiz) rather than a positive/forward action. */
+.teen-primary-btn.teen-btn-danger {
+  background: var(--error);
+  color: #ffffff;
+}
+.teen-primary-btn.teen-btn-danger:hover {
+  background: var(--error-dark);
 }
 
 /* ── 1. HERO WELCOME & PROGRESS SECTION ── */
@@ -6087,8 +6099,8 @@ footer a:hover{color:var(--gold)}
 .char-page.teen .char-wallet-row .char-wallet-chip{background:var(--teen-surface-alt)}
 .char-page.teen .button-primary{background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:none}
 .char-page.teen .button-primary:hover{background:var(--teen-cta-hover)}
-.char-page.teen .button-secondary{background:var(--teen-surface-alt);color:var(--teen-text);box-shadow:none;border-color:var(--teen-border)}
-.char-page.teen .button-secondary:hover{background:var(--teen-surface-hover)}
+.char-page.teen .button-secondary{background:var(--green-dark);color:var(--white);box-shadow:none;border-color:transparent}
+.char-page.teen .button-secondary:hover{background:var(--green-darker)}
 .char-page.teen .char-skill-row span{color:var(--teen-text)}
 .char-page.teen .char-game-performance-row strong{color:var(--teen-text)}
 .char-page.teen .char-game-performance-bar{background:var(--teen-surface-alt)}
@@ -6411,8 +6423,8 @@ footer a:hover{color:var(--gold)}
 .arcade-page.teen .arcade-coming-soon{background:var(--teen-surface-alt);color:var(--teen-text-muted)}
 .arcade-page.teen .button-primary{background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:none}
 .arcade-page.teen .button-primary:hover{background:var(--teen-cta-hover)}
-.arcade-page.teen .button-secondary{background:var(--teen-surface-alt);color:var(--teen-text);box-shadow:none;border-color:var(--teen-border)}
-.arcade-page.teen .button-secondary:hover{background:var(--teen-surface-hover)}
+.arcade-page.teen .button-secondary{background:var(--green-dark);color:var(--white);box-shadow:none;border-color:transparent}
+.arcade-page.teen .button-secondary:hover{background:var(--green-darker)}
 .arcade-page.teen .teen-main-canvas{padding:0 0 40px}
 
 .arcade-grid{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}

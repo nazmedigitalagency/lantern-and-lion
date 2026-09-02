@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ChatAssistant from '../chat-assistant';
 import StudioAudioPlayer from '../components/StudioAudioPlayer';
 import { computeStreak, getCompletedCount } from '../daily-quests/progression';
@@ -26,6 +26,7 @@ import { loadWorldContext } from '../adventure/storage';
 import { awardCoins, awardXP, getWallet } from '../lib/economy/wallet-service';
 import type { Wallet } from '../lib/economy/types';
 import { signOutOfPersona } from '../lib/session';
+import { useDialogA11y } from '../lib/use-dialog';
 import TeenSidebar from './TeenSidebar';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
@@ -404,6 +405,8 @@ export default function TeenDashboardPage() {
   const [decisionsMade, setDecisionsMade] = useState<string[]>([]);
   const [showProfiles, setShowProfiles] = useState(false);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
+  const closeFamilyModal = useCallback(() => setShowFamilyModal(false), []);
+  const familyModalRef = useDialogA11y<HTMLDivElement>(showFamilyModal, closeFamilyModal);
   const [familyData, setFamilyData] = useState({ familyName: 'The Adeyemi Family', parentName: 'Jordan Adeyemi', country: 'Nigeria' });
   const [familyMembers, setFamilyMembers] = useState<Teen[]>(fallbackTeens);
 
@@ -1320,7 +1323,7 @@ export default function TeenDashboardPage() {
                       <button type="button" className="teen-secondary-btn" onClick={startQuiz}>
                         Play Again
                       </button>
-                      <button type="button" className="teen-primary-btn" onClick={exitQuiz}>
+                      <button type="button" className="teen-primary-btn teen-btn-danger" onClick={exitQuiz}>
                         Back to Home →
                       </button>
                     </div>
@@ -1576,8 +1579,8 @@ export default function TeenDashboardPage() {
       {/* ── FAMILY SUMMARY MODAL ── */}
       {showFamilyModal && (
         <div className="help-overlay" role="dialog" aria-modal="true">
-          <div className="help-dialog family-modal-dialog">
-            <button type="button" className="close-help" onClick={() => setShowFamilyModal(false)}>✕</button>
+          <div ref={familyModalRef} className="help-dialog family-modal-dialog">
+            <button type="button" className="close-help" onClick={closeFamilyModal}>✕</button>
             <div className="family-modal-badge">👨‍👩‍👧</div>
             <p className="child-kicker">Family Account</p>
             <h2>{familyData.familyName}</h2>
@@ -1598,7 +1601,7 @@ export default function TeenDashboardPage() {
                 );
               })}
             </div>
-            <button type="button" className="family-modal-close-btn" onClick={() => setShowFamilyModal(false)}>
+            <button type="button" className="family-modal-close-btn" onClick={closeFamilyModal}>
               Close Overview
             </button>
           </div>
