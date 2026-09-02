@@ -6295,17 +6295,21 @@ footer a:hover{color:var(--gold)}
   }
 }
 
-/* ── ADVENTURE MAP RESPONSIVENESS ── */
+/* ── ADVENTURE MAP RESPONSIVENESS ──
+   Desktop/tablet keeps the illustrated left-to-right map; below 640px we
+   swap to a vertical winding path instead (see .adv-world-map-mobile),
+   since scrolling a map sideways on a phone feels cramped compared to the
+   natural vertical scroll of the page. */
 .adv-world-map-wrap {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: 20px;
 }
-@media(max-width: 600px) {
-  .adv-world-map-wrap .adv-world-map-container {
-    min-width: 540px;
-  }
+.adv-world-map-mobile { display: none; }
+@media(max-width: 640px) {
+  .adv-world-map-desktop { display: none; }
+  .adv-world-map-mobile { display: block; }
 }
 
 /* Hero mission bar (Active Expedition card) — stacks the CTA below the

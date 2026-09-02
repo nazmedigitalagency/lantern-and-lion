@@ -122,8 +122,13 @@ export function WorldMapCanvas({
   playerEquipment?: CharacterEquipment;
   onSelectRegion: (region: Region) => void;
 }) {
+  const MOBILE_ROW_HEIGHT = 150;
+  const MOBILE_TOP_PAD = 50;
+  const mobileMapHeight = MOBILE_TOP_PAD * 2 + regions.length * MOBILE_ROW_HEIGHT;
+
   return (
-    <div className="adv-world-map-wrap">
+    <>
+    <div className="adv-world-map-wrap adv-world-map-desktop">
       <div
         className="adv-world-map-container"
         style={{
@@ -296,6 +301,174 @@ export function WorldMapCanvas({
         </div>
       </div>
     </div>
+
+    {/* Mobile: vertical winding path — same node styling, but laid out
+        top-to-bottom so the map scrolls with the page instead of sideways. */}
+    <div className="adv-world-map-mobile">
+      <div
+        style={{
+          position: 'relative',
+          background: '#EFF6FF',
+          borderRadius: '20px',
+          border: '2px solid #1E293B',
+          boxShadow: '6px 6px 0 #8B5CF6',
+          overflow: 'hidden',
+        }}
+      >
+        <svg
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+        >
+          {regions.map((r, i) => {
+            const next = regions[i + 1];
+            if (!next) return null;
+            const y1 = MOBILE_TOP_PAD + i * MOBILE_ROW_HEIGHT + MOBILE_ROW_HEIGHT / 2;
+            const y2 = MOBILE_TOP_PAD + (i + 1) * MOBILE_ROW_HEIGHT + MOBILE_ROW_HEIGHT / 2;
+            const x1 = i % 2 === 0 ? '32%' : '68%';
+            const x2 = (i + 1) % 2 === 0 ? '32%' : '68%';
+            return (
+              <line
+                key={`mobile-${r.id}-${next.id}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="#1E293B"
+                strokeWidth="3"
+                strokeDasharray="6 6"
+                opacity="0.35"
+              />
+            );
+          })}
+        </svg>
+
+        <div style={{ position: 'relative', height: `${mobileMapHeight}px` }}>
+          {regions.map((region, i) => {
+            const status = regionStatuses[region.id] || 'locked';
+            const isCurrent = region.id === currentRegionId;
+            const percent = completionPercents[region.id] || 0;
+            const isLocked = status === 'locked';
+            const top = MOBILE_TOP_PAD + i * MOBILE_ROW_HEIGHT + MOBILE_ROW_HEIGHT / 2;
+            const left = i % 2 === 0 ? '32%' : '68%';
+
+            return (
+              <div
+                key={region.id}
+                style={{
+                  position: 'absolute',
+                  left,
+                  top: `${top}px`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: isCurrent ? 20 : 10,
+                  textAlign: 'center',
+                  width: '128px',
+                }}
+              >
+                {isCurrent && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-60px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '54px',
+                      height: '54px',
+                      zIndex: 30,
+                      filter: 'drop-shadow(0 4px 10px rgba(59, 130, 246, 0.5))',
+                    }}
+                  >
+                    <CharacterAvatar
+                      appearance={playerAppearance || { skinTone: 'honey', hairStyle: 'curls', face: 'smile' }}
+                      equipment={playerEquipment || {}}
+                      size="small"
+                      showPedestal={false}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        bottom: '-12px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#1D4ED8',
+                        color: '#ffffff',
+                        fontSize: '0.65rem',
+                        fontWeight: 900,
+                        padding: '0.1rem 0.35rem',
+                        borderRadius: '4px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      YOU
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => onSelectRegion(region)}
+                  disabled={isLocked}
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    background: isLocked
+                      ? '#eef3f7'
+                      : status === 'completed'
+                      ? '#22C55E'
+                      : isCurrent
+                      ? '#3B82F6'
+                      : '#FBBF24',
+                    border: isCurrent
+                      ? '3px solid #1D4ED8'
+                      : status === 'completed'
+                      ? '2px solid #15803D'
+                      : isLocked
+                      ? '2px solid #7c8fa0'
+                      : '2px solid #1E293B',
+                    color: isLocked ? '#7c8fa0' : '#1E293B',
+                    fontSize: '1.6rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    boxShadow: isCurrent
+                      ? '0 0 0 6px rgba(29, 78, 216, 0.18)'
+                      : '0 4px 10px rgba(30, 41, 59, 0.18)',
+                    transition: 'transform 0.2s ease',
+                    margin: '0 auto',
+                  }}
+                  aria-label={`${region.name}: ${status}. ${percent}% complete.`}
+                >
+                  {isLocked ? '🔒' : region.icon}
+                </button>
+
+                <div style={{ marginTop: '0.35rem' }}>
+                  <strong
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      color: isLocked ? '#7c8fa0' : '#1E293B',
+                    }}
+                  >
+                    {region.name}
+                  </strong>
+                  <small
+                    style={{
+                      fontSize: '0.68rem',
+                      color: status === 'completed' ? '#15803D' : '#64748B',
+                      display: 'block',
+                    }}
+                  >
+                    {isLocked ? 'Locked' : `${percent}% complete`}
+                  </small>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+    </>
   );
 }
 
