@@ -14,7 +14,8 @@ import type { CharacterAppearance, CharacterEquipment } from '../character/types
 import { CharacterAvatar } from '../character/components';
 import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
-import { StudentAssignmentsPanel } from '../lib/assignments/StudentAssignmentsPanel';
+import { AssignmentsWidget } from '../lib/assignments/AssignmentsWidget';
+import { AssignmentsPage } from '../lib/assignments/AssignmentsPage';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { getNextMissionRecommendation } from '../adventure/progression';
@@ -59,7 +60,7 @@ function renderGameModal(gameId: string, onClose: () => void) {
 // id is a number for a locally-created demo profile, or a UUID string for
 // an account fetched from the real server (see /api/child-auth/login).
 type Child = { id: number | string; name: string; username?: string; age: number; avatar: string; pin: string };
-type DashboardTab = 'today' | 'adventure' | 'stories' | 'arcade' | 'leagues' | 'explore' | 'progress' | 'character';
+type DashboardTab = 'today' | 'assignments' | 'adventure' | 'stories' | 'arcade' | 'leagues' | 'explore' | 'progress' | 'character';
 type ModuleFilter = 'All lessons' | 'Not started' | 'In progress' | 'Completed';
 type ModuleProgressEntry = { completedIndices: number[]; lastCompletedIndex: number };
 
@@ -547,6 +548,16 @@ export default function ChildDashboardPage() {
               <span>Today</span>
             </button>
 
+            {/* Assignments */}
+            <button
+              type="button"
+              className={`kid-nav-item ${activeTab === 'assignments' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('assignments'); setMobileMenuOpen(false); }}
+            >
+              <span className="kid-nav-icon" aria-hidden="true">📋</span>
+              <span>Assignments</span>
+            </button>
+
             {/* 2. Adventure */}
             <button
               type="button"
@@ -680,7 +691,7 @@ export default function ChildDashboardPage() {
                 </div>
               </section>
 
-              <StudentAssignmentsPanel tone="child" />
+              <AssignmentsWidget tone="child" onViewAll={() => setActiveTab('assignments')} />
 
               {/* 2. THREE QUICK-ACTION STATUS CARDS ROW */}
               <section className="kid-three-cards-row">
@@ -824,6 +835,9 @@ export default function ChildDashboardPage() {
               </section>
             </div>
           )}
+
+          {/* TAB: ASSIGNMENTS */}
+          {activeTab === 'assignments' && <AssignmentsPage tone="child" />}
 
           {/* TAB: ADVENTURE (BIBLE ADVENTURE WORLD) */}
           {activeTab === 'adventure' && (

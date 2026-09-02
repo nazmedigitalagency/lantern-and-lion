@@ -15,7 +15,8 @@ import { readAppearance, readEquipment, readCharacterName } from '../character/s
 import type { CharacterAppearance, CharacterEquipment } from '../character/types';
 import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
-import { StudentAssignmentsPanel } from '../lib/assignments/StudentAssignmentsPanel';
+import { AssignmentsWidget } from '../lib/assignments/AssignmentsWidget';
+import { AssignmentsPage } from '../lib/assignments/AssignmentsPage';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
@@ -32,7 +33,7 @@ import LanternCodesPanel from '../lib/codes/LanternCodesPanel';
 import TeenSidebar from './TeenSidebar';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
-type Tab = 'home' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
+type Tab = 'home' | 'assignments' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
 
 function trackForAge(age: number): CurriculumModule['track'] {
   if (age <= 5) return 'early';
@@ -74,12 +75,6 @@ const DEVOTION = {
     'Courage in Scripture is rarely the absence of fear. It’s obedience that keeps moving while the fear is still in the room. Today, you’ll be asked to make a real decision somewhere — a comment thread, a group chat, a test, a friendship. The question isn’t whether you feel ready. It’s whether you’ll move while God is still with you wherever you go.',
   ],
 };
-
-const ASSIGNMENTS = [
-  { id: 1, title: 'Case File: The Empty Tomb Investigation', due: 'Friday', status: 'pending' as const },
-  { id: 2, title: 'Memorize Joshua 1:9 — full verse, no hints', due: 'Sunday', status: 'pending' as const },
-  { id: 3, title: 'Real Life: Standing Alone', due: 'Completed', status: 'done' as const },
-];
 
 const STUDY_QUESTIONS = [
   'Where else in Scripture does God repeat a command for emphasis? Why might repetition matter here?',
@@ -426,7 +421,6 @@ export default function TeenDashboardPage() {
   const [quizDone, setQuizDone] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
 
-  const [assignments, setAssignments] = useState(ASSIGNMENTS);
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [devotionOpen, setDevotionOpen] = useState(false);
   const [classCode, setClassCode] = useState('');
@@ -520,7 +514,7 @@ export default function TeenDashboardPage() {
         // Arriving from a subpage's sidebar (e.g. /adventure) via
         // /teen-dashboard?tab=journey should land on that tab.
         const requestedTab = new URLSearchParams(window.location.search).get('tab') as Tab | null;
-        const validTabs: Tab[] = ['home', 'decision', 'cases', 'askword', 'learn', 'journey', 'profile'];
+        const validTabs: Tab[] = ['home', 'assignments', 'decision', 'cases', 'askword', 'learn', 'journey', 'profile'];
         if (requestedTab && validTabs.includes(requestedTab)) setActiveTab(requestedTab);
       } catch { /* keep demo defaults */ }
       setHydrated(true);
@@ -616,10 +610,6 @@ export default function TeenDashboardPage() {
     }, 1400);
   }
   function exitQuiz() { setQuizStarted(false); setQuizDone(false); setActiveTab('home'); }
-
-  function toggleAssignment(id: number) {
-    setAssignments(assignments.map((a) => a.id === id ? { ...a, status: a.status === 'done' ? 'pending' : 'done' } : a));
-  }
 
   function connectClass() {
     setClassError('');
@@ -850,7 +840,7 @@ export default function TeenDashboardPage() {
                 </div>
               </section>
 
-              <StudentAssignmentsPanel tone="teen" />
+              <AssignmentsWidget tone="teen" onViewAll={() => setActiveTab('assignments')} />
 
               {/* 2. PRIMARY ACTION ROW: RECOMMENDED BIBLE EXPEDITION & DAILY QUESTS */}
               <div className="teen-action-cards-grid">
@@ -1113,6 +1103,13 @@ export default function TeenDashboardPage() {
             </div>
           )}
 
+          {/* ── ASSIGNMENTS ── */}
+          {activeTab === 'assignments' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              <AssignmentsPage tone="teen" />
+            </div>
+          )}
+
           {/* ── TAB 2: DECISION LAB ── */}
           {activeTab === 'decision' && (
             <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
@@ -1365,32 +1362,6 @@ export default function TeenDashboardPage() {
                 ))}
               </section>
 
-              <section className="teen-panel">
-                <div className="teen-panel-head">
-                  <div>
-                    <p className="teen-kicker">ASSIGNMENTS</p>
-                    <h2>From Your Class</h2>
-                  </div>
-                </div>
-                {assignments.map((a) => (
-                  <article key={a.id} className="teen-assignment-row">
-                    <button
-                      type="button"
-                      className={`teen-check ${a.status === 'done' ? 'done' : ''}`}
-                      onClick={() => toggleAssignment(a.id)}
-                      aria-pressed={a.status === 'done'}
-                      aria-label={a.status === 'done' ? `Mark "${a.title}" as not done` : `Mark "${a.title}" as done`}
-                    >
-                      {a.status === 'done' ? '✓' : ''}
-                    </button>
-                    <div>
-                      <strong>{a.title}</strong>
-                      <small>Due {a.due}</small>
-                    </div>
-                  </article>
-                ))}
-              </section>
-
               <section className="teen-panel teen-class-panel">
                 <div className="teen-panel-head">
                   <div>
@@ -1399,7 +1370,9 @@ export default function TeenDashboardPage() {
                   </div>
                 </div>
                 {connectedClass ? (
-                  <p className="teen-panel-copy">Connected with code <b>{connectedClass.code}</b>. Assignments above sync from this class.</p>
+                  <p className="teen-panel-copy">
+                    Connected with code <b>{connectedClass.code}</b>. Check the <b>Assignments</b> tab for anything your class has sent you.
+                  </p>
                 ) : (
                   <div className="teen-class-connect">
                     <input

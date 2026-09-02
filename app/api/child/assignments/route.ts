@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getChildSessionFromCookies } from '../../../lib/child-session';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import { studentDueBucket, syncAssignmentSubmissions } from '../../../lib/assignments/server';
-import { contentLink } from '../../../lib/assignments/content';
+import { contentLink, referenceLabel } from '../../../lib/assignments/content';
+import { sortByPriority } from '../../../lib/assignments/priority';
 import type { AssignmentType, StudentAssignment } from '../../../lib/assignments/types';
 
 /**
@@ -18,15 +19,15 @@ export async function GET() {
   const admin = createServerAdminClient();
   const { data: rows } = await admin
     .from('assignment_submissions')
-    .select('id, child_id, status, score, feedback, submitted_at, assignments(id, title, instructions, assignment_type, reference_id, due_date, time_limit_minutes, required_score, xp_reward, status, assigned_at)')
+    .select('id, child_id, status, score, feedback, submitted_at, graded_at, assignments(id, title, instructions, assignment_type, reference_id, due_date, time_limit_minutes, required_score, xp_reward, status, assigned_at, classrooms(name))')
     .eq('child_id', session.childId);
 
   type Row = {
-    id: string; child_id: string; status: string; score: number | null; feedback: string | null; submitted_at: string | null;
+    id: string; child_id: string; status: string; score: number | null; feedback: string | null; submitted_at: string | null; graded_at: string | null;
     assignments: {
       id: string; title: string; instructions: string | null; assignment_type: AssignmentType; reference_id: string | null;
       due_date: string | null; time_limit_minutes: number | null; required_score: number | null; xp_reward: number | null;
-      status: 'draft' | 'assigned'; assigned_at: string | null;
+      status: 'draft' | 'assigned'; assigned_at: string | null; classrooms: { name: string } | null;
     } | null;
   };
 
@@ -54,7 +55,9 @@ export async function GET() {
         title: a.title,
         instructions: a.instructions,
         assignmentType: a.assignment_type,
+        referenceLabel: referenceLabel(a.assignment_type, a.reference_id),
         contentLink: contentLink(a.assignment_type, a.reference_id),
+        classroomName: a.classrooms?.name || null,
         dueDate: a.due_date,
         timeLimitMinutes: a.time_limit_minutes,
         requiredScore: a.required_score,
@@ -63,13 +66,10 @@ export async function GET() {
         score: r.score,
         feedback: r.feedback,
         submittedAt: r.submitted_at,
+        gradedAt: r.graded_at,
         dueBucket: studentDueBucket(a.due_date, r.status),
       };
-    })
-    .sort((a, b) => {
-      const order = { overdue: 0, due_today: 1, due_soon: 2, upcoming: 3, completed: 4 };
-      return order[a.dueBucket] - order[b.dueBucket];
     });
 
-  return NextResponse.json({ assignments: result });
+  return NextResponse.json({ assignments: sortByPriority(result) });
 }

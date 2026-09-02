@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { CharacterAvatar } from '../character/components';
 import type { CharacterAppearance, CharacterEquipment } from '../character/types';
 
-export type TeenSidebarTab = 'home' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
+export type TeenSidebarTab = 'home' | 'assignments' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
 export type TeenSidebarItem = TeenSidebarTab | 'adventure' | 'stories' | 'arcade' | 'leagues';
 
 type NavEntry = {
@@ -17,6 +17,7 @@ type NavEntry = {
 
 const NAV_ENTRIES: NavEntry[] = [
   { id: 'home', icon: '🏠', label: 'Today' },
+  { id: 'assignments', icon: '📋', label: 'Assignments' },
   { id: 'adventure', icon: '🗺️', label: 'Adventure', href: '/adventure' },
   { id: 'stories', icon: '📖', label: 'Stories', href: '/stories' },
   { id: 'arcade', icon: '🎮', label: 'Arcade', href: '/arcade' },

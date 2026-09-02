@@ -58,7 +58,11 @@ export type StudentAssignment = {
   title: string;
   instructions: string | null;
   assignmentType: AssignmentType;
+  /** The activity's own display name (e.g. the story title), when the type points at one. */
+  referenceLabel: string | null;
   contentLink: string | null;
+  /** The classroom this came through, if assigned via a class rather than individually. */
+  classroomName: string | null;
   dueDate: string | null;
   timeLimitMinutes: number | null;
   requiredScore: number | null;
@@ -67,5 +71,17 @@ export type StudentAssignment = {
   score: number | null;
   feedback: string | null;
   submittedAt: string | null;
+  gradedAt: string | null;
   dueBucket: 'upcoming' | 'due_today' | 'due_soon' | 'overdue' | 'completed';
+};
+
+/** Friendly, non-punitive category label for each assignment type — matches the teacher's own creation-form labels. */
+export const ASSIGNMENT_TYPE_LABEL: Record<AssignmentType, string> = {
+  story: 'Interactive Story',
+  reading: 'Bible Reading',
+  quiz: 'Bible Quiz',
+  memory: 'Scripture Memory',
+  game: 'Game Challenge',
+  written: 'Written Response',
+  custom: 'Custom Assignment',
 };
