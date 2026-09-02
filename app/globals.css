@@ -1994,7 +1994,7 @@ footer a:hover{color:var(--gold)}
   width: min(760px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  padding: 20px;
+  padding: 64px 20px 20px;
   border: 2.5px solid var(--kid-navy);
   border-radius: 22px;
   background: var(--white);
@@ -2007,7 +2007,19 @@ footer a:hover{color:var(--gold)}
   top: 14px;
   right: 14px;
   z-index: 5;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--error-dark);
+  border-radius: 50%;
+  background: var(--error);
+  color: var(--white);
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 }
+.game-modal-close:hover { background: var(--error-dark); }
 .family-modal-parent-line { margin: 0 0 18px; color: var(--muted); font-size: 13px; font-weight: 700; }
 .family-modal-child-grid { display: flex; flex-direction: column; gap: 10px; margin: 0 0 18px; }
 .family-score-card {
@@ -6582,9 +6594,9 @@ footer a:hover{color:var(--gold)}
 .bts-slot-number{display:grid;place-items:center;flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:var(--white);font-size:12px;font-weight:900}
 .bts-slot-text{flex:1}
 
-.bts-bank{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:18px}
-.bts-bank-card-wrap{display:flex;align-items:stretch;gap:6px}
-.bts-bank-card{min-height:44px;padding:8px 14px;border:2px solid var(--navy);border-radius:12px;background:var(--white);color:var(--navy);font:700 13px var(--font-nunito);cursor:pointer;max-width:260px;text-align:left}
+.bts-bank{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:18px}
+.bts-bank-card-wrap{display:flex;align-items:stretch;gap:6px;width:100%}
+.bts-bank-card{flex:1;width:100%;min-height:44px;padding:8px 14px;border:2px solid var(--navy);border-radius:12px;background:var(--white);color:var(--navy);font:700 13px var(--font-nunito);cursor:pointer;max-width:none;text-align:left}
 .bts-bank-card:hover{background:var(--sky)}
 .bts-audio-btn{width:40px;border:2px solid var(--navy);border-radius:12px;background:var(--gold);cursor:pointer;font-size:16px}
 
@@ -6598,7 +6610,7 @@ footer a:hover{color:var(--gold)}
 
 @media(max-width:620px){
   .bts-story-grid{grid-template-columns:1fr}
-  .bts-bank-card{max-width:70vw}
+  .bts-bank{grid-template-columns:1fr}
 }
 
 /* Bible Detective */
