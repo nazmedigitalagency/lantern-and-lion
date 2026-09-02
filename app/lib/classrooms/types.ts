@@ -65,3 +65,28 @@ export type StudentDetailResponse = {
   stories: { storyId: string; title: string; completedAt: string | null }[];
   recentActivity: StudentActivityItem[];
 };
+
+// "Add Student with Teacher Code" — the two-step lookup-then-request flow.
+
+export type ConnectionState = 'none' | 'pending' | 'approved';
+
+/** Deliberately thin — no age, username, or family info before a request exists. */
+export type StudentLookupPreview = { id: string; name: string; ageGroup: AgeGroup; avatar: string };
+
+export type StudentLookupResponse = {
+  student: StudentLookupPreview;
+  classroom: StudentClassroomRef;
+  connection: ConnectionState;
+};
+
+export type AddStudentResponse = {
+  success: true;
+  pendingApproval: true;
+  child: { id: string; name: string };
+  classroom: StudentClassroomRef;
+};
+
+export type AddStudentErrorResponse = {
+  error: string;
+  status?: 'not_found' | 'already_connected' | 'pending';
+};

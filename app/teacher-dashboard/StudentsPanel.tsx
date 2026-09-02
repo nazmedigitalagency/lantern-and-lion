@@ -1,15 +1,38 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { ActivityStatus, AgeGroup, StudentDetailResponse, StudentsRosterResponse } from '../lib/classrooms/types';
+import type {
+  ActivityStatus,
+  AddStudentErrorResponse,
+  AddStudentResponse,
+  AgeGroup,
+  StudentClassroomRef,
+  StudentDetailResponse,
+  StudentLookupResponse,
+  StudentsRosterResponse,
+} from '../lib/classrooms/types';
 
 type SortKey = 'name' | 'most_active' | 'least_active' | 'xp_high' | 'xp_low' | 'performance_high' | 'performance_low' | 'recent_activity';
+type AddStep = 'form' | 'confirm' | 'success';
 
 const ACTIVITY_LABEL: Record<ActivityStatus, string> = {
   active: 'Active',
   recently_active: 'Recently active',
   inactive: 'Inactive',
 };
+
+// Purely cosmetic mapping for the "student avatar" shown during Add Student
+// confirmation — same four badge ids a family already picks from during
+// setup (app/family-setup), just re-tinted to the Teacher Dashboard palette.
+const AVATAR_BADGE: Record<string, { mark: string; tone: string }> = {
+  lion: { mark: 'L', tone: 'var(--gold)' },
+  lantern: { mark: 'B', tone: 'var(--purple)' },
+  dove: { mark: 'P', tone: 'var(--blue)' },
+  star: { mark: 'S', tone: 'var(--green)' },
+};
+function avatarBadge(avatar: string) {
+  return AVATAR_BADGE[avatar] || { mark: '★', tone: 'var(--slate)' };
+}
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'name', label: 'Name (A–Z)' },
@@ -42,11 +65,17 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [addStudentOpen, setAddStudentOpen] = useState(false);
-  const [addStudentClassroomId, setAddStudentClassroomId] = useState('');
-  const [addStudentCode, setAddStudentCode] = useState('');
-  const [addStudentBusy, setAddStudentBusy] = useState(false);
-  const [addStudentNotice, setAddStudentNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addStep, setAddStep] = useState<AddStep>('form');
+  const [addClassroomId, setAddClassroomId] = useState('');
+  const [addCode, setAddCode] = useState('');
+  const [addBusy, setAddBusy] = useState(false);
+  const [addError, setAddError] = useState('');
+  const [addLookup, setAddLookup] = useState<StudentLookupResponse | null>(null);
+
+  const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
+  const [removeBusy, setRemoveBusy] = useState(false);
+  const [removeError, setRemoveError] = useState('');
 
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('all');
@@ -80,9 +109,9 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   }, []);
 
   useEffect(() => {
-    if (roster && roster.classrooms.length > 0 && !addStudentClassroomId) {
+    if (roster && roster.classrooms.length > 0 && !addClassroomId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- defaults the picker once, from freshly-loaded roster data
-      setAddStudentClassroomId(roster.classrooms[0].id);
+      setAddClassroomId(roster.classrooms[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roster]);
@@ -152,80 +181,231 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
     setAttentionOnly(false);
   }
 
-  async function submitAddStudent() {
-    if (!addStudentClassroomId || !addStudentCode.trim()) return;
-    setAddStudentBusy(true);
-    setAddStudentNotice(null);
+  function refreshRoster() {
+    fetch('/api/teacher/students')
+      .then((r) => (r.ok ? (r.json() as Promise<StudentsRosterResponse>) : null))
+      .then((fresh) => { if (fresh) setRoster(fresh); })
+      .catch(() => {});
+  }
+
+  function openAddModal() {
+    setAddOpen(true);
+    setAddStep('form');
+    setAddCode('');
+    setAddError('');
+    setAddLookup(null);
+  }
+
+  function closeAddModal() {
+    setAddOpen(false);
+  }
+
+  function backToCode() {
+    setAddStep('form');
+    setAddLookup(null);
+    setAddError('');
+  }
+
+  function addAnotherStudent() {
+    setAddStep('form');
+    setAddCode('');
+    setAddLookup(null);
+    setAddError('');
+  }
+
+  async function findStudent() {
+    if (!addClassroomId || !addCode.trim()) return;
+    setAddBusy(true);
+    setAddError('');
+    try {
+      const res = await fetch('/api/teacher/students/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherCode: addCode.trim(), classroomId: addClassroomId }),
+      });
+      const data = (await res.json().catch(() => null)) as (StudentLookupResponse & { error?: string }) | null;
+      if (!res.ok || !data) {
+        setAddError(data?.error || 'Could not look up that code.');
+        return;
+      }
+      setAddLookup(data);
+      setAddStep('confirm');
+    } catch {
+      setAddError('Could not look up that code. Check your connection and try again.');
+    } finally {
+      setAddBusy(false);
+    }
+  }
+
+  async function sendConnectionRequest() {
+    if (!addLookup || !addClassroomId) return;
+    setAddBusy(true);
+    setAddError('');
     try {
       const res = await fetch('/api/teacher/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacherCode: addStudentCode.trim(), classroomId: addStudentClassroomId }),
+        body: JSON.stringify({ teacherCode: addCode.trim(), classroomId: addClassroomId }),
       });
-      const data = (await res.json().catch(() => null)) as { error?: string; child?: { name: string } } | null;
-      if (!res.ok) {
-        setAddStudentNotice({ kind: 'error', text: data?.error || 'Could not send the connection request.' });
+      const data = (await res.json().catch(() => null)) as (AddStudentResponse & Partial<AddStudentErrorResponse>) | null;
+      if (!res.ok || !data?.success) {
+        setAddError(data?.error || 'Could not send the connection request.');
         return;
       }
-      setAddStudentNotice({ kind: 'success', text: `Request sent — ${data?.child?.name} is waiting on their parent's approval.` });
-      setAddStudentCode('');
-      // Refresh the roster so the new pending student shows up right away.
-      fetch('/api/teacher/students')
-        .then((r) => (r.ok ? (r.json() as Promise<StudentsRosterResponse>) : null))
-        .then((fresh) => { if (fresh) setRoster(fresh); })
-        .catch(() => {});
+      setAddStep('success');
+      refreshRoster();
     } catch {
-      setAddStudentNotice({ kind: 'error', text: 'Could not send the connection request. Check your connection and try again.' });
+      setAddError('Could not send the connection request. Check your connection and try again.');
     } finally {
-      setAddStudentBusy(false);
+      setAddBusy(false);
     }
   }
 
-  function renderAddStudentBlock(classrooms: { id: string; name: string; ageBand: string | null }[]) {
+  async function removeFromClassroom(classroomId: string) {
+    if (!detail) return;
+    setRemoveBusy(true);
+    setRemoveError('');
+    try {
+      const res = await fetch(`/api/teacher/students/${detail.student.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classroomId }),
+      });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        setRemoveError(data?.error || 'Could not remove this student.');
+        return;
+      }
+      setRemoveConfirmId(null);
+      closeDetail();
+      refreshRoster();
+    } catch {
+      setRemoveError('Could not remove this student. Check your connection and try again.');
+    } finally {
+      setRemoveBusy(false);
+    }
+  }
+
+  function renderAddButton(classrooms: StudentClassroomRef[]) {
     if (classrooms.length === 0) return null;
     return (
-      <section className="teacher-add-student-code">
-        <button
-          type="button"
-          className="teacher-add-student-toggle"
-          aria-expanded={addStudentOpen}
-          onClick={() => { setAddStudentOpen((v) => !v); setAddStudentNotice(null); }}
+      <button type="button" className="teacher-add-student-button" onClick={openAddModal}>
+        + Add Student
+      </button>
+    );
+  }
+
+  function renderAddModal() {
+    if (!addOpen || !roster) return null;
+    const badge = addLookup ? avatarBadge(addLookup.student.avatar) : null;
+    return (
+      <div className="add-student-overlay" role="presentation" onClick={closeAddModal}>
+        <section
+          className="add-student-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-student-title"
+          onClick={(e) => e.stopPropagation()}
         >
-          {addStudentOpen ? '− Add Student' : '+ Add Student'}
-        </button>
-        {addStudentOpen && (
-          <div className="teacher-add-student-form">
-            <p>Enter a student&apos;s Teacher Code to send them a classroom connection request. Their parent must approve it first.</p>
-            <div className="teacher-add-student-fields">
-              <select
-                value={addStudentClassroomId}
-                onChange={(e) => setAddStudentClassroomId(e.target.value)}
-                aria-label="Class to add this student to"
-              >
-                {classrooms.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={addStudentCode}
-                onChange={(e) => setAddStudentCode(e.target.value)}
-                placeholder="LNL-TCH-XXXXXX"
-                aria-label="Student's Teacher Code"
-                maxLength={32}
-              />
-              <button type="button" disabled={addStudentBusy || !addStudentCode.trim()} onClick={submitAddStudent}>
-                {addStudentBusy ? 'Sending…' : 'Send Request'}
+          <button className="student-detail-close" aria-label="Close" onClick={closeAddModal}>×</button>
+
+          {addStep === 'form' && (
+            <>
+              <h2 id="add-student-title">Add a student</h2>
+              <p>Ask your student to share their Lantern &amp; Lion Teacher Code.</p>
+              <label className="add-student-field">
+                Class
+                <select value={addClassroomId} onChange={(e) => setAddClassroomId(e.target.value)} aria-label="Class to add this student to">
+                  {roster.classrooms.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="add-student-field">
+                Teacher Code
+                <input
+                  type="text"
+                  value={addCode}
+                  onChange={(e) => setAddCode(e.target.value)}
+                  placeholder="LNL-TCH-XXXXXX"
+                  aria-label="Student's Teacher Code"
+                  maxLength={32}
+                  autoFocus
+                />
+              </label>
+              {addError && <p className="add-student-error" role="alert">{addError}</p>}
+              <button type="button" className="add-student-primary" disabled={addBusy || !addCode.trim()} onClick={findStudent}>
+                {addBusy ? 'Looking…' : 'Find Student'}
               </button>
-            </div>
-            {addStudentNotice && (
-              <p className={addStudentNotice.kind === 'error' ? 'teacher-add-student-error' : 'teacher-add-student-success'} role="status">
-                {addStudentNotice.text}
-              </p>
-            )}
-          </div>
-        )}
-      </section>
+            </>
+          )}
+
+          {addStep === 'confirm' && addLookup && badge && (
+            <>
+              {addLookup.connection === 'none' && (
+                <>
+                  <h2 id="add-student-title">Is this the student you&apos;re trying to add?</h2>
+                  <div className="add-student-preview">
+                    <span className="add-student-avatar" style={{ background: badge.tone }}>{badge.mark}</span>
+                    <strong>{addLookup.student.name}</strong>
+                    <small>{addLookup.student.ageGroup === 'teen' ? 'Teen' : 'Child'}</small>
+                  </div>
+                  <p className="add-student-note">Adding to <strong>{addLookup.classroom.name}</strong>. Their parent must approve before you can see any learning data.</p>
+                  {addError && <p className="add-student-error" role="alert">{addError}</p>}
+                  <div className="add-student-actions">
+                    <button type="button" className="add-student-secondary" onClick={backToCode}>Back</button>
+                    <button type="button" className="add-student-primary" disabled={addBusy} onClick={sendConnectionRequest}>
+                      {addBusy ? 'Sending…' : 'Send Connection Request'}
+                    </button>
+                  </div>
+                </>
+              )}
+              {addLookup.connection === 'approved' && (
+                <>
+                  <h2 id="add-student-title">Already connected</h2>
+                  <div className="add-student-preview">
+                    <span className="add-student-avatar" style={{ background: badge.tone }}>{badge.mark}</span>
+                    <strong>{addLookup.student.name}</strong>
+                    <small>{addLookup.student.ageGroup === 'teen' ? 'Teen' : 'Child'}</small>
+                  </div>
+                  <p className="add-student-note">This student is already connected to your classroom.</p>
+                  <div className="add-student-actions">
+                    <button type="button" className="add-student-secondary" onClick={backToCode}>Try another code</button>
+                    <button type="button" className="add-student-primary" onClick={closeAddModal}>Done</button>
+                  </div>
+                </>
+              )}
+              {addLookup.connection === 'pending' && (
+                <>
+                  <h2 id="add-student-title">Connection request pending</h2>
+                  <div className="add-student-preview">
+                    <span className="add-student-avatar" style={{ background: badge.tone }}>{badge.mark}</span>
+                    <strong>{addLookup.student.name}</strong>
+                    <small>{addLookup.student.ageGroup === 'teen' ? 'Teen' : 'Child'}</small>
+                  </div>
+                  <p className="add-student-note">A request is already waiting on their parent&apos;s approval.</p>
+                  <div className="add-student-actions">
+                    <button type="button" className="add-student-secondary" onClick={backToCode}>Try another code</button>
+                    <button type="button" className="add-student-primary" onClick={closeAddModal}>Done</button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {addStep === 'success' && (
+            <>
+              <span className="add-student-success-mark">✓</span>
+              <h2 id="add-student-title">Connection request sent.</h2>
+              <p className="add-student-note">{addLookup?.student.name} will appear in Pending approval until their parent approves the request.</p>
+              <div className="add-student-actions">
+                <button type="button" className="add-student-secondary" onClick={addAnotherStudent}>Add another</button>
+                <button type="button" className="add-student-primary" onClick={closeAddModal}>Done</button>
+              </div>
+            </>
+          )}
+        </section>
+      </div>
     );
   }
 
@@ -264,14 +444,15 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
             <button onClick={onGoToClasses}>Go to Classes</button>
           </div>
         </div>
-        {roster && renderAddStudentBlock(roster.classrooms)}
+        {roster && renderAddButton(roster.classrooms)}
+        {renderAddModal()}
       </>
     );
   }
 
   return (
     <>
-      {renderAddStudentBlock(roster.classrooms)}
+      {renderAddButton(roster.classrooms)}
       <div className="teacher-students-toolbar">
         <input
           type="search"
@@ -404,10 +585,7 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
                   <span className="student-detail-avatar">{detail.student.name[0]}</span>
                   <div>
                     <h2 id="student-detail-title">{detail.student.name}</h2>
-                    <p>
-                      {detail.student.ageGroup === 'teen' ? 'Teen' : 'Child'} · Age {detail.student.age}
-                      {detail.student.classrooms.length > 0 ? ` · ${detail.student.classrooms.map((c) => c.name).join(', ')}` : ''}
-                    </p>
+                    <p>{detail.student.ageGroup === 'teen' ? 'Teen' : 'Child'} · Age {detail.student.age}</p>
                   </div>
                   <span className={`tsc-status tsc-status-${detail.student.activityStatus}`}>{ACTIVITY_LABEL[detail.student.activityStatus]}</span>
                 </header>
@@ -473,11 +651,36 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
                     </ul>
                   )}
                 </div>
+
+                <div className="student-detail-section">
+                  <p className="teacher-kicker">Classes</p>
+                  {removeError && <p className="add-student-error" role="alert">{removeError}</p>}
+                  <ul className="student-detail-classes">
+                    {detail.student.classrooms.map((c) => (
+                      <li key={c.id}>
+                        <span>{c.name}</span>
+                        {removeConfirmId === c.id ? (
+                          <span className="student-detail-remove-confirm">
+                            <em>Remove {detail.student.name} from {c.name}?</em>
+                            <button type="button" onClick={() => setRemoveConfirmId(null)} disabled={removeBusy}>Cancel</button>
+                            <button type="button" className="student-detail-remove-go" onClick={() => removeFromClassroom(c.id)} disabled={removeBusy}>
+                              {removeBusy ? 'Removing…' : 'Yes, remove'}
+                            </button>
+                          </span>
+                        ) : (
+                          <button type="button" className="student-detail-remove" onClick={() => setRemoveConfirmId(c.id)}>Remove</button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </>
             )}
           </section>
         </div>
       )}
+
+      {renderAddModal()}
     </>
   );
 }

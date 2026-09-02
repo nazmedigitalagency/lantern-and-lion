@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../../lib/supabase/server';
 import { getStreakCalendar, getStreakStatus } from '../../../../lib/streak/server';
@@ -153,4 +154,43 @@ export async function GET(_req: Request, ctx: { params: Promise<{ studentId: str
     stories,
     recentActivity,
   });
+}
+
+const RemoveSchema = z.object({ classroomId: z.string().uuid() });
+
+/**
+ * Revokes a teacher/student connection — removes this one classroom_students
+ * row only. Never touches `children` or any learning table (daily_activity_
+ * summary, concept_mastery, streak_state, story_progress, activity_events),
+ * so the student's account and learning history are untouched; if the same
+ * Teacher Code is used again later, a fresh request can be sent since the
+ * unique (classroom_id, child_id) row is gone.
+ */
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ studentId: string }> }) {
+  const user = await getAuthenticatedUser();
+  if (!user) return NextResponse.json({ error: 'Please sign in as a teacher first.' }, { status: 401 });
+
+  const { studentId } = await ctx.params;
+  const rawBody = await req.json().catch(() => null);
+  const parsed = RemoveSchema.safeParse(rawBody);
+  if (!parsed.success) return NextResponse.json({ error: 'A classroom is required.' }, { status: 400 });
+
+  const admin = createServerAdminClient();
+
+  const { data: classroom } = await admin
+    .from('classrooms')
+    .select('id')
+    .eq('id', parsed.data.classroomId)
+    .eq('teacher_id', user.id)
+    .maybeSingle();
+  if (!classroom) return NextResponse.json({ error: 'Class not found.' }, { status: 404 });
+
+  const { error } = await admin
+    .from('classroom_students')
+    .delete()
+    .eq('classroom_id', classroom.id)
+    .eq('child_id', studentId);
+  if (error) return NextResponse.json({ error: 'Could not remove this student.' }, { status: 500 });
+
+  return NextResponse.json({ success: true });
 }

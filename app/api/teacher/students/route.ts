@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
   const code = normalizeTeacherCode(parsed.data.teacherCode);
   const { data: child } = await admin.from('children').select('id, name, family_id').eq('teacher_code', code).maybeSingle();
   if (!child) {
-    return NextResponse.json({ error: 'We could not find a student with that Teacher Code. Double-check it with them and try again.' }, { status: 404 });
+    return NextResponse.json({ error: "We couldn't find a student with that code. Check the code and try again.", status: 'not_found' }, { status: 404 });
   }
 
   const { data: existing } = await admin
@@ -195,11 +195,9 @@ export async function POST(req: NextRequest) {
 
   if (existing) {
     return NextResponse.json(
-      {
-        error: existing.approved
-          ? `${child.name} is already part of ${classroom.name}.`
-          : `A request for ${child.name} is already waiting on their parent's approval.`,
-      },
+      existing.approved
+        ? { error: 'This student is already connected to your classroom.', status: 'already_connected' }
+        : { error: 'Connection request pending.', status: 'pending' },
       { status: 409 }
     );
   }
