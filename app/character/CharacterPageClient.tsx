@@ -47,7 +47,11 @@ import TeenSidebar from '../teen-dashboard/TeenSidebar';
 
 type Tab = 'overview' | 'customize' | 'shop' | 'inventory' | 'skills';
 
-export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
+export function CharacterBuilder({
+  embedded = false,
+  onClose,
+  onNavigate,
+}: { embedded?: boolean; onClose?: () => void; onNavigate?: (tab: 'adventure' | 'arcade') => void } = {}) {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
@@ -310,7 +314,11 @@ export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boo
                   );
                 })}
               </div>
-              <Link href="/adventure" className="button button-secondary char-adventure-link">Open Adventure World →</Link>
+              {onNavigate ? (
+                <button type="button" className="button button-secondary char-adventure-link" onClick={() => onNavigate('adventure')}>Open Adventure World →</button>
+              ) : (
+                <Link href="/adventure" className="button button-secondary char-adventure-link">Open Adventure World →</Link>
+              )}
             </section>
           </div>
         )}
@@ -488,7 +496,11 @@ export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boo
               </section>
             )}
 
-            <Link href="/arcade" className="button button-secondary char-adventure-link">Open Lantern Arcade →</Link>
+            {onNavigate ? (
+              <button type="button" className="button button-secondary char-adventure-link" onClick={() => onNavigate('arcade')}>Open Lantern Arcade →</button>
+            ) : (
+              <Link href="/arcade" className="button button-secondary char-adventure-link">Open Lantern Arcade →</Link>
+            )}
           </div>
         )}
       </div>

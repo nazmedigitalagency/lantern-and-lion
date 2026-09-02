@@ -34,7 +34,11 @@ const TEEN_COLORS = {
   ctaBg: 'var(--teen-cta-bg)', ctaText: 'var(--teen-cta-text)', ctaShadow: 'none',
 };
 
-export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
+export function LeagueWorld({
+  embedded = false,
+  onClose,
+  onNavigate,
+}: { embedded?: boolean; onClose?: () => void; onNavigate?: (tab: 'arcade') => void } = {}) {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<{ id: number; name: string; kind: 'child' | 'teen'; age?: number } | null>(null);
@@ -247,9 +251,20 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
                 </p>
                 <small style={{ color: c.textMuted }}>Top {pod.promotionCutoffRank} learners advance to the next league at season end.</small>
               </div>
-              <Link href="/arcade" className="button button-primary" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem', ...ctaStyle }}>
-                🎮 Earn XP in Arcade →
-              </Link>
+              {onNavigate ? (
+                <button
+                  type="button"
+                  className="button button-primary"
+                  style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem', ...ctaStyle }}
+                  onClick={() => onNavigate('arcade')}
+                >
+                  🎮 Earn XP in Arcade →
+                </button>
+              ) : (
+                <Link href="/arcade" className="button button-primary" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem', ...ctaStyle }}>
+                  🎮 Earn XP in Arcade →
+                </Link>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

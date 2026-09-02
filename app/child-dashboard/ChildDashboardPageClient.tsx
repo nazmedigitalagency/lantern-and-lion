@@ -818,12 +818,12 @@ export default function ChildDashboardPage() {
 
           {/* TAB: LEAGUES */}
           {activeTab === 'leagues' && (
-            <LeagueWorld embedded onClose={() => setActiveTab('today')} />
+            <LeagueWorld embedded onClose={() => setActiveTab('today')} onNavigate={(tab) => setActiveTab(tab)} />
           )}
 
           {/* TAB: CHARACTER */}
           {activeTab === 'character' && (
-            <CharacterBuilder embedded onClose={() => setActiveTab('today')} />
+            <CharacterBuilder embedded onClose={() => setActiveTab('today')} onNavigate={(tab) => setActiveTab(tab)} />
           )}
 
           {/* TAB: EXPLORE (CURRICULUM MODULES & LESSONS) */}

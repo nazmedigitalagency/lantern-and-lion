@@ -33,7 +33,15 @@ import { getLevelInfo } from '../lib/xp-levels';
 type ToastEvent = { id: string; transaction: AwardResult['transaction'] };
 type LevelUpEvent = { previousLevel: number; newLevel: number; unlockedItems: EquipmentItem[] };
 
-export default function StoryPageClient({ story }: { story: InteractiveStory }) {
+export default function StoryPageClient({
+  story,
+  embedded = false,
+  onClose,
+}: {
+  story: InteractiveStory;
+  embedded?: boolean;
+  onClose?: () => void;
+}) {
   const [profile, setProfile] = useState<{ id: number; kind: 'child' | 'teen' } | null>(null);
   const [state, setState] = useState<StoryProgressState | null>(null);
   const [showComplete, setShowComplete] = useState(false);
@@ -148,6 +156,7 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
   // shell as the rest of the Lion's Den so navigation isn't lost; children
   // keep the original single-column story-shell exactly as before.
   function withTeenShell(children: ReactNode) {
+    if (embedded) return <div className="story-shell">{children}</div>;
     if (!isTeen) return <main className="story-shell">{children}</main>;
     return (
       <main className="teen-dashboard">
@@ -201,9 +210,15 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
             {reward.gems > 0 && <span>💎 +{reward.gems} Gems</span>}
           </div>
 
-          <Link href={dashboardHref} className="button button-primary story-primary-action">
-            Continue your adventure →
-          </Link>
+          {embedded && onClose ? (
+            <button type="button" className="button button-primary story-primary-action" onClick={onClose}>
+              Continue your adventure →
+            </button>
+          ) : (
+            <Link href={dashboardHref} className="button button-primary story-primary-action">
+              Continue your adventure →
+            </Link>
+          )}
         </div>
 
         {levelUpEvent && (
@@ -227,9 +242,15 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
         <h1>
           {story.heroEmoji} {story.title}
         </h1>
-        <Link href={dashboardHref} className="button button-danger" style={{ fontSize: 13, padding: '6px 12px' }}>
-          Exit
-        </Link>
+        {embedded && onClose ? (
+          <button type="button" className="button button-danger" style={{ fontSize: 13, padding: '6px 12px' }} onClick={onClose}>
+            Exit
+          </button>
+        ) : (
+          <Link href={dashboardHref} className="button button-danger" style={{ fontSize: 13, padding: '6px 12px' }}>
+            Exit
+          </Link>
+        )}
       </div>
 
       {scene.type === 'NARRATION' && <NarrationSceneView story={story} scene={scene} kind={kind} onAdvance={handleAdvance} />}

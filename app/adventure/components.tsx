@@ -509,10 +509,12 @@ export function StoryChapterReader({
   chapter,
   onComplete,
   isCompleted,
+  onPlayInteractive,
 }: {
   chapter: StoryChapter;
   onComplete: () => void;
   isCompleted: boolean;
+  onPlayInteractive?: (storyId: string) => void;
 }) {
   return (
     <article
@@ -575,9 +577,19 @@ export function StoryChapterReader({
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
         {chapter.interactiveStoryId && (
-          <a href={`/stories/${chapter.interactiveStoryId}`} className="button button-primary">
-            🎮 Play the Interactive Story
-          </a>
+          onPlayInteractive ? (
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => onPlayInteractive(chapter.interactiveStoryId!)}
+            >
+              🎮 Play the Interactive Story
+            </button>
+          ) : (
+            <Link href={`/stories/${chapter.interactiveStoryId}`} className="button button-primary">
+              🎮 Play the Interactive Story
+            </Link>
+          )
         )}
         <button
           type="button"

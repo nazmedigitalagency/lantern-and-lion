@@ -51,6 +51,8 @@ import { MemoryMatchGame } from '../arcade/memory-match/MemoryMatchPageClient';
 import { BuildTheStoryGame } from '../arcade/build-the-story/BuildTheStoryPageClient';
 import { BibleDetectiveGame } from '../arcade/bible-detective/BibleDetectivePageClient';
 import { ScriptureConnectionsGame } from '../arcade/scripture-connections/ScriptureConnectionsPageClient';
+import { getStory } from '../stories/catalog';
+import StoryPageClient from '../stories/StoryPageClient';
 
 // A quest's linked arcade game now always opens in place (as a popup over the
 // region view) instead of navigating to its own page — so "back"/"close"
@@ -136,6 +138,17 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
     setShowRegionModal(true);
   }, []);
   const gameModalRef = useDialogA11y<HTMLDivElement>(!!activeGameModal, closeGameModal);
+  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
+  const launchInteractiveStory = useCallback((storyId: string) => {
+    setShowRegionModal(false);
+    setActiveStoryId(storyId);
+  }, []);
+  const closeStoryModal = useCallback(() => {
+    setActiveStoryId(null);
+    setShowRegionModal(true);
+  }, []);
+  const storyModalRef = useDialogA11y<HTMLDivElement>(!!activeStoryId, closeStoryModal);
+  const activeStory = activeStoryId ? getStory(activeStoryId) : undefined;
 
   function refresh() {
     const active = readActiveProfile();
@@ -566,6 +579,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
                       chapter={chapter}
                       isCompleted={isChapterCompleted(chapter.id, ctx)}
                       onComplete={() => handleCompleteChapter(chapter)}
+                      onPlayInteractive={launchInteractiveStory}
                     />
                   ))}
                 </div>
@@ -712,6 +726,15 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           <div ref={gameModalRef} className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="close-help game-modal-close" aria-label="Close game" onClick={closeGameModal}>✕</button>
             {renderQuestGameModal(activeGameModal.href, activeGameModal.contentId, closeGameModal)}
+          </div>
+        </div>
+      )}
+
+      {activeStory && (
+        <div className="help-overlay" role="presentation" onClick={closeStoryModal}>
+          <div ref={storyModalRef} className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="close-help game-modal-close" aria-label="Close story" onClick={closeStoryModal}>✕</button>
+            <StoryPageClient story={activeStory} embedded onClose={closeStoryModal} />
           </div>
         </div>
       )}
