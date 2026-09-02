@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { blogPosts } from '../blog-data';
 import SiteFooter from '../components/SiteFooter';
+import SiteHeader from '../components/SiteHeader';
 
 export const metadata: Metadata = {
   title: 'Bible Learning Ideas for Families & Ministry | Lantern & Lion Blog',
@@ -19,21 +19,7 @@ export const metadata: Metadata = {
 export default function BlogIndexPage() {
   return (
     <main className="public-subpage">
-      <header className="site-header">
-        <Link className="brand" href="/" aria-label="Lantern and Lion home">
-          <Image src="/lantern-lion-logo.png" alt="" width={58} height={58} />
-          <span><strong>Lantern &amp; Lion</strong><small>Bible play for growing minds</small></span>
-        </Link>
-        <nav>
-          <Link href="/curriculum">Curriculum</Link>
-          <Link href="/arcade">Games</Link>
-          <Link href="/churches">Churches &amp; Schools</Link>
-          <Link className="active-nav" href="/blog">Blog</Link>
-        </nav>
-        <div className="header-actions">
-          <Link className="button button-primary" href="/parent-access">Get started</Link>
-        </div>
-      </header>
+      <SiteHeader activeNav="blog" />
 
       <section className="blog-index-hero">
         <p className="eyebrow"><span>✎</span>The Lantern &amp; Lion Blog</p>

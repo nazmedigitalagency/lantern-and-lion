@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { curriculumModules, type CurriculumModule } from '../../curriculum-data';
 import { SITE_URL } from '../../lib/site';
 import SiteFooter from '../../components/SiteFooter';
+import SiteHeader from '../../components/SiteHeader';
 
 export function generateStaticParams() {
   return curriculumModules.map((mod) => ({ id: mod.id }));
@@ -86,21 +87,7 @@ export default async function CurriculumLessonPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(lessonJsonLd) }} />
 
-      <header className="site-header">
-        <Link className="brand" href="/" aria-label="Lantern and Lion home">
-          <Image src="/lantern-lion-logo.png" alt="" width={58} height={58} />
-          <span><strong>Lantern &amp; Lion</strong><small>Bible play for growing minds</small></span>
-        </Link>
-        <nav>
-          <Link href="/curriculum">Curriculum</Link>
-          <Link href="/arcade">Games</Link>
-          <Link href="/churches">Churches &amp; Schools</Link>
-          <Link href="/safety">Safety</Link>
-        </nav>
-        <div className="header-actions">
-          <Link className="button button-primary" href="/parent-access">Get started</Link>
-        </div>
-      </header>
+      <SiteHeader activeNav="curriculum" />
 
       <section style={{ padding: '24px max(24px,calc((100vw - 1192px)/2)) 0', fontSize: 14, color: '#64748B' }}>
         <Link href="/curriculum">Curriculum</Link>

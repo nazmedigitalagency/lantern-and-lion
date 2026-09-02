@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { blogPosts, getBlogPost } from '../../blog-data';
 import { SITE_URL } from '../../lib/site';
 import SiteFooter from '../../components/SiteFooter';
+import SiteHeader from '../../components/SiteHeader';
 
 export function generateStaticParams() {
   return blogPosts.map((post) => ({ slug: post.slug }));
@@ -66,20 +66,7 @@ export default async function BlogPostPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
-      <header className="site-header">
-        <Link className="brand" href="/" aria-label="Lantern and Lion home">
-          <Image src="/lantern-lion-logo.png" alt="" width={58} height={58} />
-          <span><strong>Lantern &amp; Lion</strong><small>Bible play for growing minds</small></span>
-        </Link>
-        <nav>
-          <Link href="/curriculum">Curriculum</Link>
-          <Link href="/arcade">Games</Link>
-          <Link className="active-nav" href="/blog">Blog</Link>
-        </nav>
-        <div className="header-actions">
-          <Link className="button button-primary" href="/parent-access">Get started</Link>
-        </div>
-      </header>
+      <SiteHeader activeNav="blog" />
 
       <article className="blog-article-shell">
         <p style={{ margin: 0, fontSize: 14 }}><Link href="/blog">Blog</Link> {' › '} <span>{post.category}</span></p>

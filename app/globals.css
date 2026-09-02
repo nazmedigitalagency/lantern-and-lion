@@ -5839,6 +5839,12 @@ footer a:hover{color:var(--gold)}
 .char-nav-adventure:hover{background:#dbeafe}
 .char-nav-back{background:var(--error);color:var(--white);border-color:var(--error-dark);box-shadow:2px 2px 0 var(--error-dark)}
 .char-nav-back:hover{background:var(--error-dark)}
+@media(max-width:480px){
+  /* Two full-width text pills plus the logo/menu column overflow a phone-width topbar — collapse to icon-only chips. */
+  .char-topbar-actions{gap:8px}
+  .char-nav-btn{min-height:38px;width:38px;padding:0;justify-content:center;gap:0}
+  .char-nav-btn span:last-child{display:none}
+}
 
 /* Modular Illustrated Avatar System */
 .ll-avatar-container{position:relative;display:inline-flex;align-items:center;justify-content:center;user-select:none}
