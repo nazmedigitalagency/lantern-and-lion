@@ -438,7 +438,7 @@ export function MemoryVerseTrainer({ verse }: { verse: MemoryVerseChallenge }) {
             })}
       </p>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+      <div className="adv-mv-actions">
         <button
           type="button"
           className="button button-secondary"
@@ -557,14 +557,14 @@ export function KnowledgeBossArena({
         <p style={{ fontSize: '0.9rem', color: '#334155', maxWidth: '520px', margin: '0 auto 1.25rem auto' }}>
           {boss.description}
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
-          <span style={{ background: '#fef3c7', color: '#92400e', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 700 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+          <span style={{ background: '#fef3c7', color: '#92400e', border: '1.5px solid #92400e', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
             ⭐ +{boss.reward.xp} XP
           </span>
-          <span style={{ background: '#ecfdf5', color: '#065f46', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 700 }}>
+          <span style={{ background: '#ecfdf5', color: '#065f46', border: '1.5px solid #065f46', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
             🪙 +{boss.reward.coins} Coins
           </span>
-          <span style={{ background: '#eff6ff', color: '#1e40af', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 700 }}>
+          <span style={{ background: '#eff6ff', color: '#1e40af', border: '1.5px solid #1e40af', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
             💎 +{boss.reward.gems} Gems
           </span>
         </div>

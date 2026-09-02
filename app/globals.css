@@ -1694,6 +1694,16 @@ footer a:hover{color:var(--gold)}
   gap: 16px;
   margin-bottom: 28px;
 }
+@media (max-width: 640px) {
+  .kid-tab-view .progress-overview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 360px) {
+  .kid-tab-view .progress-overview {
+    grid-template-columns: 1fr;
+  }
+}
 .kid-tab-view .progress-overview article {
   padding: 18px;
   border: 2.5px solid var(--kid-navy);
@@ -6081,6 +6091,9 @@ footer a:hover{color:var(--gold)}
 }
 
 @media(max-width:480px){
+  .char-tab-nav{display:flex;flex-wrap:wrap;width:100%;overflow-x:visible}
+  .child-nav{flex-wrap:wrap;overflow-x:visible}
+  .child-nav button{white-space:nowrap;flex:1 1 auto}
   .char-stat-grid{grid-template-columns:1fr 1fr;gap:8px}
   .char-stat-chip{padding:12px 8px}
   .char-stat-chip strong{font-size:18px}
@@ -6246,6 +6259,15 @@ footer a:hover{color:var(--gold)}
   white-space: nowrap;
   flex-shrink: 0;
 }
+@media (max-width: 640px) {
+  .league-tab-bar {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .league-tab-bar button {
+    flex: 1 1 auto;
+  }
+}
 .league-leaderboard-row {
   display: grid;
   grid-template-columns: 40px auto 1fr auto auto;
@@ -6284,6 +6306,63 @@ footer a:hover{color:var(--gold)}
   .adv-world-map-wrap .adv-world-map-container {
     min-width: 540px;
   }
+}
+
+/* Hero mission bar (Active Expedition card) — stacks the CTA below the
+   text instead of squeezing it into a shrinking row on small screens. */
+.adv-hero-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+@media (max-width: 680px) {
+  .adv-hero-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .adv-hero-bar .adv-hero-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Region detail modal header — icon/title/mastery grid collapses to a
+   single column on small screens instead of squashing three columns. */
+.adv-location-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.25rem;
+  align-items: center;
+}
+.adv-mastery-block { text-align: right; }
+@media (max-width: 600px) {
+  .adv-location-header {
+    grid-template-columns: auto 1fr;
+    row-gap: 0.6rem;
+  }
+  .adv-mastery-block {
+    grid-column: 1 / -1;
+    text-align: left;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+}
+
+/* Memory Verse card actions — equal-width side by side on desktop,
+   full-width stacked on small screens so both buttons have room. */
+.adv-mv-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+.adv-mv-actions > * { flex: 1 1 200px; text-align: center; justify-content: center; }
+@media (max-width: 600px) {
+  .adv-mv-actions { flex-direction: column; }
+  .adv-mv-actions > * { flex: 0 0 auto; width: 100%; }
 }
 
 /* ── LANTERN ARCADE ───────────────────────────────────────────── */

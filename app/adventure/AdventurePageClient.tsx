@@ -241,16 +241,13 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
 
         {/* Hero Mission Bar */}
         <section
+          className="adv-hero-bar"
           style={{
             background: c.cardBg,
             border: `2px solid ${c.cardBorder}`,
             borderRadius: '18px',
             padding: '1.25rem 1.5rem',
             marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '1rem',
             boxShadow: `5px 5px 0 ${c.cardShadow}`,
           }}
         >
@@ -271,7 +268,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
 
           <button
             type="button"
-            className="button button-primary"
+            className="button button-primary adv-hero-cta"
             onClick={() => {
               setSelectedRegionId(nextMission.region.id);
               if (nextMission.type === 'boss') setLocationTab('boss');
@@ -366,11 +363,8 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           </button>
           {/* Location Header */}
           <div
+            className="adv-location-header"
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'auto 1fr auto',
-              gap: '1.25rem',
-              alignItems: 'center',
               borderBottom: `1px solid ${c.surfaceAltBorder}`,
               paddingBottom: '1.25rem',
               marginBottom: '1.5rem',
@@ -379,7 +373,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           >
             <span style={{ fontSize: '3.5rem' }}>{selectedRegion.icon}</span>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                 <span style={{ fontSize: '0.75rem', background: '#3b82f6', color: '#ffffff', padding: '0.15rem 0.55rem', borderRadius: '9999px', fontWeight: 700 }}>
                   {selectedRegion.scriptureRange}
                 </span>
@@ -393,7 +387,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
               <p style={{ margin: 0, fontSize: '0.85rem', color: c.textMuted }}>{selectedRegion.summary}</p>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
+            <div className="adv-mastery-block">
               <strong style={{ fontSize: '1.4rem', color: c.gold, display: 'block' }}>
                 {completionPercents[selectedRegion.id] || 0}%
               </strong>
@@ -567,7 +561,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
                             <button
                               type="button"
                               className="button button-secondary"
-                              style={{ fontSize: '0.75rem', padding: '0.35rem 0.7rem' }}
+                              style={{ fontSize: '0.75rem', padding: '0.5rem 0.7rem', width: '100%', justifyContent: 'center' }}
                               onClick={() => handleDiscoverSecret(sec.id, sec.rewardCoins, sec.rewardGems)}
                             >
                               🔍 Search Area
