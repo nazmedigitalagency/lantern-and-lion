@@ -1,4 +1,4 @@
-import type { ActivityStatus, AgeGroup } from './types';
+import type { ActivityStatus, AgeGroup, AssignmentStatus } from './types';
 
 // A child is placed on the Teen track at the same age boundary already used
 // for the "Ages 13-16" classroom band (see codePrefixForAgeBand in the
@@ -68,4 +68,20 @@ export function buildNeedsAttention(input: NeedsAttentionInput): { needsAttentio
   }
 
   return { needsAttention: reasons.length > 0, reasons };
+}
+
+/**
+ * An assignment's bucket is derived purely from its due date and how many
+ * of the class have actually completed the real content it points at —
+ * never a status a teacher has to update by hand.
+ */
+export function assignmentStatus(dueDate: string | null, completionPercent: number): AssignmentStatus {
+  if (completionPercent >= 100) return 'completed';
+  if (!dueDate) return 'active';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(`${dueDate}T00:00:00`);
+  if (due.getTime() < today.getTime()) return 'overdue';
+  if (due.getTime() > today.getTime()) return 'upcoming';
+  return 'active';
 }

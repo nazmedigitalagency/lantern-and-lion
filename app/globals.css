@@ -2806,6 +2806,82 @@ footer a:hover{color:var(--gold)}
 .student-detail-remove-confirm button{min-height:32px;padding:0 10px;border:1px solid var(--border-alt);border-radius:7px;background:white;color:var(--navy);font-size:11px;font-weight:900;cursor:pointer}
 .student-detail-remove-confirm button.student-detail-remove-go{border-color:var(--error-dark);background:var(--error-dark);color:white}
 
+/* ── Teacher Dashboard: Classes ────────────────────────── */
+.classroom-grid{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.classroom-card{padding:18px;display:grid;gap:10px;border:2px solid var(--navy);border-radius:16px;background:white;box-shadow:3px 3px 0 var(--border-alt);text-align:left;font-family:var(--font-nunito);cursor:pointer;transition:box-shadow 120ms ease,transform 120ms ease}
+.classroom-card:hover{box-shadow:4px 4px 0 var(--blue);transform:translateY(-1px)}
+.classroom-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.classroom-card-head strong{font-size:17px;color:var(--navy)}
+.classroom-card-age{padding:3px 9px;border-radius:999px;background:var(--sky);color:var(--blue-dark);font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap}
+.classroom-card-desc{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.classroom-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.classroom-card-stats>div b{display:block;color:var(--navy);font-size:15px;font-weight:800}
+.classroom-card-stats>div span{display:block;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.classroom-card-meeting{margin:0;color:var(--slate);font-size:12px;font-weight:700}
+.classroom-card-activity{margin:0;color:var(--navy);font-size:12px;line-height:1.4}
+
+.classroom-create-dialog{width:min(100%,480px);text-align:left}
+.classroom-create-dialog h2{text-align:left;margin-bottom:16px}
+.classroom-create-meeting{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.add-student-field textarea{min-height:64px;padding:10px 14px;border:2px solid var(--border-alt);border-radius:10px;background:white;color:var(--navy);font:700 14px var(--font-nunito);resize:vertical}
+.add-student-field small{color:var(--muted);font-weight:700;text-transform:none}
+
+.classroom-detail{padding-bottom:20px}
+.classroom-back{margin-bottom:18px;border:0;background:transparent;color:var(--blue-dark);font:900 13px var(--font-nunito);text-decoration:underline;cursor:pointer}
+.classroom-detail-head h1{margin:0 0 6px;font-size:clamp(30px,4vw,42px)}
+.classroom-detail-desc{margin:0 0 8px;color:var(--navy);font-size:15px;line-height:1.5}
+.classroom-detail-meta{margin:0;color:var(--muted);font-size:13px;font-weight:700}
+.classroom-detail-meta strong{color:var(--navy);letter-spacing:.05em}
+
+.classroom-detail-stats{margin-top:22px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.classroom-detail-stats>div{padding:16px;border:2px solid var(--navy);border-radius:14px;background:white;box-shadow:3px 3px 0 var(--navy)}
+.classroom-detail-stats>div b{display:block;font:700 26px var(--font-fredoka)}
+.classroom-detail-stats>div span{display:block;margin-top:2px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase}
+
+.classroom-detail-section{margin-top:34px}
+.classroom-detail-section h2{margin:0 0 12px;font-size:24px}
+.classroom-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.classroom-section-head h2{margin:0}
+.classroom-manage-button{min-height:42px;padding:0 16px;border:2px solid var(--blue-dark);border-radius:9px;background:white;color:var(--blue-dark);font:900 13px var(--font-nunito);cursor:pointer}
+.classroom-manage-button:hover{background:var(--blue-tint)}
+.classroom-pending-list{margin-top:14px}
+
+.classroom-assignment-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.classroom-assignment-tabs button{min-height:38px;padding:0 14px;border:2px solid var(--border-alt);border-radius:999px;background:white;color:var(--slate);font:800 12px var(--font-nunito);cursor:pointer}
+.classroom-assignment-tabs button.active{border-color:var(--blue-dark);background:var(--blue-tint);color:var(--blue-dark)}
+
+.classroom-assignment-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.classroom-assignment-list li{padding:14px 16px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:14px;border:1px solid var(--border);border-radius:12px;background:white}
+.classroom-assignment-info strong{display:block;color:var(--navy);font-size:14px}
+.classroom-assignment-info small{display:block;margin-top:2px;color:var(--muted);font-size:12px}
+.classroom-assignment-progress{display:grid;justify-items:end;gap:4px;min-width:120px}
+.classroom-assignment-progress i{width:120px;height:7px;display:block;border-radius:10px;background:#dce5eb;overflow:hidden}
+.classroom-assignment-progress i b{height:100%;display:block;background:var(--green)}
+.classroom-assignment-progress span{color:var(--muted);font-size:11px;font-weight:700}
+
+.classroom-activity-list li{grid-template-columns:96px 1fr}
+
+.classroom-leaderboard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.classroom-leaderboard-card{padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--sky)}
+.classroom-leaderboard-title{margin:0;color:var(--navy);font-size:14px;font-weight:900}
+.classroom-leaderboard-card>small{color:var(--muted);font-size:11px}
+.classroom-leaderboard-card ol{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px;counter-reset:lb}
+.classroom-leaderboard-card ol li{counter-increment:lb;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border)}
+.classroom-leaderboard-card ol li:first-child{border-top:0}
+.classroom-leaderboard-card ol li::before{content:counter(lb) ".";color:var(--muted);font-weight:800;margin-right:6px}
+.classroom-leaderboard-card ol li span{color:var(--navy);font-size:13px;font-weight:800}
+.classroom-leaderboard-card ol li b{color:var(--blue-dark);font-size:12px;font-weight:800;text-align:right}
+
+.classroom-manage-dialog{width:min(100%,460px);text-align:left}
+.classroom-manage-dialog h2{text-align:left;margin-bottom:6px}
+.classroom-manage-dialog>p{margin:0 0 14px;color:var(--muted);font-size:13px}
+.classroom-manage-list{margin:0;padding:0;list-style:none;display:grid;gap:8px;max-height:340px;overflow-y:auto}
+.classroom-manage-list li{padding:10px 12px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px}
+.classroom-manage-list li>span{flex:1;color:var(--navy);font-size:13px;font-weight:800}
+.classroom-manage-list li>small{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase}
+.classroom-manage-list li>button{min-height:34px;padding:0 14px;border:2px solid var(--blue-dark);border-radius:8px;background:var(--blue-dark);color:white;font:900 12px var(--font-nunito);cursor:pointer}
+.classroom-manage-list li>button:disabled{opacity:.6;cursor:not-allowed}
+
 @media(max-width:620px){
   .teacher-students-toolbar{flex-direction:column}
   .teacher-students-toolbar input[type=search],.teacher-students-toolbar select,.teacher-students-attention-toggle{width:100%}
@@ -2815,6 +2891,15 @@ footer a:hover{color:var(--gold)}
   .teacher-add-student-button{width:100%}
   .add-student-dialog{padding:22px 16px}
   .add-student-actions{grid-template-columns:1fr;gap:8px}
+  .classroom-grid{grid-template-columns:1fr}
+  .classroom-create-meeting{grid-template-columns:1fr}
+  .classroom-detail-stats{grid-template-columns:1fr 1fr}
+  .classroom-assignment-list li{grid-template-columns:1fr;justify-items:start}
+  .classroom-assignment-progress{justify-items:start}
+}
+
+@media(max-width:900px){
+  .classroom-detail-stats{grid-template-columns:repeat(3,1fr)}
 }
 
 /* Private multiplayer Bible games */

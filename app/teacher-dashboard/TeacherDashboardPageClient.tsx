@@ -8,6 +8,7 @@ import { getTierForXp, LEAGUE_TIERS } from '../lib/leagues/config';
 import { canonicalRegions } from '../adventure/world-data';
 import { signOutOfPersona } from '../lib/session';
 import StudentsPanel from './StudentsPanel';
+import ClassesPanel from './ClassesPanel';
 
 type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
@@ -96,7 +97,6 @@ export default function TeacherDashboardPage() {
   const [notice, setNotice] = useState('');
   const [newClass, setNewClass] = useState('');
   const [ageBand, setAgeBand] = useState('Ages 8–11');
-  const [studentName, setStudentName] = useState('');
   const [lesson, setLesson] = useState(lessons[0]);
   const [due, setDue] = useState('Friday');
   const [message, setMessage] = useState('');
@@ -244,56 +244,6 @@ export default function TeacherDashboardPage() {
     setActiveClass(nextClass.id);
     setNewClass('');
     setNotice(`${nextClass.name} is ready. Share its code only with approved families.`);
-  }
-
-  function addStudent() {
-    if (!studentName.trim() || !classroom) return;
-    const next = allClasses.map((item) =>
-      item.id === classroom.id
-        ? {
-            ...item,
-            students: [
-              ...item.students,
-              {
-                id: nextId(),
-                name: studentName.trim(),
-                age: item.ageBand.includes('13') ? 14 : 9,
-                progress: 0,
-                needsHelp: false,
-                parent: 'Parent invitation pending',
-                approved: false,
-              },
-            ],
-          }
-        : item
-    );
-    saveAllClasses(next);
-    setStudentName('');
-    setNotice(`${studentName.trim()} was added as pending. Their parent must approve the profile before learning begins.`);
-  }
-
-  function approveStudent(studentId: number) {
-    const next = allClasses.map((item) => ({
-      ...item,
-      students: item.students.map((student) =>
-        student.id === studentId
-          ? {
-              ...student,
-              approved: true,
-              parent: student.parent === 'Parent invitation pending' ? 'Parent approved' : student.parent,
-            }
-          : student
-      ),
-    }));
-    saveAllClasses(next);
-    setNotice('The student is now approved and visible in class metrics.');
-  }
-
-  function regenerateCode() {
-    if (!classroom) return;
-    const code = generateJoinCode(classroom.ageBand);
-    saveAllClasses(allClasses.map((item) => (item.id === classroom.id ? { ...item, code } : item)));
-    setNotice('A new join code is ready. The old code no longer works in this demo.');
   }
 
   function assign() {
@@ -657,91 +607,11 @@ export default function TeacherDashboardPage() {
             {page === 'classes' && (
               <div className="teacher-content">
                 <div className="teacher-title">
-                  <p className="teacher-kicker">Classes and groups</p>
-                  <h1>Keep every learning circle clear.</h1>
-                  <p>Join codes connect approved families. Children never create public profiles or search for a classroom.</p>
+                  <p className="teacher-kicker">Classes</p>
+                  <h1>Organize your students into classrooms.</h1>
+                  <p>Create a classroom for each group you teach, assign Bible stories and lessons, and see how each class is progressing.</p>
                 </div>
-
-                <div className="teacher-class-tabs">
-                  {classes.map((item) => (
-                    <button
-                      key={item.id}
-                      className={activeClass === item.id ? 'active' : ''}
-                      onClick={() => setActiveClass(item.id)}
-                    >
-                      <strong>{item.name}</strong>
-                      <small>
-                        {item.ageBand} · {item.students.length} students
-                      </small>
-                    </button>
-                  ))}
-                </div>
-
-                <section className="teacher-panel teacher-class-detail">
-                  <div className="teacher-panel-head">
-                    <div>
-                      <p className="teacher-kicker">{classroom.ageBand}</p>
-                      <h2>{classroom.name}</h2>
-                    </div>
-                    <div className="join-code">
-                      <span>Family join code</span>
-                      <strong>{classroom.code}</strong>
-                      <button onClick={regenerateCode}>Make a new code</button>
-                    </div>
-                  </div>
-
-                  <div className="teacher-table">
-                    {classroom.students.map((student) => (
-                      <article key={student.id} className={student.approved ? '' : 'teacher-student-pending'}>
-                        <span>{student.name[0]}</span>
-                        <div>
-                          <strong>
-                            {student.name}
-                            {!student.approved && <em> · Pending approval</em>}
-                          </strong>
-                          <small>Age {student.age} · Parent: {student.parent}</small>
-                        </div>
-                        <b>{student.approved ? `${student.progress}%` : '—'}</b>
-                        {student.approved ? (
-                          <button onClick={() => setNotice(`A parent-safe progress note for ${student.name} is ready to review.`)}>
-                            View learner
-                          </button>
-                        ) : (
-                          <button onClick={() => approveStudent(student.id)}>Approve student</button>
-                        )}
-                      </article>
-                    ))}
-                    {!classroom.students.length && <p>No students yet. Add the first approved learner below.</p>}
-                  </div>
-
-                  <div className="teacher-add-student">
-                    <label>
-                      Student’s display name
-                      <input value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="For example, Ada O." />
-                    </label>
-                    <button onClick={addStudent}>Add pending student</button>
-                  </div>
-                </section>
-
-                <section className="teacher-create-class">
-                  <div>
-                    <p className="teacher-kicker">Create another class</p>
-                    <h2>A new learning circle</h2>
-                  </div>
-                  <label>
-                    Class name
-                    <input value={newClass} onChange={(e) => setNewClass(e.target.value)} placeholder="Sunday Juniors" />
-                  </label>
-                  <label>
-                    Age group
-                    <select value={ageBand} onChange={(e) => setAgeBand(e.target.value)}>
-                      <option>Ages 5–7</option>
-                      <option>Ages 8–11</option>
-                      <option>Ages 13–16</option>
-                    </select>
-                  </label>
-                  <button onClick={createClass}>Create class</button>
-                </section>
+                <ClassesPanel />
               </div>
             )}
 

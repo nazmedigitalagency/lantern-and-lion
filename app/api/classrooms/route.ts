@@ -15,11 +15,21 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Please sign in as a teacher first.' }, { status: 401 });
 
   const admin = createServerAdminClient();
-  const { data: classrooms } = await admin.from('classrooms').select('id, name, age_band, code, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false });
+  const { data: classrooms } = await admin
+    .from('classrooms')
+    .select('id, name, description, age_band, meeting_day, meeting_time, code, created_at')
+    .eq('teacher_id', user.id)
+    .order('created_at', { ascending: false });
   return NextResponse.json({ classrooms: classrooms || [] });
 }
 
-const CreateSchema = z.object({ name: z.string().trim().min(1).max(64), ageBand: z.string().trim().max(32).optional() });
+const CreateSchema = z.object({
+  name: z.string().trim().min(1).max(64),
+  ageBand: z.string().trim().max(32).optional(),
+  description: z.string().trim().max(500).optional(),
+  meetingDay: z.string().trim().max(24).optional(),
+  meetingTime: z.string().trim().max(24).optional(),
+});
 
 export async function POST(req: NextRequest) {
   const user = await getAuthenticatedUser();
@@ -39,8 +49,16 @@ export async function POST(req: NextRequest) {
 
   const { data: classroom, error } = await admin
     .from('classrooms')
-    .insert({ teacher_id: user.id, name: parsed.data.name, age_band: parsed.data.ageBand || null, code })
-    .select('id, name, age_band, code, created_at')
+    .insert({
+      teacher_id: user.id,
+      name: parsed.data.name,
+      age_band: parsed.data.ageBand || null,
+      description: parsed.data.description || null,
+      meeting_day: parsed.data.meetingDay || null,
+      meeting_time: parsed.data.meetingTime || null,
+      code,
+    })
+    .select('id, name, description, age_band, meeting_day, meeting_time, code, created_at')
     .maybeSingle();
 
   if (error || !classroom) return NextResponse.json({ error: 'Could not create the class.' }, { status: 500 });

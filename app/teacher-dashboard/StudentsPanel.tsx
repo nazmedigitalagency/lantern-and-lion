@@ -7,19 +7,14 @@ import type {
   AddStudentResponse,
   AgeGroup,
   StudentClassroomRef,
-  StudentDetailResponse,
   StudentLookupResponse,
   StudentsRosterResponse,
 } from '../lib/classrooms/types';
+import StudentCard from './StudentCard';
+import StudentDetailModal from './StudentDetailModal';
 
 type SortKey = 'name' | 'most_active' | 'least_active' | 'xp_high' | 'xp_low' | 'performance_high' | 'performance_low' | 'recent_activity';
 type AddStep = 'form' | 'confirm' | 'success';
-
-const ACTIVITY_LABEL: Record<ActivityStatus, string> = {
-  active: 'Active',
-  recently_active: 'Recently active',
-  inactive: 'Inactive',
-};
 
 // Purely cosmetic mapping for the "student avatar" shown during Add Student
 // confirmation — same four badge ids a family already picks from during
@@ -45,21 +40,6 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'performance_low', label: 'Lowest performance' },
 ];
 
-function formatLastActive(iso: string | null): string {
-  if (!iso) return 'Never logged in';
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return 'Active today';
-  if (days === 1) return 'Active yesterday';
-  if (days < 7) return `Active ${days} days ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks < 5) return `Active ${weeks} week${weeks === 1 ? '' : 's'} ago`;
-  return `Last active ${new Date(iso).toLocaleDateString()}`;
-}
-
-function dayLetter(dateKey: string): string {
-  return new Date(`${dateKey}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'narrow', timeZone: 'UTC' });
-}
-
 export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => void }) {
   const [roster, setRoster] = useState<StudentsRosterResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,10 +53,6 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   const [addError, setAddError] = useState('');
   const [addLookup, setAddLookup] = useState<StudentLookupResponse | null>(null);
 
-  const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
-  const [removeBusy, setRemoveBusy] = useState(false);
-  const [removeError, setRemoveError] = useState('');
-
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('all');
   const [ageFilter, setAgeFilter] = useState<'all' | AgeGroup>('all');
@@ -85,9 +61,6 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   const [sort, setSort] = useState<SortKey>('name');
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<StudentDetailResponse | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -116,29 +89,6 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roster]);
 
-  useEffect(() => {
-    if (!selectedId) return;
-    let alive = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- selectedId changed, must show loading before the fetch below resolves
-    setDetailLoading(true);
-    setDetailError('');
-    fetch(`/api/teacher/students/${selectedId}`)
-      .then((res) => (res.ok ? (res.json() as Promise<StudentDetailResponse>) : Promise.reject()))
-      .then((data) => {
-        if (alive) {
-          setDetail(data);
-          setDetailLoading(false);
-        }
-      })
-      .catch(() => {
-        if (alive) {
-          setDetailError('Could not load this student’s profile.');
-          setDetailLoading(false);
-        }
-      });
-    return () => { alive = false; };
-  }, [selectedId]);
-
   const attentionCount = roster?.students.filter((s) => s.needsAttention).length || 0;
 
   const filtered = useMemo(() => {
@@ -166,12 +116,6 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   }, [roster, search, classFilter, ageFilter, activityFilter, attentionOnly, sort]);
 
   const hasActiveFilters = Boolean(search.trim()) || classFilter !== 'all' || ageFilter !== 'all' || activityFilter !== 'all' || attentionOnly;
-
-  function closeDetail() {
-    setSelectedId(null);
-    setDetail(null);
-    setDetailError('');
-  }
 
   function clearFilters() {
     setSearch('');
@@ -258,31 +202,6 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
       setAddError('Could not send the connection request. Check your connection and try again.');
     } finally {
       setAddBusy(false);
-    }
-  }
-
-  async function removeFromClassroom(classroomId: string) {
-    if (!detail) return;
-    setRemoveBusy(true);
-    setRemoveError('');
-    try {
-      const res = await fetch(`/api/teacher/students/${detail.student.id}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classroomId }),
-      });
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      if (!res.ok) {
-        setRemoveError(data?.error || 'Could not remove this student.');
-        return;
-      }
-      setRemoveConfirmId(null);
-      closeDetail();
-      refreshRoster();
-    } catch {
-      setRemoveError('Could not remove this student. Check your connection and try again.');
-    } finally {
-      setRemoveBusy(false);
     }
   }
 
@@ -512,31 +431,7 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
       ) : (
         <div className="teacher-students-grid">
           {filtered.map((s) => (
-            <button key={s.id} className="teacher-student-card" onClick={() => setSelectedId(s.id)}>
-              <div className="tsc-top">
-                <span className="tsc-avatar">{s.name[0]}</span>
-                <div className="tsc-id">
-                  <strong>{s.name}</strong>
-                  <small>{s.ageGroup === 'teen' ? 'Teen' : 'Child'} · Age {s.age}</small>
-                </div>
-              </div>
-              {s.classrooms.length > 0 && (
-                <div className="tsc-classes">
-                  {s.classrooms.map((c) => <span key={c.id}>{c.name}</span>)}
-                </div>
-              )}
-              <div className="tsc-stats">
-                <div><b>Lvl {s.level}</b><span>{s.xp} XP</span></div>
-                <div><b>🔥 {s.currentStreak}</b><span>day streak</span></div>
-                <div><b>{s.weeklyActiveDays}/7</b><span>active days</span></div>
-                <div><b>{s.masteryTracked ? `${s.masteryPercent}%` : '—'}</b><span>performance</span></div>
-              </div>
-              <div className="tsc-foot">
-                <span className={`tsc-status tsc-status-${s.activityStatus}`}>{ACTIVITY_LABEL[s.activityStatus]}</span>
-                <small>{formatLastActive(s.lastActiveAt)}</small>
-                {s.needsAttention && <em className="tsc-flag">Needs attention</em>}
-              </div>
-            </button>
+            <StudentCard key={s.id} student={s} onClick={() => setSelectedId(s.id)} />
           ))}
         </div>
       )}
@@ -560,124 +455,7 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
       )}
 
       {selectedId && (
-        <div className="student-detail-overlay" role="presentation" onClick={closeDetail}>
-          <section
-            className="student-detail-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="student-detail-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button className="student-detail-close" aria-label="Close" onClick={closeDetail}>×</button>
-
-            {detailLoading && (
-              <div className="teacher-students-loading">
-                <span></span>
-                <p>Loading student profile…</p>
-              </div>
-            )}
-
-            {!detailLoading && detailError && <p className="student-detail-empty">{detailError}</p>}
-
-            {!detailLoading && detail && (
-              <>
-                <header className="student-detail-head">
-                  <span className="student-detail-avatar">{detail.student.name[0]}</span>
-                  <div>
-                    <h2 id="student-detail-title">{detail.student.name}</h2>
-                    <p>{detail.student.ageGroup === 'teen' ? 'Teen' : 'Child'} · Age {detail.student.age}</p>
-                  </div>
-                  <span className={`tsc-status tsc-status-${detail.student.activityStatus}`}>{ACTIVITY_LABEL[detail.student.activityStatus]}</span>
-                </header>
-
-                <div className="student-detail-stats">
-                  <div><b>{detail.student.levelTitle}</b><span>Level {detail.student.level}</span></div>
-                  <div><b>{detail.student.xp}</b><span>Total XP</span></div>
-                  <div><b>🔥 {detail.student.currentStreak}</b><span>current streak</span></div>
-                  <div><b>{detail.longestStreak}</b><span>longest streak</span></div>
-                  <div><b>{detail.student.weeklyActiveDays}/7</b><span>active this week</span></div>
-                  <div><b>{detail.student.masteryTracked ? `${detail.student.masteryPercent}%` : '—'}</b><span>avg. performance</span></div>
-                </div>
-
-                <div className="student-detail-section">
-                  <p className="teacher-kicker">This week</p>
-                  <div className="student-detail-calendar">
-                    {detail.weekCalendar.map((d) => (
-                      <span key={d.date} className={`sdc-day sdc-${d.state}`} title={d.date}>{dayLetter(d.date)}</span>
-                    ))}
-                  </div>
-                </div>
-
-                {detail.student.needsAttention && (
-                  <div className="student-detail-attention">
-                    <p className="teacher-kicker">Needs attention</p>
-                    <ul>
-                      {detail.student.needsAttentionReasons.map((r, i) => <li key={i}>{r}</li>)}
-                    </ul>
-                  </div>
-                )}
-
-                <div className="student-detail-section">
-                  <p className="teacher-kicker">Strengths &amp; areas to practice</p>
-                  {detail.learning.strengths.length === 0 && detail.learning.needsPractice.length === 0 ? (
-                    <p className="student-detail-empty">Keep learning — we’ll identify strengths as more activity is completed.</p>
-                  ) : (
-                    <div className="student-detail-pills">
-                      {detail.learning.strengths.map((c) => <span key={c.conceptId} className="pill pill-strength">{c.label}</span>)}
-                      {detail.learning.needsPractice.map((c) => <span key={c.conceptId} className="pill pill-practice">{c.label}</span>)}
-                    </div>
-                  )}
-                </div>
-
-                {detail.stories.length > 0 && (
-                  <div className="student-detail-section">
-                    <p className="teacher-kicker">Interactive Bible stories</p>
-                    <p>{detail.stories.length} completed — most recently “{detail.stories[0].title}.”</p>
-                  </div>
-                )}
-
-                <div className="student-detail-section">
-                  <p className="teacher-kicker">Recent activity</p>
-                  {detail.recentActivity.length === 0 ? (
-                    <p className="student-detail-empty">No activity yet — check back once {detail.student.name.split(' ')[0]} starts learning.</p>
-                  ) : (
-                    <ul className="student-detail-activity">
-                      {detail.recentActivity.map((item) => (
-                        <li key={item.id}>
-                          <time>{new Date(item.occurredAt).toLocaleDateString()}</time>
-                          <span>{item.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="student-detail-section">
-                  <p className="teacher-kicker">Classes</p>
-                  {removeError && <p className="add-student-error" role="alert">{removeError}</p>}
-                  <ul className="student-detail-classes">
-                    {detail.student.classrooms.map((c) => (
-                      <li key={c.id}>
-                        <span>{c.name}</span>
-                        {removeConfirmId === c.id ? (
-                          <span className="student-detail-remove-confirm">
-                            <em>Remove {detail.student.name} from {c.name}?</em>
-                            <button type="button" onClick={() => setRemoveConfirmId(null)} disabled={removeBusy}>Cancel</button>
-                            <button type="button" className="student-detail-remove-go" onClick={() => removeFromClassroom(c.id)} disabled={removeBusy}>
-                              {removeBusy ? 'Removing…' : 'Yes, remove'}
-                            </button>
-                          </span>
-                        ) : (
-                          <button type="button" className="student-detail-remove" onClick={() => setRemoveConfirmId(c.id)}>Remove</button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </>
-            )}
-          </section>
-        </div>
+        <StudentDetailModal studentId={selectedId} onClose={() => setSelectedId(null)} onRemoved={refreshRoster} />
       )}
 
       {renderAddModal()}

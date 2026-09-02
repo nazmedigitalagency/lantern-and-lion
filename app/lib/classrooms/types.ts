@@ -90,3 +90,77 @@ export type AddStudentErrorResponse = {
   error: string;
   status?: 'not_found' | 'already_connected' | 'pending';
 };
+
+// Classrooms — the "My Classes" list, classroom detail page, assignments,
+// class-level activity feed, and the (optional, positively-framed) leaderboard.
+
+export type ClassroomRef = {
+  id: string;
+  name: string;
+  description: string | null;
+  ageBand: string | null;
+  meetingDay: string | null;
+  meetingTime: string | null;
+  code: string;
+  createdAt: string;
+};
+
+export type ClassroomCard = ClassroomRef & {
+  studentCount: number;
+  activeThisWeek: number;
+  avgAssignmentCompletion: number | null;
+  avgLearningActivity: number;
+  upcomingAssignmentsCount: number;
+  recentActivityPreview: string | null;
+};
+
+export type ClassroomsListResponse = { classrooms: ClassroomCard[] };
+
+export type AssignmentType = 'story' | 'concept';
+export type AssignmentStatus = 'active' | 'upcoming' | 'completed' | 'overdue';
+
+export type ClassroomAssignment = {
+  id: string;
+  title: string;
+  description: string | null;
+  assignmentType: AssignmentType;
+  referenceId: string;
+  referenceLabel: string;
+  dueDate: string | null;
+  createdAt: string;
+  completedCount: number;
+  totalStudents: number;
+  completionPercent: number;
+  status: AssignmentStatus;
+};
+
+export type ClassroomActivityItem = { id: string; label: string; occurredAt: string };
+
+export type LeaderboardEntry = { studentId: string; name: string; value: number; unit: string };
+export type ClassroomLeaderboard = {
+  mostConsistent: LeaderboardEntry[];
+  scriptureChampion: LeaderboardEntry[];
+  quizChampion: LeaderboardEntry[];
+  mostImproved: LeaderboardEntry[];
+};
+
+export type ClassroomDetailResponse = {
+  classroom: ClassroomRef;
+  stats: {
+    studentCount: number;
+    activeThisWeek: number;
+    assignmentsCompletedPercent: number | null;
+    avgPerformance: number;
+    avgLearningActivity: number;
+  };
+  students: StudentCard[];
+  pending: PendingStudent[];
+  connectedElsewhere: { id: string; name: string; ageGroup: AgeGroup }[];
+  assignments: ClassroomAssignment[];
+  activity: ClassroomActivityItem[];
+  leaderboard: ClassroomLeaderboard;
+};
+
+export type AssignableContent =
+  | { type: 'story'; id: string; label: string }
+  | { type: 'concept'; id: string; label: string; track: string };

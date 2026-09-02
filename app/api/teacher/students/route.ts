@@ -2,17 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
-import { getStreakCalendar, getStreakStatus } from '../../../lib/streak/server';
-import { getConceptMasteryForChild } from '../../../lib/adaptive/server';
-import { getConcept } from '../../../lib/adaptive/concepts';
-import { getLevelInfo } from '../../../lib/xp-levels';
-import { ageGroupForAge, buildNeedsAttention, computeActivityStatus } from '../../../lib/classrooms/server';
+import { computeStudentCards, type ChildRow } from '../../../lib/classrooms/roster';
 import type { PendingStudent, StudentCard, StudentClassroomRef } from '../../../lib/classrooms/types';
 import { normalizeTeacherCode } from '../../../lib/codes/server';
 import { checkRateLimit, getClientIp } from '../../../lib/rate-limit';
 import { notifyOnce } from '../../../lib/activity/server';
 
-type ChildRow = { id: string; name: string; age: number; family_id: string; last_login_at: string | null };
 type RosterRow = { classroom_id: string; child_id: string; approved: boolean; needs_help: boolean; joined_at: string; children: ChildRow | null };
 
 /**
@@ -63,66 +58,17 @@ export async function GET() {
   const approvedChildIds = Array.from(byChild.entries()).filter(([, rows]) => rows.some((r) => r.approved)).map(([id]) => id);
   const pendingChildIds = Array.from(byChild.entries()).filter(([, rows]) => !rows.some((r) => r.approved)).map(([id]) => id);
 
-  const familyIds = Array.from(new Set(roster.map((r) => (r.children as ChildRow).family_id)));
-  const { data: families } = familyIds.length ? await admin.from('families').select('id, timezone').in('id', familyIds) : { data: [] as { id: string; timezone: string }[] };
-  const timezoneByChild = new Map<string, string>();
-  for (const r of roster) {
-    const familyId = (r.children as ChildRow).family_id;
-    timezoneByChild.set(r.child_id, families?.find((f) => f.id === familyId)?.timezone || 'UTC');
-  }
+  const needsHelpByChild = new Map<string, boolean>();
+  for (const [childId, rows] of byChild) needsHelpByChild.set(childId, rows.some((r) => r.needs_help));
 
-  const lifetimeXp = new Map<string, number>();
-  if (approvedChildIds.length > 0) {
-    const { data: xpRows } = await admin.from('daily_activity_summary').select('child_id, xp_earned').in('child_id', approvedChildIds);
-    for (const row of xpRows || []) lifetimeXp.set(row.child_id, (lifetimeXp.get(row.child_id) || 0) + (row.xp_earned || 0));
-  }
+  const approvedChildren = approvedChildIds.map((id) => byChild.get(id)![0].children as ChildRow);
+  const cardsByChild = await computeStudentCards(admin, approvedChildren, needsHelpByChild);
 
-  const students: StudentCard[] = await Promise.all(approvedChildIds.map(async (childId) => {
+  const students: StudentCard[] = approvedChildIds.map((childId) => {
     const memberships = byChild.get(childId)!;
-    const child = memberships[0].children as ChildRow;
-    const needsHelp = memberships.some((m) => m.needs_help);
-    const tz = timezoneByChild.get(childId) || 'UTC';
-
-    const [streak, calendar, masteryRows] = await Promise.all([
-      getStreakStatus(admin, childId, tz),
-      getStreakCalendar(admin, childId, tz, 7),
-      getConceptMasteryForChild(admin, childId),
-    ]);
-
-    const weeklyActiveDays = calendar.filter((d) => d.state === 'complete' || d.state === 'grace').length;
-    const masteryPercent = masteryRows.length ? Math.round(masteryRows.reduce((sum, m) => sum + m.mastery_score, 0) / masteryRows.length) : 0;
-    const strugglingLabels = masteryRows.filter((m) => m.status === 'needs_reinforcement').map((m) => getConcept(m.concept_id)?.label || m.concept_id);
-
-    const xp = lifetimeXp.get(childId) || 0;
-    const level = getLevelInfo(xp);
-    const activityStatus = computeActivityStatus(child.last_login_at);
-    const { needsAttention, reasons } = buildNeedsAttention({
-      lastActiveAt: child.last_login_at,
-      needsHelp,
-      streakEndedRecently: streak.streakEndedRecently,
-      strugglingConceptLabels: strugglingLabels,
-    });
-
-    return {
-      id: child.id,
-      name: child.name,
-      age: child.age,
-      ageGroup: ageGroupForAge(child.age),
-      classrooms: memberships.filter((m) => m.approved).map((m) => classroomRef(m.classroom_id)),
-      xp,
-      level: level.level,
-      levelTitle: level.title,
-      currentStreak: streak.currentStreak,
-      weeklyActiveDays,
-      masteryPercent,
-      masteryTracked: masteryRows.length > 0,
-      lastActiveAt: child.last_login_at,
-      activityStatus,
-      needsHelp,
-      needsAttention,
-      needsAttentionReasons: reasons,
-    };
-  }));
+    const base = cardsByChild.get(childId)!;
+    return { ...base, classrooms: memberships.filter((m) => m.approved).map((m) => classroomRef(m.classroom_id)) };
+  });
 
   students.sort((a, b) => a.name.localeCompare(b.name));
 
