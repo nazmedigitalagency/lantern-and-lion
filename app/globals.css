@@ -2948,6 +2948,36 @@ footer a:hover{color:var(--gold)}
   .create-assignment-dialog{padding:22px 16px}
 }
 
+/* ── Teacher Dashboard: Assignment Templates ─────────────── */
+.assignments-subtabs{display:flex;gap:8px;margin:6px 0 18px}
+.assignments-subtabs button{min-height:38px;padding:0 16px;border:2px solid var(--border-alt);border-radius:999px;background:white;color:var(--slate);font:800 12px var(--font-nunito);cursor:pointer}
+.assignments-subtabs button.active{border-color:var(--navy);background:var(--navy);color:white}
+
+.template-filters{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px}
+.template-filters input[type="search"]{flex:1 1 220px;min-height:42px;padding:0 14px;border:2px solid var(--border-alt);border-radius:9px;font:600 13px var(--font-nunito);color:var(--navy)}
+.template-filters select{min-height:42px;padding:0 12px;border:2px solid var(--border-alt);border-radius:9px;font:700 12px var(--font-nunito);color:var(--navy);background:white}
+
+.template-section{margin-bottom:32px}
+.template-section h2{margin:0 0 14px;font-size:16px;color:var(--navy)}
+.template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+
+.template-card{position:relative;padding:16px;border:2px solid var(--border-alt);border-radius:14px;background:white;display:flex;flex-direction:column;gap:8px}
+.template-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.template-card-head strong{font-size:14px;color:var(--navy);line-height:1.3}
+.template-badge{flex-shrink:0;padding:3px 9px;border-radius:999px;background:var(--blue-tint);color:var(--blue-dark);font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap}
+.template-card-desc{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.template-card-meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--slate);font-size:11px;font-weight:700}
+.template-card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.template-card-actions button{min-height:34px;padding:0 12px;border:2px solid var(--border-alt);border-radius:8px;background:white;color:var(--navy);font:800 11px var(--font-nunito);cursor:pointer}
+.template-card-actions .add-student-primary{border-color:var(--navy);background:var(--navy);color:white}
+.template-card-actions .student-detail-remove{border:2px solid var(--error-dark);background:white;color:var(--error-dark);text-decoration:none}
+.template-category{align-self:flex-start;font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--border-alt)}
+
+@media(max-width:620px){
+  .template-filters{flex-direction:column}
+  .template-filters select{width:100%}
+}
+
 /* ── Student-facing assignments (child/teen dashboard) ────── */
 .student-assignments{margin:18px 0}
 .student-assignments-kicker{margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--teal-dark)}

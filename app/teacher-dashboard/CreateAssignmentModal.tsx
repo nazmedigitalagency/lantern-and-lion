@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AssignmentType } from '../lib/assignments/types';
 import { assignableConcepts, assignableGames, assignableStories } from '../lib/assignments/content';
+import type { TemplateAgeGroup } from '../lib/assignments/templates';
 import type { StudentsRosterResponse } from '../lib/classrooms/types';
+import SaveTemplateModal from './SaveTemplateModal';
 
 const TYPE_OPTIONS: { value: AssignmentType; label: string; hint: string }[] = [
   { value: 'story', label: 'Interactive Story', hint: 'A full branching Bible story' },
@@ -17,35 +19,52 @@ const TYPE_OPTIONS: { value: AssignmentType; label: string; hint: string }[] = [
 
 type Classroom = { id: string; name: string };
 
+export type AssignmentTemplatePrefill = {
+  title: string;
+  instructions: string | null;
+  assignmentType: AssignmentType;
+  referenceId: string | null;
+  timeLimitMinutes: number | null;
+  requiredScore: number | null;
+  xpReward: number | null;
+  ageGroup: TemplateAgeGroup;
+};
+
 export default function CreateAssignmentModal({
   defaultClassroomId,
   lockClassroom,
+  initialTemplate,
   onClose,
   onCreated,
 }: {
   defaultClassroomId?: string;
   lockClassroom?: boolean;
+  initialTemplate?: AssignmentTemplatePrefill;
   onClose: () => void;
   onCreated: () => void;
 }) {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [students, setStudents] = useState<{ id: string; name: string; classroomIds: string[] }[]>([]);
+  const [students, setStudents] = useState<{ id: string; name: string; classroomIds: string[]; ageGroup: 'child' | 'teen' }[]>([]);
 
-  const [type, setType] = useState<AssignmentType>('story');
-  const [referenceId, setReferenceId] = useState('');
-  const [title, setTitle] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [type, setType] = useState<AssignmentType>(initialTemplate?.assignmentType || 'story');
+  const [referenceId, setReferenceId] = useState(initialTemplate?.referenceId || '');
+  const [title, setTitle] = useState(initialTemplate?.title || '');
+  const [instructions, setInstructions] = useState(initialTemplate?.instructions || '');
   const [classroomId, setClassroomId] = useState(defaultClassroomId || '');
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
-  const [targetMode, setTargetMode] = useState<'classroom' | 'students'>(defaultClassroomId ? 'classroom' : 'classroom');
+  // A template built for one age group only can never target a mixed classroom — start on
+  // "Selected students" so the age filter below is actually enforced.
+  const templateAgeGroup = initialTemplate?.ageGroup && initialTemplate.ageGroup !== 'both' ? initialTemplate.ageGroup : null;
+  const [targetMode, setTargetMode] = useState<'classroom' | 'students'>(templateAgeGroup ? 'students' : 'classroom');
   const [dueDate, setDueDate] = useState('');
-  const [timeLimit, setTimeLimit] = useState('');
-  const [requiredScore, setRequiredScore] = useState('');
-  const [xpReward, setXpReward] = useState('');
+  const [timeLimit, setTimeLimit] = useState(initialTemplate?.timeLimitMinutes ? String(initialTemplate.timeLimitMinutes) : '');
+  const [requiredScore, setRequiredScore] = useState(initialTemplate?.requiredScore != null ? String(initialTemplate.requiredScore) : '');
+  const [xpReward, setXpReward] = useState(initialTemplate?.xpReward != null ? String(initialTemplate.xpReward) : '');
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<'draft' | 'assigned' | null>(null);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/classrooms').then((r) => (r.ok ? (r.json() as Promise<{ classrooms?: Classroom[] }>) : null)).then((data) => {
@@ -55,7 +74,7 @@ export default function CreateAssignmentModal({
       }
     }).catch(() => {});
     fetch('/api/teacher/students').then((r) => (r.ok ? (r.json() as Promise<StudentsRosterResponse>) : null)).then((data) => {
-      if (data?.students) setStudents(data.students.map((s) => ({ id: s.id, name: s.name, classroomIds: s.classrooms.map((c) => c.id) })));
+      if (data?.students) setStudents(data.students.map((s) => ({ id: s.id, name: s.name, classroomIds: s.classrooms.map((c) => c.id), ageGroup: s.ageGroup })));
     }).catch(() => {});
   }, [defaultClassroomId]);
 
@@ -68,19 +87,25 @@ export default function CreateAssignmentModal({
 
   useEffect(() => {
     if (contentOptions.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- switching to written/custom clears the dependent content picker
-      setReferenceId('');
+      if (referenceId) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- switching to written/custom clears the dependent content picker
+        setReferenceId('');
+      }
       return;
     }
-    setReferenceId(contentOptions[0].id);
-    if (!title.trim() || TYPE_OPTIONS.some((t) => t.label === title)) setTitle(contentOptions[0].label);
+    if (!contentOptions.some((c) => c.id === referenceId)) {
+      setReferenceId(contentOptions[0].id);
+      if (!title.trim() || TYPE_OPTIONS.some((t) => t.label === title)) setTitle(contentOptions[0].label);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
 
   const needsContent = type !== 'written' && type !== 'custom';
   const selectedContentLabel = contentOptions.find((c) => c.id === referenceId)?.label || '';
   const classroomName = classrooms.find((c) => c.id === classroomId)?.name || '';
-  const eligibleStudents = targetMode === 'students' && classroomId ? students.filter((s) => s.classroomIds.includes(classroomId)) : students;
+  const ageFilteredStudents = templateAgeGroup ? students.filter((s) => s.ageGroup === templateAgeGroup) : students;
+  const eligibleStudents = targetMode === 'students' && classroomId ? ageFilteredStudents.filter((s) => s.classroomIds.includes(classroomId)) : ageFilteredStudents;
+  const hiddenByAgeCount = templateAgeGroup ? students.length - ageFilteredStudents.length : 0;
 
   const canSubmit = title.trim().length > 0 && (!needsContent || Boolean(referenceId)) && (targetMode === 'classroom' ? Boolean(classroomId) : selectedStudentIds.length > 0);
 
@@ -134,7 +159,17 @@ export default function CreateAssignmentModal({
             <span className="add-student-success-mark">✓</span>
             <h2 id="create-assignment-title">{success === 'assigned' ? 'Assignment sent.' : 'Draft saved.'}</h2>
             <p className="add-student-note">{success === 'assigned' ? 'Students will see it in their assignments now.' : 'Find it under Drafts whenever you’re ready to assign it.'}</p>
-            <button type="button" className="add-student-primary" onClick={onClose}>Done</button>
+            <div className="add-student-actions">
+              <button type="button" className="add-student-secondary" onClick={() => setSaveTemplateOpen(true)}>Save as template</button>
+              <button type="button" className="add-student-primary" onClick={onClose}>Done</button>
+            </div>
+            {saveTemplateOpen && (
+              <SaveTemplateModal
+                source={{ assignmentType: type, referenceId: needsContent ? referenceId : null, instructions: instructions.trim() || null, timeLimitMinutes: timeLimit ? Number(timeLimit) : null, requiredScore: requiredScore ? Number(requiredScore) : null, xpReward: xpReward ? Number(xpReward) : null, defaultTitle: title }}
+                onClose={() => setSaveTemplateOpen(false)}
+                onSaved={() => {}}
+              />
+            )}
           </>
         ) : (
           <>
@@ -170,9 +205,10 @@ export default function CreateAssignmentModal({
             <div className="add-student-field">
               Assign to
               <div className="assign-target-toggle">
-                <button type="button" className={targetMode === 'classroom' ? 'active' : ''} onClick={() => setTargetMode('classroom')}>Entire classroom</button>
+                <button type="button" className={targetMode === 'classroom' ? 'active' : ''} disabled={Boolean(templateAgeGroup)} title={templateAgeGroup ? 'This template is age-restricted — choose students individually.' : undefined} onClick={() => setTargetMode('classroom')}>Entire classroom</button>
                 <button type="button" className={targetMode === 'students' ? 'active' : ''} onClick={() => setTargetMode('students')}>Selected students</button>
               </div>
+              {templateAgeGroup && <small>This template is for {templateAgeGroup === 'child' ? 'children (5-12)' : 'teens (13-17)'} only.</small>}
             </div>
 
             {targetMode === 'classroom' ? (
@@ -187,7 +223,7 @@ export default function CreateAssignmentModal({
               <div className="add-student-field">
                 Students
                 {eligibleStudents.length === 0 ? (
-                  <p className="student-detail-empty">No connected students yet.</p>
+                  <p className="student-detail-empty">{hiddenByAgeCount > 0 ? 'No students in the right age group for this template.' : 'No connected students yet.'}</p>
                 ) : (
                   <div className="assign-student-picker">
                     {eligibleStudents.map((s) => (
@@ -198,6 +234,7 @@ export default function CreateAssignmentModal({
                     ))}
                   </div>
                 )}
+                {hiddenByAgeCount > 0 && <small>{hiddenByAgeCount} student{hiddenByAgeCount === 1 ? '' : 's'} hidden — not the right age group for this template.</small>}
               </div>
             )}
 

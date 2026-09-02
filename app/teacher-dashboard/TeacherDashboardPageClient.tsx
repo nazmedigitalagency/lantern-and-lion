@@ -10,6 +10,7 @@ import { signOutOfPersona } from '../lib/session';
 import StudentsPanel from './StudentsPanel';
 import ClassesPanel from './ClassesPanel';
 import AssignmentsPanel from './AssignmentsPanel';
+import TemplatesPanel from './TemplatesPanel';
 
 type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
@@ -82,6 +83,7 @@ export default function TeacherDashboardPage() {
   const [teacherEmail, setTeacherEmail] = useState('');
   const [teacherName, setTeacherName] = useState('Teacher');
   const [page, setPage] = useState<Page>('overview');
+  const [assignmentsSubTab, setAssignmentsSubTab] = useState<'assignments' | 'templates'>('assignments');
   const [allClasses, setAllClasses] = useState<Classroom[]>([]);
   const [activeClass, setActiveClass] = useState(1);
   const [assignments, setAssignments] = useState<Assignment[]>([
@@ -602,7 +604,11 @@ export default function TeacherDashboardPage() {
                   <h1>Assign, monitor, and grade.</h1>
                   <p>Create Bible-learning assignments for a whole classroom or hand-picked students, and see completion and scores in one place.</p>
                 </div>
-                <AssignmentsPanel />
+                <div className="assignments-subtabs">
+                  <button type="button" className={assignmentsSubTab === 'assignments' ? 'active' : ''} onClick={() => setAssignmentsSubTab('assignments')}>Assignments</button>
+                  <button type="button" className={assignmentsSubTab === 'templates' ? 'active' : ''} onClick={() => setAssignmentsSubTab('templates')}>Templates</button>
+                </div>
+                {assignmentsSubTab === 'assignments' ? <AssignmentsPanel /> : <TemplatesPanel />}
               </div>
             )}
 

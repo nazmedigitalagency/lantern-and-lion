@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { AssignmentBucket, AssignmentDetail, AssignmentListItem, SubmissionStatus } from '../lib/assignments/types';
 import { isAutoScoredType } from '../lib/assignments/types';
 import CreateAssignmentModal from './CreateAssignmentModal';
+import SaveTemplateModal from './SaveTemplateModal';
 
 const BUCKET_TABS: { value: AssignmentBucket; label: string }[] = [
   { value: 'draft', label: 'Drafts' },
@@ -141,6 +142,7 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
   const [gradeError, setGradeError] = useState('');
   const [duplicateBusy, setDuplicateBusy] = useState(false);
   const [duplicated, setDuplicated] = useState(false);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
 
   function load() {
     fetch(`/api/assignments/${assignmentId}`)
@@ -240,9 +242,18 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
           </p>
         </div>
         <div className="assignment-detail-actions">
+          <button type="button" onClick={() => setSaveTemplateOpen(true)}>Save as template</button>
           <button type="button" onClick={duplicate} disabled={duplicateBusy}>{duplicateBusy ? 'Duplicating…' : duplicated ? 'Duplicated ✓' : 'Duplicate'}</button>
         </div>
       </header>
+
+      {saveTemplateOpen && (
+        <SaveTemplateModal
+          source={{ assignmentType: detail.assignmentType, referenceId: detail.referenceId, instructions: detail.instructions, timeLimitMinutes: detail.timeLimitMinutes, requiredScore: detail.requiredScore, xpReward: detail.xpReward, defaultTitle: detail.title }}
+          onClose={() => setSaveTemplateOpen(false)}
+          onSaved={() => {}}
+        />
+      )}
 
       <div className="classroom-detail-stats">
         <div><b>{detail.completedCount}/{detail.studentCount}</b><span>Completed</span></div>
