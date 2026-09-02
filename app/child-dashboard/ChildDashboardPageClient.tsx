@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ChatAssistant from '../chat-assistant';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
 import { getModuleLessons } from '../curriculum-lessons';
@@ -36,6 +36,7 @@ import { LeagueWorld } from '../leagues/LeaguePageClient';
 import { CharacterBuilder } from '../character/CharacterPageClient';
 import { STORY_CATALOG } from '../stories/catalog';
 import { signOutOfPersona } from '../lib/session';
+import { useDialogA11y } from '../lib/use-dialog';
 
 // Every implemented arcade game now opens as an in-dashboard popup instead
 // of navigating to its own page (see VerseBuilderGame's `embedded` mode).
@@ -90,6 +91,8 @@ export default function ChildDashboardPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [showProfiles, setShowProfiles] = useState(false);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
+  const closeFamilyModal = useCallback(() => setShowFamilyModal(false), []);
+  const familyModalRef = useDialogA11y<HTMLDivElement>(showFamilyModal, closeFamilyModal);
   const [hydrated, setHydrated] = useState(false);
   const [helpNotice, setHelpNotice] = useState('');
   const [filter, setFilter] = useState<ModuleFilter>('All lessons');
@@ -108,6 +111,8 @@ export default function ChildDashboardPage() {
   // of navigating to their own page (see VerseBuilderGame's `embedded` mode)
   // — a pilot for the pattern before rolling it out to the rest of the arcade.
   const [activeGameModal, setActiveGameModal] = useState<string | null>(null);
+  const closeGameModal = useCallback(() => setActiveGameModal(null), []);
+  const gameModalRef = useDialogA11y<HTMLDivElement>(!!activeGameModal, closeGameModal);
   const EMBEDDABLE_GAME_IDS = useMemo(() => new Set(GAME_DEFINITIONS.map((g) => g.id)), []);
   type TodaySummaryData = { active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number };
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
@@ -1020,8 +1025,8 @@ export default function ChildDashboardPage() {
       {/* ── FAMILY SUMMARY MODAL ── */}
       {showFamilyModal && (
         <div className="help-overlay" role="dialog" aria-modal="true">
-          <div className="help-dialog family-modal-dialog">
-            <button type="button" className="close-help" onClick={() => setShowFamilyModal(false)}>✕</button>
+          <div ref={familyModalRef} className="help-dialog family-modal-dialog">
+            <button type="button" className="close-help" onClick={closeFamilyModal}>✕</button>
             <div className="family-modal-badge">👨‍👩‍👧</div>
             <p className="child-kicker">Family Account</p>
             <h2>{familyData.familyName}</h2>
@@ -1051,7 +1056,7 @@ export default function ChildDashboardPage() {
               🔒 You can see how everyone in your family is doing, but each person’s sign-in stays private —
               only they can play on their own profile, and grown-up settings aren’t shown here.
             </p>
-            <button type="button" className="family-modal-close-btn" onClick={() => setShowFamilyModal(false)}>
+            <button type="button" className="family-modal-close-btn" onClick={closeFamilyModal}>
               Close Overview
             </button>
           </div>
@@ -1060,10 +1065,10 @@ export default function ChildDashboardPage() {
 
       {/* ── IN-DASHBOARD GAME POPUP ── */}
       {activeGameModal && (
-        <div className="help-overlay" role="presentation" onClick={() => setActiveGameModal(null)}>
-          <div className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="close-help game-modal-close" aria-label="Close game" onClick={() => setActiveGameModal(null)}>✕</button>
-            {renderGameModal(activeGameModal, () => setActiveGameModal(null))}
+        <div className="help-overlay" role="presentation" onClick={closeGameModal}>
+          <div ref={gameModalRef} className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="close-help game-modal-close" aria-label="Close game" onClick={closeGameModal}>✕</button>
+            {renderGameModal(activeGameModal, closeGameModal)}
           </div>
         </div>
       )}

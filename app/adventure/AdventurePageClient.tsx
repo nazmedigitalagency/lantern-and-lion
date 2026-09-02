@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,7 @@ import { readAppearance, readEquipment } from '../character/storage';
 import type { CharacterAppearance, CharacterEquipment } from '../character/types';
 import { LevelUpModal, XPToastStack } from '../lib/economy/components';
 import { useWalletSync } from '../lib/economy/use-wallet-sync';
+import { useDialogA11y } from '../lib/use-dialog';
 import {
   CollectiblesPouchModal,
   KnowledgeBossArena,
@@ -92,6 +93,8 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
   const [selectedRegionId, setSelectedRegionId] = useState<RegionId>('creation');
   const [locationTab, setLocationTab] = useState<LocationTab>('chapters');
   const [showRegionModal, setShowRegionModal] = useState(false);
+  const closeRegionModal = useCallback(() => setShowRegionModal(false), []);
+  const regionModalRef = useDialogA11y<HTMLElement>(showRegionModal, closeRegionModal);
   const [showPouch, setShowPouch] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -323,6 +326,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           }}
         >
         <section
+          ref={regionModalRef}
           role="dialog"
           aria-modal="true"
           onClick={(e) => e.stopPropagation()}
@@ -361,9 +365,9 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           >
             ✕
           </button>
-          {/* Location Header */}
+          {/* Location Header — desktop/tablet: icon + title + mastery in a row */}
           <div
-            className="adv-location-header"
+            className="adv-location-header adv-location-header-desktop"
             style={{
               borderBottom: `1px solid ${c.surfaceAltBorder}`,
               paddingBottom: '1.25rem',
@@ -392,6 +396,51 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
                 {completionPercents[selectedRegion.id] || 0}%
               </strong>
               <small style={{ color: c.textMuted, fontSize: '0.75rem' }}>Mastery</small>
+            </div>
+          </div>
+
+          {/* Location Header — mobile: everything stacked in a single
+              column (icon top-left, then each piece full-width) instead
+              of squeezing a 3-column layout into a narrow screen. */}
+          <div
+            className="adv-location-header-mobile"
+            style={{
+              borderBottom: `1px solid ${c.surfaceAltBorder}`,
+              paddingBottom: '1.25rem',
+              marginBottom: '1.5rem',
+              paddingRight: '2.75rem',
+            }}
+          >
+            <span style={{ fontSize: '2.75rem', display: 'block', marginBottom: '0.75rem' }}>{selectedRegion.icon}</span>
+            <span
+              style={{
+                display: 'block',
+                width: '100%',
+                boxSizing: 'border-box',
+                textAlign: 'center',
+                fontSize: '0.8rem',
+                background: '#3b82f6',
+                color: '#ffffff',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '9999px',
+                fontWeight: 700,
+                marginBottom: '0.6rem',
+              }}
+            >
+              {selectedRegion.scriptureRange}
+            </span>
+            <span style={{ display: 'block', fontSize: '0.8rem', color: isRegionUnlocked ? c.unlockedText : c.lockedText, fontWeight: 600, marginBottom: '0.5rem' }}>
+              {isRegionUnlocked ? '✨ Unlocked Land' : '🔒 Locked Land'}
+            </span>
+            <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem', fontWeight: 900, color: c.text }}>
+              {selectedRegion.name}
+            </h2>
+            <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.85rem', color: c.textMuted }}>{selectedRegion.summary}</p>
+            <div>
+              <strong style={{ fontSize: '1.4rem', color: c.gold }}>
+                {completionPercents[selectedRegion.id] || 0}%
+              </strong>
+              <small style={{ color: c.textMuted, fontSize: '0.75rem', marginLeft: '0.4rem' }}>Mastery</small>
             </div>
           </div>
 
@@ -505,8 +554,8 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
                           }}
                         />
                         {quest.linkedArcadeGame && (
-                          <div style={{ marginTop: '0.75rem', textAlign: 'right' }}>
-                            <Link href={quest.linkedArcadeGame.href} className="button button-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', ...ctaStyle }}>
+                          <div style={{ marginTop: '0.75rem' }}>
+                            <Link href={quest.linkedArcadeGame.href} className="button button-primary" style={{ fontSize: '0.8rem', padding: '0.6rem 0.8rem', width: '100%', justifyContent: 'center', ...ctaStyle }}>
                               Launch Game →
                             </Link>
                           </div>

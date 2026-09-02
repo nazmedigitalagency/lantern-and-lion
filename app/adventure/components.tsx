@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { CharacterAvatar } from '../character/components';
+import { useDialogA11y } from '../lib/use-dialog';
 import type { CharacterAppearance, CharacterEquipment } from '../character/types';
 import type {
   AdventureQuest,
@@ -921,9 +922,11 @@ export function CollectiblesPouchModal({
   secrets?: LocationSecret[];
   onClose: () => void;
 }) {
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
   return (
     <div className="help-overlay" role="presentation" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="help-dialog"
         role="dialog"
         aria-modal="true"

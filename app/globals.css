@@ -6332,27 +6332,20 @@ footer a:hover{color:var(--gold)}
   }
 }
 
-/* Region detail modal header — icon/title/mastery grid collapses to a
-   single column on small screens instead of squashing three columns. */
-.adv-location-header {
+/* Region detail modal header — desktop keeps the icon/title/mastery row;
+   mobile swaps to a fully stacked single column (see
+   .adv-location-header-mobile) instead of squashing the row. */
+.adv-location-header-desktop {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 1.25rem;
   align-items: center;
 }
 .adv-mastery-block { text-align: right; }
-@media (max-width: 600px) {
-  .adv-location-header {
-    grid-template-columns: auto 1fr;
-    row-gap: 0.6rem;
-  }
-  .adv-mastery-block {
-    grid-column: 1 / -1;
-    text-align: left;
-    display: flex;
-    align-items: baseline;
-    gap: 0.4rem;
-  }
+.adv-location-header-mobile { display: none; }
+@media (max-width: 640px) {
+  .adv-location-header-desktop { display: none; }
+  .adv-location-header-mobile { display: block; }
 }
 
 /* Memory Verse card actions — equal-width side by side on desktop,

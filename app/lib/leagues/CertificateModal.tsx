@@ -3,6 +3,7 @@
 import React from 'react';
 import type { SeasonCertificate } from './types';
 import { LEAGUE_TIERS } from './config';
+import { useDialogA11y } from '../use-dialog';
 
 interface CertificateModalProps {
   certificate: SeasonCertificate;
@@ -11,10 +12,12 @@ interface CertificateModalProps {
 
 export function CertificateModal({ certificate, onClose }: CertificateModalProps) {
   const tier = LEAGUE_TIERS[certificate.tier] || LEAGUE_TIERS.bronze;
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   return (
     <div className="help-overlay" role="presentation" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="help-dialog"
         role="dialog"
         aria-modal="true"
