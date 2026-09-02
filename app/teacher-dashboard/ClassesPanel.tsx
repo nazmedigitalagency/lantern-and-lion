@@ -2,22 +2,21 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type {
-  AssignmentStatus,
   ClassroomCard,
   ClassroomDetailResponse,
   ClassroomsListResponse,
 } from '../lib/classrooms/types';
-import { STORY_CATALOG } from '../stories/catalog';
-import { curriculumModules } from '../curriculum-data';
+import type { AssignmentBucket, AssignmentListItem } from '../lib/assignments/types';
 import StudentCard from './StudentCard';
 import StudentDetailModal from './StudentDetailModal';
+import CreateAssignmentModal from './CreateAssignmentModal';
 
 const AGE_BAND_OPTIONS = ['Ages 5–7', 'Ages 8–11', 'Ages 13–16'];
 const MEETING_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-const ASSIGNMENT_TABS: { value: AssignmentStatus; label: string }[] = [
+const ASSIGNMENT_TABS: { value: AssignmentBucket; label: string }[] = [
   { value: 'active', label: 'Active' },
-  { value: 'upcoming', label: 'Upcoming' },
+  { value: 'due_soon', label: 'Due soon' },
   { value: 'completed', label: 'Completed' },
   { value: 'overdue', label: 'Overdue' },
 ];
@@ -238,21 +237,15 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
   const [detail, setDetail] = useState<ClassroomDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [assignmentTab, setAssignmentTab] = useState<AssignmentStatus>('active');
+  const [assignmentTab, setAssignmentTab] = useState<AssignmentBucket>('active');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   const [manageOpen, setManageOpen] = useState(false);
   const [manageBusyId, setManageBusyId] = useState<string | null>(null);
   const [manageError, setManageError] = useState('');
 
+  const [assignments, setAssignments] = useState<AssignmentListItem[] | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
-  const [assignType, setAssignType] = useState<'story' | 'concept'>('story');
-  const [assignReferenceId, setAssignReferenceId] = useState('');
-  const [assignTitle, setAssignTitle] = useState('');
-  const [assignDescription, setAssignDescription] = useState('');
-  const [assignDueDate, setAssignDueDate] = useState('');
-  const [assignBusy, setAssignBusy] = useState(false);
-  const [assignError, setAssignError] = useState('');
   const [deleteAssignmentBusyId, setDeleteAssignmentBusyId] = useState<string | null>(null);
 
   function loadDetail() {
@@ -268,15 +261,24 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
       });
   }
 
+  function loadAssignments() {
+    fetch(`/api/assignments?classroomId=${classroomId}`)
+      .then((res) => (res.ok ? (res.json() as Promise<{ assignments: AssignmentListItem[] }>) : null))
+      .then((data) => { if (data) setAssignments(data.assignments); })
+      .catch(() => {});
+  }
+
   useEffect(() => {
     loadDetail();
+    loadAssignments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classroomId]);
 
   const assignmentsByTab = useMemo(() => {
-    if (!detail) return [];
-    return detail.assignments.filter((a) => a.status === assignmentTab);
-  }, [detail, assignmentTab]);
+    if (!assignments) return [];
+    return assignments.filter((a) => a.status === 'assigned' && a.bucket === assignmentTab);
+  }, [assignments, assignmentTab]);
+  const liveAssignments = useMemo(() => (assignments || []).filter((a) => a.status === 'assigned'), [assignments]);
 
   async function addExistingStudent(childId: string) {
     setManageBusyId(childId);
@@ -300,55 +302,11 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
     }
   }
 
-  function openAssign() {
-    setAssignOpen(true);
-    setAssignType('story');
-    setAssignReferenceId(STORY_CATALOG[0]?.id || '');
-    setAssignTitle(STORY_CATALOG[0]?.title || '');
-    setAssignDescription('');
-    setAssignDueDate('');
-    setAssignError('');
-  }
-
-  async function submitAssignment() {
-    if (!assignTitle.trim() || !assignReferenceId) return;
-    setAssignBusy(true);
-    setAssignError('');
-    try {
-      const res = await fetch(`/api/classrooms/${classroomId}/assignments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: assignTitle.trim(),
-          description: assignDescription.trim() || undefined,
-          assignmentType: assignType,
-          referenceId: assignReferenceId,
-          dueDate: assignDueDate || undefined,
-        }),
-      });
-      const data = (await res.json().catch(() => null)) as { error?: string; success?: boolean } | null;
-      if (!res.ok || !data?.success) {
-        setAssignError(data?.error || 'Could not create the assignment.');
-        return;
-      }
-      setAssignOpen(false);
-      loadDetail();
-    } catch {
-      setAssignError('Could not create the assignment. Check your connection and try again.');
-    } finally {
-      setAssignBusy(false);
-    }
-  }
-
   async function deleteAssignment(assignmentId: string) {
     setDeleteAssignmentBusyId(assignmentId);
     try {
-      await fetch(`/api/classrooms/${classroomId}/assignments`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignmentId }),
-      });
-      loadDetail();
+      await fetch(`/api/assignments/${assignmentId}`, { method: 'DELETE' });
+      loadAssignments();
     } finally {
       setDeleteAssignmentBusyId(null);
     }
@@ -426,7 +384,7 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
       <section className="classroom-detail-section">
         <div className="classroom-section-head">
           <h2>Assignments</h2>
-          <button type="button" className="classroom-manage-button" onClick={openAssign}>+ Assign</button>
+          <button type="button" className="classroom-manage-button" onClick={() => setAssignOpen(true)}>+ Assign</button>
         </div>
         <div className="classroom-assignment-tabs">
           {ASSIGNMENT_TABS.map((t) => (
@@ -436,13 +394,13 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
               className={assignmentTab === t.value ? 'active' : ''}
               onClick={() => setAssignmentTab(t.value)}
             >
-              {t.label} ({detail.assignments.filter((a) => a.status === t.value).length})
+              {t.label} ({liveAssignments.filter((a) => a.bucket === t.value).length})
             </button>
           ))}
         </div>
         {assignmentsByTab.length === 0 ? (
           <p className="student-detail-empty">
-            {detail.assignments.length === 0 ? 'No assignments yet — assign a Bible story or lesson to the class.' : `No ${assignmentTab} assignments.`}
+            {liveAssignments.length === 0 ? 'No assignments yet — assign a Bible story, lesson, or game to the class.' : `No ${assignmentTab.replace('_', ' ')} assignments.`}
           </p>
         ) : (
           <ul className="classroom-assignment-list">
@@ -450,11 +408,11 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
               <li key={a.id}>
                 <div className="classroom-assignment-info">
                   <strong>{a.title}</strong>
-                  <small>{a.referenceLabel}{a.dueDate ? ` · Due ${new Date(`${a.dueDate}T00:00:00`).toLocaleDateString()}` : ''}</small>
+                  <small>{a.referenceLabel || 'Custom'}{a.dueDate ? ` · Due ${new Date(`${a.dueDate}T00:00:00`).toLocaleDateString()}` : ''}</small>
                 </div>
                 <div className="classroom-assignment-progress">
-                  <i><b style={{ width: `${a.completionPercent}%` }} /></i>
-                  <span>{a.completedCount}/{a.totalStudents} completed</span>
+                  <i><b style={{ width: `${a.studentCount ? Math.round((a.completedCount / a.studentCount) * 100) : 0}%` }} /></i>
+                  <span>{a.completedCount}/{a.studentCount} completed</span>
                 </div>
                 <button type="button" className="student-detail-remove" disabled={deleteAssignmentBusyId === a.id} onClick={() => deleteAssignment(a.id)}>
                   {deleteAssignmentBusyId === a.id ? 'Removing…' : 'Remove'}
@@ -536,59 +494,12 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
       )}
 
       {assignOpen && (
-        <div className="add-student-overlay" role="presentation" onClick={() => setAssignOpen(false)}>
-          <section className="add-student-dialog classroom-create-dialog" role="dialog" aria-modal="true" aria-labelledby="assign-title" onClick={(e) => e.stopPropagation()}>
-            <button className="student-detail-close" aria-label="Close" onClick={() => setAssignOpen(false)}>×</button>
-            <h2 id="assign-title">Assign to class</h2>
-            <label className="add-student-field">
-              Content type
-              <select
-                value={assignType}
-                onChange={(e) => {
-                  const type = e.target.value as 'story' | 'concept';
-                  setAssignType(type);
-                  const first = type === 'story' ? STORY_CATALOG[0] : curriculumModules[0];
-                  setAssignReferenceId(first?.id || '');
-                  setAssignTitle(first?.title || '');
-                }}
-              >
-                <option value="story">Interactive Bible story</option>
-                <option value="concept">Bible lesson</option>
-              </select>
-            </label>
-            <label className="add-student-field">
-              {assignType === 'story' ? 'Story' : 'Lesson'}
-              <select
-                value={assignReferenceId}
-                onChange={(e) => {
-                  setAssignReferenceId(e.target.value);
-                  const found = assignType === 'story' ? STORY_CATALOG.find((s) => s.id === e.target.value) : curriculumModules.find((m) => m.id === e.target.value);
-                  if (found) setAssignTitle(found.title);
-                }}
-              >
-                {assignType === 'story'
-                  ? STORY_CATALOG.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)
-                  : curriculumModules.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
-              </select>
-            </label>
-            <label className="add-student-field">
-              Title
-              <input type="text" value={assignTitle} onChange={(e) => setAssignTitle(e.target.value)} maxLength={120} />
-            </label>
-            <label className="add-student-field">
-              Notes <small>(optional)</small>
-              <textarea value={assignDescription} onChange={(e) => setAssignDescription(e.target.value)} rows={2} maxLength={500} />
-            </label>
-            <label className="add-student-field">
-              Due date <small>(optional)</small>
-              <input type="date" value={assignDueDate} onChange={(e) => setAssignDueDate(e.target.value)} />
-            </label>
-            {assignError && <p className="add-student-error" role="alert">{assignError}</p>}
-            <button type="button" className="add-student-primary" disabled={assignBusy || !assignTitle.trim()} onClick={submitAssignment}>
-              {assignBusy ? 'Assigning…' : 'Assign to class'}
-            </button>
-          </section>
-        </div>
+        <CreateAssignmentModal
+          defaultClassroomId={classroomId}
+          lockClassroom
+          onClose={() => setAssignOpen(false)}
+          onCreated={loadAssignments}
+        />
       )}
     </div>
   );

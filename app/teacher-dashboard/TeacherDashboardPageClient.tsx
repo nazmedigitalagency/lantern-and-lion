@@ -9,6 +9,7 @@ import { canonicalRegions } from '../adventure/world-data';
 import { signOutOfPersona } from '../lib/session';
 import StudentsPanel from './StudentsPanel';
 import ClassesPanel from './ClassesPanel';
+import AssignmentsPanel from './AssignmentsPanel';
 
 type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
@@ -71,13 +72,6 @@ function getStarterClassesFor(email: string, name: string): Classroom[] {
   ];
 }
 
-const lessons = [
-  'David chooses courage',
-  'Build Psalm 119:105',
-  'Samuel listens',
-  'A kind choice at lunch',
-  'What did Ruth notice?',
-];
 
 const codePrefixForAgeBand = (ageBand: string) => (ageBand.includes('5') ? 'LIGHT' : ageBand.includes('13') ? 'LAMP' : 'LION');
 const generateJoinCode = (ageBand: string) => `${codePrefixForAgeBand(ageBand)}-${Math.floor(100 + Math.random() * 900)}`;
@@ -97,8 +91,6 @@ export default function TeacherDashboardPage() {
   const [notice, setNotice] = useState('');
   const [newClass, setNewClass] = useState('');
   const [ageBand, setAgeBand] = useState('Ages 8–11');
-  const [lesson, setLesson] = useState(lessons[0]);
-  const [due, setDue] = useState('Friday');
   const [message, setMessage] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(1);
   const [sentMessages, setSentMessages] = useState<Array<{ studentId: number; body: string }>>([]);
@@ -218,7 +210,6 @@ export default function TeacherDashboardPage() {
   const average = approvedStudents.length
     ? Math.round(approvedStudents.reduce((sum, item) => sum + item.progress, 0) / approvedStudents.length)
     : 0;
-  const activeAssignments = classroom ? assignments.filter((item) => item.classId === classroom.id) : [];
 
   function saveAllClasses(next: Classroom[]) {
     setAllClasses(next);
@@ -244,17 +235,6 @@ export default function TeacherDashboardPage() {
     setActiveClass(nextClass.id);
     setNewClass('');
     setNotice(`${nextClass.name} is ready. Share its code only with approved families.`);
-  }
-
-  function assign() {
-    if (!classroom) return;
-    const existing = assignments.find((item) => item.classId === classroom.id && item.title === lesson);
-    let next: Assignment[];
-    if (existing) next = assignments.map((item) => (item.id === existing.id ? { ...item, due } : item));
-    else next = [...assignments, { id: nextId(), classId: classroom.id, title: lesson, due, completed: 0 }];
-    setAssignments(next);
-    localStorage.setItem('lanternLionTeacherAssignments', JSON.stringify(next));
-    setNotice(existing ? 'The due date was updated.' : `${lesson} was assigned to ${classroom.name}.`);
   }
 
   function signOut() {
@@ -619,70 +599,10 @@ export default function TeacherDashboardPage() {
               <div className="teacher-content">
                 <div className="teacher-title">
                   <p className="teacher-kicker">Assignments</p>
-                  <h1>Choose one useful next step.</h1>
-                  <p>Assigned work appears first, but students can still explore the rest of their age-appropriate library.</p>
+                  <h1>Assign, monitor, and grade.</h1>
+                  <p>Create Bible-learning assignments for a whole classroom or hand-picked students, and see completion and scores in one place.</p>
                 </div>
-
-                <section className="teacher-assignment-builder">
-                  <div>
-                    <label>
-                      Class
-                      <select value={activeClass} onChange={(e) => setActiveClass(Number(e.target.value))}>
-                        {classes.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Activity
-                      <select value={lesson} onChange={(e) => setLesson(e.target.value)}>
-                        {lessons.map((item) => (
-                          <option key={item}>{item}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Finish by
-                      <select value={due} onChange={(e) => setDue(e.target.value)}>
-                        <option>Friday</option>
-                        <option>Sunday</option>
-                        <option>Next Wednesday</option>
-                        <option>No due date</option>
-                      </select>
-                    </label>
-                    <button onClick={assign}>Assign to class</button>
-                  </div>
-
-                  <aside>
-                    <p className="teacher-kicker">Current class work</p>
-                    {activeAssignments.length ? (
-                      activeAssignments.map((item) => (
-                        <article key={item.id}>
-                          <span>A</span>
-                          <div>
-                            <strong>{item.title}</strong>
-                            <small>
-                              {item.completed} of {classroom.students.length} finished · Due {item.due}
-                            </small>
-                          </div>
-                          <button
-                            onClick={() => {
-                              const next = assignments.filter((work) => work.id !== item.id);
-                              setAssignments(next);
-                              localStorage.setItem('lanternLionTeacherAssignments', JSON.stringify(next));
-                            }}
-                          >
-                            Remove
-                          </button>
-                        </article>
-                      ))
-                    ) : (
-                      <p>No assignments for this class yet.</p>
-                    )}
-                  </aside>
-                </section>
+                <AssignmentsPanel />
               </div>
             )}
 

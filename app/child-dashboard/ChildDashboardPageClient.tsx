@@ -14,6 +14,7 @@ import type { CharacterAppearance, CharacterEquipment } from '../character/types
 import { CharacterAvatar } from '../character/components';
 import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
+import { StudentAssignmentsPanel } from '../lib/assignments/StudentAssignmentsPanel';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { getNextMissionRecommendation } from '../adventure/progression';
@@ -678,6 +679,8 @@ export default function ChildDashboardPage() {
                   </div>
                 </div>
               </section>
+
+              <StudentAssignmentsPanel tone="child" />
 
               {/* 2. THREE QUICK-ACTION STATUS CARDS ROW */}
               <section className="kid-three-cards-row">

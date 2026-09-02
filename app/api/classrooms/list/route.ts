@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import { computeStudentCards, type ChildRow } from '../../../lib/classrooms/roster';
-import { computeClassroomAssignments } from '../../../lib/classrooms/assignments';
+import { assignmentBucket } from '../../../lib/assignments/server';
 import { getStory } from '../../../stories/catalog';
 import { getConcept } from '../../../lib/adaptive/concepts';
 import type { ClassroomCard, ClassroomsListResponse } from '../../../lib/classrooms/types';
@@ -40,9 +40,31 @@ export async function GET() {
     const activeThisWeek = studentCards.filter((s) => s.weeklyActiveDays > 0).length;
     const avgLearningActivity = studentCount ? Math.round((studentCards.reduce((sum, s) => sum + s.weeklyActiveDays, 0) / studentCount / 7) * 100) : 0;
 
-    const assignments = await computeClassroomAssignments(admin, c.id, childIds);
-    const avgAssignmentCompletion = assignments.length ? Math.round(assignments.reduce((sum, a) => sum + a.completionPercent, 0) / assignments.length) : null;
-    const upcomingAssignmentsCount = assignments.filter((a) => a.status === 'upcoming' || a.status === 'active').length;
+    const { data: classroomAssignments } = await admin.from('assignments').select('id, due_date').eq('classroom_id', c.id).eq('status', 'assigned');
+    let avgAssignmentCompletion: number | null = null;
+    let upcomingAssignmentsCount = 0;
+    if (classroomAssignments && classroomAssignments.length > 0) {
+      const assignmentIds = classroomAssignments.map((a) => a.id);
+      const { data: subs } = await admin.from('assignment_submissions').select('assignment_id, status').in('assignment_id', assignmentIds);
+      const totals = new Map<string, { done: number; total: number }>();
+      for (const s of subs || []) {
+        const t = totals.get(s.assignment_id) || { done: 0, total: 0 };
+        t.total += 1;
+        if (s.status === 'submitted' || s.status === 'graded' || s.status === 'returned') t.done += 1;
+        totals.set(s.assignment_id, t);
+      }
+      const percents = classroomAssignments.map((a) => {
+        const t = totals.get(a.id) || { done: 0, total: 0 };
+        return t.total > 0 ? (t.done / t.total) * 100 : 0;
+      });
+      avgAssignmentCompletion = percents.length ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : null;
+      upcomingAssignmentsCount = classroomAssignments.filter((a) => {
+        const t = totals.get(a.id) || { done: 0, total: 0 };
+        const percent = t.total > 0 ? (t.done / t.total) * 100 : 0;
+        const bucket = assignmentBucket('assigned', a.due_date, Math.round((percent / 100) * t.total), t.total);
+        return bucket === 'due_soon' || bucket === 'active';
+      }).length;
+    }
 
     let recentActivityPreview: string | null = null;
     if (childIds.length > 0) {

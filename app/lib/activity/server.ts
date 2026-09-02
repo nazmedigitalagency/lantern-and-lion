@@ -121,7 +121,7 @@ export async function notifyOnce(
   params: {
     recipientId: string;
     childId?: string | null;
-    type: 'LOGIN' | 'DAILY_SUMMARY' | 'ACHIEVEMENT' | 'QUEST' | 'LEARNING' | 'STREAK' | 'TEACHER_REQUEST';
+    type: 'LOGIN' | 'DAILY_SUMMARY' | 'ACHIEVEMENT' | 'QUEST' | 'LEARNING' | 'STREAK' | 'TEACHER_REQUEST' | 'ASSIGNMENT';
     title: string;
     body: string;
     payload?: Record<string, unknown>;

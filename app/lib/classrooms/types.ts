@@ -116,24 +116,6 @@ export type ClassroomCard = ClassroomRef & {
 
 export type ClassroomsListResponse = { classrooms: ClassroomCard[] };
 
-export type AssignmentType = 'story' | 'concept';
-export type AssignmentStatus = 'active' | 'upcoming' | 'completed' | 'overdue';
-
-export type ClassroomAssignment = {
-  id: string;
-  title: string;
-  description: string | null;
-  assignmentType: AssignmentType;
-  referenceId: string;
-  referenceLabel: string;
-  dueDate: string | null;
-  createdAt: string;
-  completedCount: number;
-  totalStudents: number;
-  completionPercent: number;
-  status: AssignmentStatus;
-};
-
 export type ClassroomActivityItem = { id: string; label: string; occurredAt: string };
 
 export type LeaderboardEntry = { studentId: string; name: string; value: number; unit: string };
@@ -156,11 +138,6 @@ export type ClassroomDetailResponse = {
   students: StudentCard[];
   pending: PendingStudent[];
   connectedElsewhere: { id: string; name: string; ageGroup: AgeGroup }[];
-  assignments: ClassroomAssignment[];
   activity: ClassroomActivityItem[];
   leaderboard: ClassroomLeaderboard;
 };
-
-export type AssignableContent =
-  | { type: 'story'; id: string; label: string }
-  | { type: 'concept'; id: string; label: string; track: string };

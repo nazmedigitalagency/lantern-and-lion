@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import { computeStudentCards, type ChildRow } from '../../../lib/classrooms/roster';
-import { computeClassroomAssignments } from '../../../lib/classrooms/assignments';
 import { ageGroupForAge } from '../../../lib/classrooms/server';
 import { getConceptMasteryForChild } from '../../../lib/adaptive/server';
 import { getConcept } from '../../../lib/adaptive/concepts';
@@ -80,8 +79,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     connectedElsewhere.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  const assignments = await computeClassroomAssignments(admin, classroomId, childIds);
-
   // Stats — every number here is a real aggregate of the roster/assignment
   // data above, never a placeholder.
   const studentCount = students.length;
@@ -89,9 +86,21 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const trackedMastery = students.filter((s) => s.masteryTracked);
   const avgPerformance = trackedMastery.length ? Math.round(trackedMastery.reduce((sum, s) => sum + s.masteryPercent, 0) / trackedMastery.length) : 0;
   const avgLearningActivity = studentCount ? Math.round((students.reduce((sum, s) => sum + s.weeklyActiveDays, 0) / studentCount / 7) * 100) : 0;
-  const assignmentsCompletedPercent = assignments.length
-    ? Math.round(assignments.reduce((sum, a) => sum + a.completionPercent, 0) / assignments.length)
-    : null;
+
+  const { data: classroomAssignments } = await admin.from('assignments').select('id').eq('classroom_id', classroomId).eq('status', 'assigned');
+  let assignmentsCompletedPercent: number | null = null;
+  if (classroomAssignments && classroomAssignments.length > 0) {
+    const { data: subs } = await admin.from('assignment_submissions').select('assignment_id, status').in('assignment_id', classroomAssignments.map((a) => a.id));
+    const totals = new Map<string, { done: number; total: number }>();
+    for (const s of subs || []) {
+      const t = totals.get(s.assignment_id) || { done: 0, total: 0 };
+      t.total += 1;
+      if (s.status === 'submitted' || s.status === 'graded' || s.status === 'returned') t.done += 1;
+      totals.set(s.assignment_id, t);
+    }
+    const percents = Array.from(totals.values()).filter((t) => t.total > 0).map((t) => (t.done / t.total) * 100);
+    assignmentsCompletedPercent = percents.length ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : null;
+  }
 
   // Class-level activity feed — aggregate "N students completed/practiced X
   // this week" lines plus a couple of individually-named recent completions,
@@ -187,7 +196,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     students,
     pending,
     connectedElsewhere,
-    assignments,
     activity: trimmedActivity,
     leaderboard,
   };

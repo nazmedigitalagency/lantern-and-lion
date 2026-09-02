@@ -15,6 +15,7 @@ import { readAppearance, readEquipment, readCharacterName } from '../character/s
 import type { CharacterAppearance, CharacterEquipment } from '../character/types';
 import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
+import { StudentAssignmentsPanel } from '../lib/assignments/StudentAssignmentsPanel';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
 import { curriculumModules, type CurriculumModule } from '../curriculum-data';
@@ -848,6 +849,8 @@ export default function TeenDashboardPage() {
                   </p>
                 </div>
               </section>
+
+              <StudentAssignmentsPanel tone="teen" />
 
               {/* 2. PRIMARY ACTION ROW: RECOMMENDED BIBLE EXPEDITION & DAILY QUESTS */}
               <div className="teen-action-cards-grid">
