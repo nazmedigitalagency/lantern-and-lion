@@ -977,7 +977,7 @@ export function CollectiblesPouchModal({
         )}
 
         <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
-          <button type="button" className="button button-primary" onClick={onClose}>
+          <button type="button" className="button button-danger" onClick={onClose}>
             Close Pouch
           </button>
         </div>

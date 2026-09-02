@@ -122,7 +122,7 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
           <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '1rem' }}>
             <button
               type="button"
-              className="button button-secondary"
+              className="button button-danger"
               onClick={onClose}
               style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
             >
@@ -555,7 +555,7 @@ export function LeagueWorld({ embedded = false, onClose }: { embedded?: boolean;
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <Link href={dashboardHref} className="button button-secondary" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}>
+        <Link href={dashboardHref} className="button button-danger" style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}>
           ← Back to Dashboard
         </Link>
       </div>

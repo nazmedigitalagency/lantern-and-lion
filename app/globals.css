@@ -23,6 +23,7 @@
   /* Fresh Green — growth, progress, success, completed states */
   --green:#22C55E;         /* 2.28:1 on white — bg/icon/progress-fill ONLY, never text */
   --green-dark:#15803D;    /* 5.02:1 on white — text-safe, use for success text/links/"completed" labels */
+  --green-darker:#166534;  /* pressed/shadow shade for elements using --green-dark as their base bg */
   --green-tint:#EFFDF4;
   --teal:#22C55E;          /* legacy alias -> green (old "teal" role now served by green) */
   --teal-dark:#15803D;     /* legacy alias -> green-dark */
@@ -135,9 +136,19 @@ nav a:hover { background:var(--sky); color:var(--teal-dark); }
 .button-coral { min-height:44px; background:var(--purple); color:var(--white); box-shadow:0 4px 0 var(--purple-hover); }
 .button-coral:hover { background:var(--purple-hover); }
 .button-coral:active { box-shadow:0 2px 0 var(--purple-hover); }
-.button-secondary { border-color:transparent; background:var(--green); color:var(--navy); box-shadow:0 5px 0 var(--green-dark); }
-.button-secondary:hover { background:var(--green-dark); }
-.button-secondary:active { box-shadow:0 3px 0 var(--green-dark); }
+/* --green (#22C55E) is bg-only per the token comment above — it's only
+   2.28:1 against white text, so the button background uses the darker,
+   text-safe --green-dark instead (5.02:1), keeping white text readable. */
+.button-secondary { border-color:transparent; background:var(--green-dark); color:var(--white); box-shadow:0 5px 0 var(--green-darker); }
+.button-secondary:hover { background:var(--green-darker); }
+.button-secondary:active { box-shadow:0 3px 0 var(--green-darker); }
+
+/* Dismissive actions (close/cancel/back/exit) — red instead of green so
+   the color itself signals "this leaves/undoes", distinct from the
+   green "do this" secondary action. */
+.button-danger { border-color:transparent; background:var(--error); color:var(--white); box-shadow:0 5px 0 var(--error-dark); }
+.button-danger:hover { background:var(--error-dark); }
+.button-danger:active { box-shadow:0 3px 0 var(--error-dark); }
 .button-gold { border-color:transparent; background:var(--yellow); color:var(--navy); box-shadow:0 5px 0 var(--yellow-dark); }
 .button-gold:hover { background:var(--yellow-dark); }
 .button-purple { border-color:transparent; background:var(--purple); color:var(--white); box-shadow:0 5px 0 var(--purple-hover); }
@@ -785,10 +796,10 @@ footer a:hover{color:var(--gold)}
 .kid-sidebar-close-btn {
   width: 32px;
   height: 32px;
-  border: 2px solid var(--navy);
+  border: 2px solid var(--error-dark);
   border-radius: 50%;
-  background: var(--cream);
-  color: var(--navy);
+  background: var(--error);
+  color: var(--white);
   font: 900 14px var(--font-nunito);
   cursor: pointer;
 }
@@ -1943,13 +1954,14 @@ footer a:hover{color:var(--gold)}
   right: 14px;
   width: 38px;
   height: 38px;
-  border: 2px solid var(--kid-navy);
+  border: 2px solid var(--error-dark);
   border-radius: 50%;
-  background: var(--white);
-  color: var(--kid-navy);
+  background: var(--error);
+  color: var(--white);
   font-size: 16px;
   cursor: pointer;
 }
+.help-dialog .close-help:hover { background: var(--error-dark); }
 .help-dialog h2 { margin: 6px 0 10px; font: 700 30px var(--font-fredoka); color: var(--kid-navy); }
 .help-dialog > p { margin: 0 0 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .help-dialog > div {
@@ -2794,8 +2806,8 @@ footer a:hover{color:var(--gold)}
 .family-modal-safety-note{padding:12px 14px;border-left:4px solid var(--teal);border-radius:10px;background:var(--teal-soft);text-align:left;margin-bottom:22px}
 .family-modal-safety-note span{display:block;font-size:11px;font-weight:900;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.05em}
 .family-modal-safety-note p{margin:3px 0 0;color:#24544d;font-size:13px;line-height:1.4}
-.family-modal-close-btn{width:100%;min-height:48px;border:2px solid var(--kid-navy);border-radius:14px;background:var(--kid-gold);color:var(--kid-navy);cursor:pointer;font-family:var(--font-nunito);font-size:15px;font-weight:900;box-shadow:3px 3px 0 var(--kid-navy);transition:transform 120ms ease}
-.family-modal-close-btn:hover{transform:translateY(-1px)}
+.family-modal-close-btn{width:100%;min-height:48px;border:2px solid var(--error-dark);border-radius:14px;background:var(--error);color:var(--white);cursor:pointer;font-family:var(--font-nunito);font-size:15px;font-weight:900;box-shadow:3px 3px 0 var(--error-dark);transition:transform 120ms ease}
+.family-modal-close-btn:hover{transform:translateY(-1px);background:var(--error-dark)}
 @media(max-width:600px){
   .family-modal-meta{grid-template-columns:1fr;gap:6px}
   .family-summary-modal{padding:26px 16px}
@@ -2803,7 +2815,8 @@ footer a:hover{color:var(--gold)}
 
 /* ── Teen-mode overrides for the Family Progress modal (help-dialog is shared with the kid dashboard) ── */
 .teen-dashboard .help-dialog{border-color:var(--teen-border);background:var(--teen-surface);box-shadow:0 24px 56px rgba(0,0,0,.45);color:var(--teen-text)}
-.teen-dashboard .help-dialog .close-help{border-color:var(--teen-border);background:var(--teen-well);color:var(--teen-text)}
+.teen-dashboard .help-dialog .close-help{border-color:var(--error-dark);background:var(--error);color:var(--white)}
+.teen-dashboard .help-dialog .close-help:hover{background:var(--error-dark)}
 .teen-dashboard .help-dialog h2{color:var(--teen-text)}
 .teen-dashboard .help-dialog .child-kicker{color:var(--teen-accent)}
 .teen-dashboard .family-modal-badge{border-color:var(--teen-border)}
@@ -2815,8 +2828,8 @@ footer a:hover{color:var(--gold)}
 .teen-dashboard .fam-card-points b{color:var(--teen-text)}
 .teen-dashboard .fam-card-points small{color:var(--teen-text-muted)}
 .teen-dashboard .you-tag{color:var(--teen-accent-light)}
-.teen-dashboard .family-modal-close-btn{border-color:var(--teen-border);background:var(--teen-cta-bg);color:var(--teen-cta-text);box-shadow:none}
-.teen-dashboard .family-modal-close-btn:hover{background:var(--teen-cta-hover)}
+.teen-dashboard .family-modal-close-btn{border-color:var(--error-dark);background:var(--error);color:var(--white);box-shadow:none}
+.teen-dashboard .family-modal-close-btn:hover{background:var(--error-dark)}
 
 /* ── Interactive Scripture Reader & Chip ───────────────── */
 .scripture-chip-btn{width:fit-content;display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:2px solid var(--navy);border-radius:999px;background:var(--sky);color:var(--navy);font-family:var(--font-nunito);cursor:pointer;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease;text-align:left;box-shadow:3px 3px 0 var(--navy)}
@@ -5635,21 +5648,23 @@ footer a:hover{color:var(--gold)}
 .child-logo strong{font:700 18px var(--font-fredoka)}
 .child-logo small{color:var(--kid-blue-dark);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
 .child-header-actions{display:flex;align-items:center;gap:10px;justify-self:end}
+/* Always a "leave this page" back-link in practice (← Arcade, ← Back to
+   dashboard) — red per the app's close/cancel/back color convention. */
 .help-button{
   min-height:42px;
   padding:0 16px;
   display:inline-flex;
   align-items:center;
-  border:2px solid var(--kid-navy);
+  border:2px solid var(--error-dark);
   border-radius:12px;
-  background:#ffffff;
-  color:var(--kid-navy);
+  background:var(--error);
+  color:var(--white);
   font:900 13px var(--font-nunito);
   text-decoration:none;
   cursor:pointer;
   transition:transform 120ms ease,background 120ms ease;
 }
-.help-button:hover{background:var(--kid-sky);transform:translateY(-1px)}
+.help-button:hover{background:var(--error-dark);transform:translateY(-1px)}
 .child-kicker{
   margin:0 0 8px;
   color:var(--kid-blue-dark);
@@ -5810,7 +5825,8 @@ footer a:hover{color:var(--gold)}
 .char-nav-btn:hover{transform:translateY(-1px);background:var(--cream)}
 .char-nav-adventure{background:var(--blue-tint);color:var(--blue-dark)}
 .char-nav-adventure:hover{background:#dbeafe}
-.char-nav-back{background:var(--cream)}
+.char-nav-back{background:var(--error);color:var(--white);border-color:var(--error-dark);box-shadow:2px 2px 0 var(--error-dark)}
+.char-nav-back:hover{background:var(--error-dark)}
 
 /* Modular Illustrated Avatar System */
 .ll-avatar-container{position:relative;display:inline-flex;align-items:center;justify-content:center;user-select:none}
@@ -6027,6 +6043,8 @@ footer a:hover{color:var(--gold)}
 .char-page.teen .child-logo small{color:var(--teen-accent-light)}
 .char-page.teen .char-nav-btn{background:var(--teen-surface-alt);color:var(--teen-text);border-color:var(--teen-border)}
 .char-page.teen .char-nav-btn:hover{background:var(--teen-surface-hover)}
+.char-page.teen .char-nav-back{background:var(--error);color:var(--white);border-color:var(--error-dark)}
+.char-page.teen .char-nav-back:hover{background:var(--error-dark)}
 .char-page.teen .char-hero{background:var(--teen-surface);border-color:var(--teen-border);box-shadow:6px 6px 0 var(--teen-well)}
 .char-page.teen .char-name-edit h1{color:var(--teen-text)}
 .char-page.teen .char-name-edit small{color:var(--teen-accent-light)}
@@ -6377,8 +6395,8 @@ footer a:hover{color:var(--gold)}
 .arcade-page.teen .child-topbar{background:var(--teen-surface);border-bottom-color:var(--teen-border)}
 .arcade-page.teen .child-logo{color:var(--teen-text)}
 .arcade-page.teen .child-logo small{color:var(--teen-accent-light)}
-.arcade-page.teen .help-button{background:var(--teen-surface-alt);color:var(--teen-text);border-color:var(--teen-border)}
-.arcade-page.teen .help-button:hover{background:var(--teen-surface-hover)}
+.arcade-page.teen .help-button{background:var(--error);color:var(--white);border-color:var(--error-dark)}
+.arcade-page.teen .help-button:hover{background:var(--error-dark)}
 .arcade-page.teen .daily-intro h1{color:var(--teen-text)}
 .arcade-page.teen .daily-intro>p{color:var(--teen-text-secondary)}
 .arcade-page.teen .child-kicker{color:var(--teen-accent-light)}

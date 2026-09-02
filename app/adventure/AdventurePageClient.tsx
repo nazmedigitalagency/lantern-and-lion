@@ -209,7 +209,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           {onClose && (
             <button
               type="button"
-              className="button button-secondary"
+              className="button button-danger"
               onClick={onClose}
               style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
             >
@@ -355,9 +355,9 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
               display: 'grid',
               placeItems: 'center',
               borderRadius: '50%',
-              border: `1.5px solid ${c.modalBorder}`,
-              background: c.cardBg,
-              color: c.text,
+              border: '1.5px solid var(--error-dark)',
+              background: 'var(--error)',
+              color: 'var(--white)',
               fontSize: '1rem',
               cursor: 'pointer',
               zIndex: 5,
@@ -715,7 +715,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <Link href={dashboardHref} className="button button-secondary" style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}>
+        <Link href={dashboardHref} className="button button-danger" style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}>
           ← Back to Dashboard
         </Link>
       </div>

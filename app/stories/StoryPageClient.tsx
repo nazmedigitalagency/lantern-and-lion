@@ -227,7 +227,7 @@ export default function StoryPageClient({ story }: { story: InteractiveStory }) 
         <h1>
           {story.heroEmoji} {story.title}
         </h1>
-        <Link href={dashboardHref} className="button button-secondary" style={{ fontSize: 13, padding: '6px 12px' }}>
+        <Link href={dashboardHref} className="button button-danger" style={{ fontSize: 13, padding: '6px 12px' }}>
           Exit
         </Link>
       </div>

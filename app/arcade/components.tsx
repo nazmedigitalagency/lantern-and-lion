@@ -122,9 +122,9 @@ export function GameResultModal({
         <div className="arcade-result-actions">
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           {onBack ? (
-            <button type="button" className="button button-secondary" onClick={onBack}>Back to Arcade</button>
+            <button type="button" className="button button-danger" onClick={onBack}>Back to Arcade</button>
           ) : (
-            <Link className="button button-secondary" href={backHref || '/arcade'}>Back to Arcade</Link>
+            <Link className="button button-danger" href={backHref || '/arcade'}>Back to Arcade</Link>
           )}
         </div>
       </section>

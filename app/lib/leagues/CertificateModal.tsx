@@ -148,7 +148,7 @@ export function CertificateModal({ certificate, onClose }: CertificateModalProps
           </button>
           <button
             type="button"
-            className="button button-secondary"
+            className="button button-danger"
             onClick={onClose}
           >
             Close

@@ -425,9 +425,9 @@ function ConnectionsResultScreen({
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           <button type="button" className="button button-secondary" onClick={onSwitchMode}>Change mode</button>
           {onBack ? (
-            <button type="button" className="button button-secondary" onClick={onBack}>Back to Arcade</button>
+            <button type="button" className="button button-danger" onClick={onBack}>Back to Arcade</button>
           ) : (
-            <Link className="button button-secondary" href="/arcade">Back to Arcade</Link>
+            <Link className="button button-danger" href="/arcade">Back to Arcade</Link>
           )}
         </div>
       </section>

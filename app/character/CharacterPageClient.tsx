@@ -157,7 +157,7 @@ export function CharacterBuilder({ embedded = false, onClose }: { embedded?: boo
           <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '1rem' }}>
             <button
               type="button"
-              className="button button-secondary"
+              className="button button-danger"
               onClick={onClose}
               style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
             >
