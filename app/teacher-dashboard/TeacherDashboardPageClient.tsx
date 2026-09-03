@@ -14,8 +14,9 @@ import AssignmentsPanel from './AssignmentsPanel';
 import TemplatesPanel from './TemplatesPanel';
 import InsightsPanel from './InsightsPanel';
 import GradebookPanel from './GradebookPanel';
+import ChallengesPanel from './ChallengesPanel';
 
-type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'insights' | 'messages' | 'safety';
+type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'challenges' | 'insights' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
 type Classroom = { id: number; name: string; ageBand: string; code: string; students: Student[]; teacherEmail: string; teacherName: string };
 type Assignment = { id: number; classId: number; title: string; due: string; completed: number };
@@ -282,6 +283,7 @@ export default function TeacherDashboardPage() {
     ['classes', 'C', 'Classes'],
     ['assignments', 'A', 'Assignments'],
     ['gradebook', 'G', 'Gradebook'],
+    ['challenges', 'Ch', 'Challenges'],
     ['insights', 'I', 'Insights'],
     ['messages', 'M', 'Parent messages'],
     ['safety', 'S', 'Safety'],
@@ -663,6 +665,17 @@ export default function TeacherDashboardPage() {
                   <p>Every submission across your classes, spreadsheet-style scores per class, and one place to grade and return work.</p>
                 </div>
                 <GradebookPanel />
+              </div>
+            )}
+
+            {page === 'challenges' && (
+              <div className="teacher-content">
+                <div className="teacher-title">
+                  <p className="teacher-kicker">Challenges</p>
+                  <h1 className="teacher-title-oneline">Work toward a goal together.</h1>
+                  <p>Optional class-wide challenges — real progress from real activity, with positive recognition when the class comes through.</p>
+                </div>
+                <ChallengesPanel />
               </div>
             )}
 

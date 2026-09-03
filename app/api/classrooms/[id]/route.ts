@@ -6,6 +6,7 @@ import { ageGroupForAge } from '../../../lib/classrooms/server';
 import { getConceptMasteryForChild } from '../../../lib/adaptive/server';
 import { getConcept } from '../../../lib/adaptive/concepts';
 import { getStory } from '../../../stories/catalog';
+import { computeChallengeLeaderForClassroom } from '../../../lib/challenges/aggregate';
 import type { ClassroomActivityItem, ClassroomDetailResponse, ClassroomLeaderboard, LeaderboardEntry, PendingStudent, StudentCard } from '../../../lib/classrooms/types';
 
 type RosterRow = { child_id: string; approved: boolean; needs_help: boolean; joined_at: string; children: ChildRow | null };
@@ -159,7 +160,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   // Leaderboard — motivation, not ranking by weakness. Only students with
   // real, non-zero activity in a category are ever listed.
-  const leaderboard: ClassroomLeaderboard = { mostConsistent: [], scriptureChampion: [], quizChampion: [], mostImproved: [] };
+  const leaderboard: ClassroomLeaderboard = { mostConsistent: [], scriptureChampion: [], quizChampion: [], mostImproved: [], challengeLeader: [] };
   if (childIds.length > 0) {
     const top = (entries: LeaderboardEntry[]) => entries.filter((e) => e.value > 0).sort((a, b) => b.value - a.value).slice(0, 3);
 
@@ -179,6 +180,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     }));
     const improvementByChild = new Map(improvement.map((i) => [i.childId, i.best]));
     leaderboard.mostImproved = top(students.map((s) => ({ studentId: s.id, name: s.name, value: improvementByChild.get(s.id) || 0, unit: 'correct in a row' })));
+
+    const challengeLeaders = await computeChallengeLeaderForClassroom(admin, classroomId, childIds, new Map(students.map((s) => [s.id, s.name])));
+    leaderboard.challengeLeader = challengeLeaders.map((p) => ({ studentId: p.studentId, name: p.name, value: p.contribution, unit: 'toward the class challenge' }));
   }
 
   const response: ClassroomDetailResponse = {

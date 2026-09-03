@@ -127,6 +127,7 @@ export type ClassroomLeaderboard = {
   scriptureChampion: LeaderboardEntry[];
   quizChampion: LeaderboardEntry[];
   mostImproved: LeaderboardEntry[];
+  challengeLeader: LeaderboardEntry[];
 };
 
 export type ClassroomDetailResponse = {

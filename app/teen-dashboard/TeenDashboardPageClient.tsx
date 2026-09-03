@@ -16,6 +16,7 @@ import type { CharacterAppearance, CharacterEquipment } from '../character/types
 import { useActivityHeartbeat } from '../lib/activity/idle-tracker';
 import { StreakCard } from '../lib/streak/StreakCard';
 import { AssignmentsWidget } from '../lib/assignments/AssignmentsWidget';
+import { ClassChallengeWidget } from '../lib/challenges/ClassChallengeWidget';
 import { AssignmentsPage } from '../lib/assignments/AssignmentsPage';
 import { NotificationBell } from '../lib/notifications/NotificationBell';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
@@ -866,6 +867,7 @@ export default function TeenDashboardPage() {
               </section>
 
               <AssignmentsWidget tone="teen" onViewAll={() => setActiveTab('assignments')} />
+              <ClassChallengeWidget tone="teen" />
 
               {/* 2. PRIMARY ACTION ROW: RECOMMENDED BIBLE EXPEDITION & DAILY QUESTS */}
               <div className="teen-action-cards-grid">

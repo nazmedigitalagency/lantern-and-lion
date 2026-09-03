@@ -33,6 +33,7 @@ const LEADERBOARD_CATEGORIES: { key: keyof ClassroomDetailResponse['leaderboard'
   { key: 'scriptureChampion', title: 'Scripture Champion', emoji: '📖', blurb: 'Most Bible stories completed' },
   { key: 'quizChampion', title: 'Quiz Champion', emoji: '🏆', blurb: 'Highest average performance' },
   { key: 'mostImproved', title: 'Most Improved', emoji: '📈', blurb: 'Longest run of correct answers right now' },
+  { key: 'challengeLeader', title: 'Challenge Leader', emoji: '🎯', blurb: 'Contributed the most to the class challenge' },
 ];
 
 function formatMeeting(day: string | null, time: string | null): string | null {

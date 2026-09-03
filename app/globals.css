@@ -7579,3 +7579,58 @@ footer a:hover{color:var(--gold)}
   .gradebook-bulk-bar button{width:100%}
 }
 
+/* ── Teacher Dashboard: Class Challenges (Feature 9) ──────── */
+.challenge-list{display:grid;gap:16px}
+.challenge-card{padding:18px 20px;border:2px solid var(--navy);border-radius:16px;background:white;box-shadow:4px 4px 0 var(--navy)}
+.challenge-card-completed{border-color:var(--green);box-shadow:4px 4px 0 var(--green)}
+.challenge-card-expired{opacity:.75}
+.challenge-card-cancelled{opacity:.6}
+.challenge-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.challenge-card-head strong{display:block;color:var(--navy);font-size:17px}
+.challenge-card-head small{display:block;margin-top:3px;color:var(--slate);font-size:12px}
+.challenge-status-active{background:var(--blue-tint);color:var(--blue-dark)}
+.challenge-status-completed{background:#F0FDF4;color:#15803D}
+.challenge-status-expired{background:var(--sky);color:var(--slate)}
+.challenge-status-cancelled{background:var(--sky);color:var(--slate)}
+.challenge-card-desc{margin:0 0 12px;color:var(--slate);font-size:13px;line-height:1.5}
+
+.challenge-progress{margin:12px 0}
+.challenge-progress i{display:block;height:14px;border-radius:999px;background:var(--sky);border:1px solid var(--border);overflow:hidden}
+.challenge-progress i b{display:block;height:100%;background:var(--blue-dark);border-radius:999px}
+.challenge-card-completed .challenge-progress i b{background:var(--green)}
+.challenge-progress span{display:block;margin-top:6px;color:var(--navy);font-size:12.5px;font-weight:800}
+
+.challenge-complete-banner{margin:0 0 12px;padding:10px 14px;border:2px solid var(--green);border-radius:10px;background:#F0FDF4;color:#15803D;font-weight:800;font-size:13px}
+
+.challenge-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.challenge-stats-row div{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--sky);text-align:center}
+.challenge-stats-row b{display:block;font:700 18px var(--font-fredoka);color:var(--navy)}
+.challenge-stats-row span{display:block;font-size:11px;color:var(--slate);font-weight:700}
+
+.challenge-toggle{min-height:36px;padding:0;border:0;background:transparent;color:var(--blue-dark);font:900 12px var(--font-nunito);cursor:pointer}
+.challenge-participants{margin:10px 0;padding:0;list-style:none;display:grid;gap:6px}
+.challenge-participants li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:white;font-size:13px;color:var(--navy)}
+.challenge-participants li b{color:var(--blue-dark)}
+
+@media(max-width:620px){
+  .challenge-stats-row{grid-template-columns:1fr 1fr}
+  .challenge-card-head{flex-direction:column}
+}
+
+/* ── Student Dashboard: Class Challenge widget (Feature 9) ── */
+.class-challenge-widget{margin:18px 0;padding:18px 20px;border:2px solid var(--purple-dark,#8B5CF6);border-radius:18px;background:var(--white);box-shadow:4px 4px 0 var(--purple-dark,#8B5CF6)}
+.class-challenge-widget-teen{background:var(--teen-surface-alt,#1E293B);border-color:var(--teen-border,#334155);box-shadow:none;color:var(--teen-text,#fff)}
+.class-challenge-widget-kicker{margin:0 0 6px;font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--purple-dark,#8B5CF6)}
+.class-challenge-widget-teen .class-challenge-widget-kicker{color:var(--teen-accent,#60A5FA)}
+.class-challenge-widget-headline{margin:0 0 10px;font-size:15px;font-weight:800;color:var(--navy)}
+.class-challenge-widget-teen .class-challenge-widget-headline{color:var(--teen-text,#fff)}
+.class-challenge-widget-progress i{display:block;height:12px;border-radius:999px;background:var(--sky);border:1px solid var(--border-alt);overflow:hidden}
+.class-challenge-widget-teen .class-challenge-widget-progress i{background:var(--teen-surface-hover,#253349);border-color:var(--teen-border,#334155)}
+.class-challenge-widget-progress i b{display:block;height:100%;background:var(--purple-dark,#8B5CF6);border-radius:999px}
+.class-challenge-widget-teen .class-challenge-widget-progress i b{background:var(--teen-accent,#60A5FA)}
+.class-challenge-widget-progress span{display:block;margin-top:6px;font-size:12px;font-weight:800;color:var(--slate)}
+.class-challenge-widget-mine{margin:10px 0 0;font-size:13px;font-weight:800;color:var(--navy)}
+.class-challenge-widget-teen .class-challenge-widget-mine{color:var(--teen-text,#fff)}
+.class-challenge-widget-reward{margin:8px 0 0;font-size:13px;font-weight:900;color:#15803D}
+.class-challenge-widget-teen .class-challenge-widget-reward{color:var(--teen-emerald-dark,#4ADE80)}
+
