@@ -16,6 +16,7 @@ import { canonicalRegions } from '../adventure/world-data';
 import { getRegionCompletionPercent, getCurrentRegionId } from '../adventure/progression';
 import { loadWorldContext } from '../adventure/storage';
 import { signOutOfPersona } from '../lib/session';
+import type { ParentChildClassroomInfo } from '../api/family/classrooms/route';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Family = { familyName: string; country: string; children: Child[]; privateArtwork: boolean; teacherMessages: boolean; progressEmails: boolean };
@@ -38,7 +39,8 @@ function suggestionFor(request: HelpRequest): string {
   }
   return `Lumen flagged this for your attention. Check in with ${request.child} when you both have a quiet moment.`;
 }
-type Page = 'overview' | 'children' | 'assignments' | 'messages' | 'settings';
+
+type Page = 'overview' | 'children' | 'assignments' | 'teachers' | 'messages' | 'settings';
 
 type DailySummaryRow = {
   active_seconds: number;
@@ -143,6 +145,7 @@ export default function ParentDashboardPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedActivityChild, setSelectedActivityChild] = useState<string | null>(null);
   const [classMemberships, setClassMemberships] = useState<{ classroomId: string; classroomName: string; childId: string; childName: string; approved: boolean; requestedBy?: 'child' | 'teacher' }[]>([]);
+  const [childClassrooms, setChildClassrooms] = useState<ParentChildClassroomInfo[]>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -223,6 +226,117 @@ export default function ParentDashboardPage() {
     return () => window.clearTimeout(timer);
   }, [savedNotice]);
 
+  function loadDemoClassrooms() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('lanternLionTeacherClasses') || 'null');
+      const teacherClasses: Array<{ id: number | string; name: string; ageBand?: string; code: string; teacherName?: string; students: Array<{ id: number | string; name: string; approved?: boolean }> }> =
+        Array.isArray(saved) && saved.length > 0 ? saved : [
+          {
+            id: 1,
+            name: 'Wednesday Explorers',
+            ageBand: 'Ages 8–11',
+            code: 'LION-482',
+            teacherName: 'Sarah',
+            students: [{ id: 1, name: 'Amara A.', approved: true }],
+          },
+          {
+            id: 2,
+            name: 'Friday Teen Circle',
+            ageBand: 'Ages 13–16',
+            code: 'LAMP-731',
+            teacherName: 'Sarah',
+            students: [{ id: 2, name: 'Tobi A.', approved: true }],
+          },
+        ];
+
+      const list: ParentChildClassroomInfo[] = (family.children || []).map((ch) => {
+        const matchedClass = teacherClasses.find((cls) =>
+          cls.students?.some((st) => String(st.id) === String(ch.id) || st.name.toLowerCase().includes(ch.name.toLowerCase()))
+        );
+
+        if (!matchedClass) {
+          return {
+            childId: String(ch.id),
+            childName: ch.name,
+            classroomId: null,
+            classroomName: null,
+            classroomCode: null,
+            ageBand: null,
+            teacherName: null,
+            status: 'not_connected' as const,
+            approved: false,
+            needsHelp: false,
+            joinedAt: null,
+            requestedBy: 'child' as const,
+            assignments: { completedCount: 0, pendingCount: 0, latest: null },
+            announcements: [],
+          };
+        }
+
+        const student = matchedClass.students.find((st) => String(st.id) === String(ch.id) || st.name.toLowerCase().includes(ch.name.toLowerCase()));
+        const isApproved = student?.approved !== false;
+        const isAmara = ch.name.toLowerCase().includes('amara') || String(ch.id) === '1';
+
+        return {
+          childId: String(ch.id),
+          childName: ch.name,
+          classroomId: String(matchedClass.id),
+          classroomName: matchedClass.name,
+          classroomCode: matchedClass.code,
+          ageBand: matchedClass.ageBand || null,
+          teacherName: matchedClass.teacherName || 'Sarah',
+          status: isApproved ? 'connected' : 'pending',
+          approved: isApproved,
+          needsHelp: false,
+          joinedAt: 'This week',
+          requestedBy: 'teacher' as const,
+          assignments: isAmara ? {
+            completedCount: 3,
+            pendingCount: 1,
+            latest: {
+              title: 'Bible Quiz',
+              assignmentType: 'quiz',
+              score: 92,
+              feedback: 'Great work on remembering God’s promises!',
+              gradedAt: 'Today',
+            },
+          } : {
+            completedCount: 2,
+            pendingCount: 1,
+            latest: {
+              title: 'Youth Circle Discussion',
+              assignmentType: 'reflection',
+              score: 95,
+              feedback: 'Very thoughtful perspective on courage and standing firm.',
+              gradedAt: 'Yesterday',
+            },
+          },
+          announcements: isAmara ? [
+            {
+              id: 'ann-1',
+              title: 'Sunday School picnic next Saturday',
+              message: 'Bring your favourite fruit or snack! We will have a group verse memory challenge.',
+              eventDate: 'Next Saturday, 10:00 AM',
+              createdAt: '2 days ago',
+            },
+          ] : [
+            {
+              id: 'ann-2',
+              title: 'Youth Fellowship Outreach',
+              message: 'Join us at 4 PM for community service and worship team preparation.',
+              eventDate: 'Friday, 4:00 PM',
+              createdAt: 'Yesterday',
+            },
+          ],
+        };
+      });
+
+      setChildClassrooms(list);
+    } catch {
+      /* Safe fallback */
+    }
+  }
+
   useEffect(() => {
     if (!hydrated) return;
     fetch('/api/family/today')
@@ -242,18 +356,63 @@ export default function ParentDashboardPage() {
       .catch(() => { /* Non-blocking. */ });
 
     fetch('/api/family/classrooms')
-      .then((res) => (res.ok ? (res.json() as Promise<{ memberships: typeof classMemberships }>) : null))
-      .then((data) => { if (data?.memberships) setClassMemberships(data.memberships); })
-      .catch(() => { /* Non-blocking. */ });
+      .then((res) => (res.ok ? (res.json() as Promise<{ memberships: typeof classMemberships; childClassrooms?: ParentChildClassroomInfo[] }>) : null))
+      .then((data) => {
+        if (data?.memberships) setClassMemberships(data.memberships);
+        if (data?.childClassrooms && data.childClassrooms.length > 0) {
+          setChildClassrooms(data.childClassrooms);
+        } else {
+          loadDemoClassrooms();
+        }
+      })
+      .catch(() => {
+        loadDemoClassrooms();
+      });
   }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   function approveClassroom(classroomId: string, childId: string, approved: boolean) {
     setClassMemberships((current) => current.map((m) => (m.classroomId === classroomId && m.childId === childId ? { ...m, approved } : m)));
-    fetch(`/api/classrooms/${classroomId}/students/${childId}/approve`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ approved }),
-    }).catch(() => {});
+    setChildClassrooms((current) => current.map((c) => {
+      if (String(c.childId) === String(childId)) {
+        return approved
+          ? { ...c, approved: true, status: 'connected' }
+          : { ...c, approved: false, status: 'not_connected', classroomId: null, classroomName: null };
+      }
+      return c;
+    }));
+
+    if (approved) {
+      fetch(`/api/classrooms/${classroomId}/students/${childId}/approve`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approved: true }),
+      }).catch(() => {});
+    } else {
+      fetch(`/api/classrooms/${classroomId}/students/${childId}/approve`, {
+        method: 'DELETE',
+      }).catch(() => {});
+    }
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('lanternLionTeacherClasses') || '[]');
+      if (Array.isArray(saved)) {
+        const next = saved.map((cls) => {
+          if (String(cls.id) === String(classroomId) || cls.name === classroomId) {
+            return {
+              ...cls,
+              students: (cls.students || []).map((st: { id: number | string; approved?: boolean }) =>
+                String(st.id) === String(childId) ? { ...st, approved } : st
+              ).filter((st: { id: number | string; approved?: boolean }) => approved || String(st.id) !== String(childId)),
+            };
+          }
+          return cls;
+        });
+        localStorage.setItem('lanternLionTeacherClasses', JSON.stringify(next));
+      }
+    } catch { /* Storage unavailable. */ }
+
+    setSavedNotice(approved ? 'Class connection approved!' : 'Class connection declined.');
   }
 
   function markNotificationRead(id: string) {
@@ -320,6 +479,7 @@ export default function ParentDashboardPage() {
           <button aria-pressed={page === 'overview'} className={page === 'overview' ? 'active' : ''} onClick={() => setPage('overview')}><span>H</span>Home</button>
           <button aria-pressed={page === 'children'} className={page === 'children' ? 'active' : ''} onClick={() => setPage('children')}><span>C</span>Children</button>
           <button aria-pressed={page === 'assignments'} className={page === 'assignments' ? 'active' : ''} onClick={() => setPage('assignments')}><span>A</span>Assignments</button>
+          <button aria-pressed={page === 'teachers'} className={page === 'teachers' ? 'active' : ''} onClick={() => setPage('teachers')}><span>T</span>Teachers &amp; Classes</button>
           <button aria-pressed={page === 'messages'} className={page === 'messages' ? 'active' : ''} onClick={() => setPage('messages')}><span>M</span>Messages <b>1</b></button>
           <button aria-pressed={page === 'settings'} className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}><span>S</span>Settings</button>
         </nav>
@@ -846,6 +1006,36 @@ export default function ParentDashboardPage() {
                     </article>
                   ))}
               </div>
+
+              {(() => {
+                const info = childClassrooms.find((c) => String(c.childId) === String(activeChild.id));
+                if (!info || info.status === 'not_connected') return null;
+                return (
+                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem' }}>
+                    <div className="panel-heading">
+                      <div>
+                        <p className="parent-dash-kicker">School &amp; Church Connection</p>
+                        <h2>{info.classroomName} · Teacher {info.teacherName}</h2>
+                      </div>
+                      <button type="button" className="button button-secondary" onClick={() => setPage('teachers')}>
+                        View Details →
+                      </button>
+                    </div>
+                    <p className="parent-skill-note">
+                      {info.status === 'connected' ? (
+                        <>
+                          Connected to <strong>{info.classroomName}</strong> with <strong>{info.assignments.completedCount} completed</strong> assignments and <strong>{info.assignments.pendingCount} pending</strong>.
+                          {info.assignments.latest && (
+                            <> Latest: <strong>{info.assignments.latest.title}</strong>{info.assignments.latest.score !== null ? ` (${info.assignments.latest.score}%)` : ''}.</>
+                          )}
+                        </>
+                      ) : (
+                        <>Class connection pending your approval.</>
+                      )}
+                    </p>
+                  </section>
+                );
+              })()}
             </section>
           </div>
         )}
@@ -910,6 +1100,148 @@ export default function ParentDashboardPage() {
                 )}
               </aside>
             </section>
+          </div>
+        )}
+
+        {page === 'teachers' && (
+          <div className="parent-dashboard-content">
+            <div className="parent-page-title">
+              <p className="parent-dash-kicker">School &amp; Church</p>
+              <h1>Teachers &amp; Classroom Connections</h1>
+              <p>View your children’s connected classrooms, teachers, assignment completion, grades, teacher feedback, and announcements.</p>
+            </div>
+
+            <div className="parent-class-grid">
+              {children.map((child) => {
+                const info = childClassrooms.find((c) => String(c.childId) === String(child.id)) || {
+                  childId: String(child.id),
+                  childName: child.name,
+                  classroomId: null,
+                  classroomName: null,
+                  classroomCode: null,
+                  ageBand: null,
+                  teacherName: null,
+                  status: 'not_connected' as const,
+                  approved: false,
+                  needsHelp: false,
+                  joinedAt: null,
+                  requestedBy: 'child' as const,
+                  assignments: { completedCount: 0, pendingCount: 0, latest: null },
+                  announcements: [],
+                };
+
+                return (
+                  <article key={child.id} className="parent-class-card">
+                    <div className="parent-class-header">
+                      <div className="parent-class-child-badge">
+                        <span className="parent-class-avatar">{child.name[0]}</span>
+                        <div>
+                          <h3>{child.name}</h3>
+                          <small>{child.age} years old · {child.age >= 13 ? 'Teen' : 'Child'}</small>
+                        </div>
+                      </div>
+                      <div className={`parent-conn-badge conn-${info.status}`}>
+                        {info.status === 'connected' ? '✓ Connected' : info.status === 'pending' ? '⏳ Pending Approval' : '○ Not Connected'}
+                      </div>
+                    </div>
+
+                    {info.status === 'connected' && (
+                      <div className="parent-class-body">
+                        <div className="parent-class-meta-grid">
+                          <div className="parent-class-meta-item">
+                            <span>Classroom</span>
+                            <strong>{info.classroomName}</strong>
+                            {info.classroomCode && <small>Code: {info.classroomCode}</small>}
+                          </div>
+                          <div className="parent-class-meta-item">
+                            <span>Teacher</span>
+                            <strong>{info.teacherName}</strong>
+                            <small>Verified Teacher</small>
+                          </div>
+                          <div className="parent-class-meta-item">
+                            <span>Assignments</span>
+                            <strong>{info.assignments.completedCount} completed</strong>
+                            <small>{info.assignments.pendingCount} pending</small>
+                          </div>
+                        </div>
+
+                        {info.assignments.latest && (
+                          <div className="parent-latest-assignment">
+                            <div className="parent-latest-head">
+                              <span className="parent-dash-kicker">Latest Graded Work</span>
+                              {info.assignments.latest.score !== null && (
+                                <span className="parent-assignment-score">{info.assignments.latest.score}%</span>
+                              )}
+                            </div>
+                            <strong>{info.assignments.latest.title}</strong>
+                            {info.assignments.latest.feedback && (
+                              <p className="parent-teacher-feedback">
+                                💬 Teacher feedback: <em>&ldquo;{info.assignments.latest.feedback}&rdquo;</em>
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {info.announcements && info.announcements.length > 0 && (
+                          <div className="parent-class-announcements">
+                            <span className="parent-dash-kicker">Classroom Announcements</span>
+                            <div className="parent-announcement-list">
+                              {info.announcements.map((ann) => (
+                                <div key={ann.id} className="parent-announcement-item">
+                                  <div className="parent-ann-top">
+                                    <strong>📢 {ann.title}</strong>
+                                    <small>{ann.createdAt}</small>
+                                  </div>
+                                  <p>{ann.message}</p>
+                                  {ann.eventDate && (
+                                    <span className="parent-ann-event">📅 Event: {ann.eventDate}</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {info.status === 'pending' && (
+                      <div className="parent-class-pending-card">
+                        <p>
+                          A teacher wants to connect <strong>{child.name}</strong> to <strong>{info.classroomName}</strong> (Teacher: {info.teacherName}).
+                        </p>
+                        <div className="parent-class-pending-actions">
+                          <button
+                            type="button"
+                            className="button button-primary"
+                            onClick={() => approveClassroom(info.classroomId || '', String(child.id), true)}
+                          >
+                            Approve Connection
+                          </button>
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            onClick={() => approveClassroom(info.classroomId || '', String(child.id), false)}
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {info.status === 'not_connected' && (
+                      <div className="parent-class-empty-card">
+                        <p>
+                          <strong>{child.name}</strong> is not connected to a Sunday School or school class yet.
+                        </p>
+                        <small>
+                          Your child or teen can enter their teacher’s join code (e.g. <code>LION-482</code> or <code>LAMP-731</code>) from their dashboard to request connection, which will appear here for your approval.
+                        </small>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
           </div>
         )}
 

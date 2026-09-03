@@ -325,7 +325,7 @@ type TeenProgressState = {
   journeyDraft: string;
   journeyLive: string;
   journeySubmitted: boolean;
-  connectedClass: { name: string; code: string } | null;
+  connectedClass: { name: string; code: string; teacherName?: string; approved?: boolean } | null;
 };
 
 function loadTeenProgress(teenId: number): TeenProgressState {
@@ -334,7 +334,29 @@ function loadTeenProgress(teenId: number): TeenProgressState {
   const decisionsMade = readTeenMap<string[]>(localStorage.getItem('lanternLionTeenDecisions'), teenId, []);
   const notes = readTeenMap<Record<number, string>>(localStorage.getItem('lanternLionTeenNotesByTeen'), teenId, {});
   const journey = readTeenMap<{ done: Record<JourneyStage, boolean>; awarded?: Record<JourneyStage, boolean>; draft: string; live: string; submitted: boolean } | null>(localStorage.getItem('lanternLionTeenJourney'), teenId, null);
-  const connectedClass = readTeenMap<{ name: string; code: string } | null>(localStorage.getItem('lanternLionTeenClass'), teenId, null);
+  
+  let connectedClass: { name: string; code: string; teacherName?: string; approved?: boolean } | null = null;
+  try {
+    const teacherClassesRaw = localStorage.getItem('lanternLionTeacherClasses');
+    if (teacherClassesRaw) {
+      const teacherClasses: Array<{ id: number | string; name: string; code: string; teacherName?: string; students: Array<{ id: number | string; name: string; approved?: boolean }> }> = JSON.parse(teacherClassesRaw);
+      const matched = teacherClasses.find((cls) => cls.students?.some((st) => String(st.id) === String(teenId) || st.name.toLowerCase().includes('tobi')));
+      if (matched) {
+        const student = matched.students.find((st) => String(st.id) === String(teenId) || st.name.toLowerCase().includes('tobi'));
+        connectedClass = {
+          name: matched.name,
+          code: matched.code,
+          teacherName: matched.teacherName || 'Sarah',
+          approved: student?.approved !== false,
+        };
+      }
+    } else {
+      connectedClass = readTeenMap<{ name: string; code: string; teacherName?: string; approved?: boolean } | null>(localStorage.getItem('lanternLionTeenClass'), teenId, null);
+    }
+  } catch {
+    connectedClass = readTeenMap<{ name: string; code: string; teacherName?: string; approved?: boolean } | null>(localStorage.getItem('lanternLionTeenClass'), teenId, null);
+  }
+
   return {
     points: points ?? 220,
     casesSolved,
@@ -447,7 +469,7 @@ export default function TeenDashboardPage() {
   const [focusAssignmentId, setFocusAssignmentId] = useState<string | null>(null);
   const [devotionOpen, setDevotionOpen] = useState(false);
   const [classCode, setClassCode] = useState('');
-  const [connectedClass, setConnectedClass] = useState<{ name: string; code: string } | null>(null);
+  const [connectedClass, setConnectedClass] = useState<{ name: string; code: string; teacherName?: string; approved?: boolean } | null>(null);
   const [classError, setClassError] = useState('');
 
   const [journeyDone, setJourneyDone] = useState<Record<JourneyStage, boolean>>({ read: false, think: false, speak: false, live: false });
@@ -677,12 +699,51 @@ export default function TeenDashboardPage() {
   function connectClass() {
     setClassError('');
     const code = classCode.trim().toUpperCase();
-    if (code === 'LAMP-731') {
-      const c = { name: 'Friday Teen Circle', code };
-      setConnectedClass(c);
-      setClassCode('');
-    } else {
-      setClassError('That code didn’t match an open teen circle. Ask your teacher, or try LAMP-731.');
+    if (!code) return;
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('lanternLionTeacherClasses') || 'null');
+      const teacherClasses: Array<{ id: number | string; name: string; code: string; teacherName?: string; students: Array<{ id: number | string; name: string; age?: number; approved?: boolean }> }> =
+        Array.isArray(saved) && saved.length > 0 ? saved : [
+          {
+            id: 2,
+            name: 'Friday Teen Circle',
+            code: 'LAMP-731',
+            teacherName: 'Sarah',
+            students: [],
+          },
+        ];
+
+      const found = teacherClasses.find((cls) => cls.code.toUpperCase() === code);
+      if (found) {
+        if (!found.students.some((st) => String(st.id) === String(activeId))) {
+          found.students.push({
+            id: activeId,
+            name: `${teen.name} A.`,
+            age: teen.age,
+            approved: false,
+          });
+          localStorage.setItem('lanternLionTeacherClasses', JSON.stringify(teacherClasses));
+        }
+        const student = found.students.find((st) => String(st.id) === String(activeId));
+        setConnectedClass({
+          name: found.name,
+          code: found.code,
+          teacherName: found.teacherName || 'Sarah',
+          approved: student?.approved !== false,
+        });
+        setClassCode('');
+
+        fetch('/api/classrooms/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        }).catch(() => {});
+      } else {
+        setClassError('That code didn’t match an open class. Ask your teacher, or try LAMP-731.');
+      }
+    } catch {
+      setClassError('Could not join class. Please try again.');
     }
   }
 
@@ -1436,13 +1497,21 @@ export default function TeenDashboardPage() {
               <section className="teen-panel teen-class-panel">
                 <div className="teen-panel-head">
                   <div>
-                    <p className="teen-kicker">CLASS CONNECTION</p>
-                    <h2>{connectedClass ? connectedClass.name : 'Not Connected Yet'}</h2>
+                    <p className="teen-kicker">MY CLASS &amp; TEACHER</p>
+                    <h2>{connectedClass ? `${connectedClass.name} · Teacher ${connectedClass.teacherName || 'Sarah'}` : 'Not Connected Yet'}</h2>
                   </div>
                 </div>
                 {connectedClass ? (
                   <p className="teen-panel-copy">
-                    Connected with code <b>{connectedClass.code}</b>. Check the <b>Assignments</b> tab for anything your class has sent you.
+                    {connectedClass.approved !== false ? (
+                      <>
+                        Connected with code <b>{connectedClass.code}</b>. Check the <b>Assignments</b> tab for anything your teacher has assigned.
+                      </>
+                    ) : (
+                      <>
+                        Connected with code <b>{connectedClass.code}</b>. ⏳ Waiting for parent approval on your parent&rsquo;s dashboard.
+                      </>
+                    )}
                   </p>
                 ) : (
                   <div className="teen-class-connect">
@@ -1450,7 +1519,7 @@ export default function TeenDashboardPage() {
                       value={classCode}
                       onChange={(e) => setClassCode(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') connectClass(); }}
-                      placeholder="Enter your teacher’s join code"
+                      placeholder="Enter your teacher’s join code (e.g. LAMP-731)"
                       maxLength={12}
                     />
                     <button type="button" className="teen-primary-btn" onClick={connectClass}>

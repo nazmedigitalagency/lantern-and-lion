@@ -149,6 +149,69 @@ export default function ChildDashboardPage() {
   type TodaySummaryData = { active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number };
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
 
+  type ChildClassroomConnection = {
+    connected: boolean;
+    approved: boolean;
+    classroom: { id: string; name: string; code: string; ageBand?: string | null } | null;
+    teacherName: string | null;
+  };
+  const [childClassroom, setChildClassroom] = useState<ChildClassroomConnection | null>(null);
+
+  function loadChildDemoClassroom() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('lanternLionTeacherClasses') || 'null');
+      const teacherClasses: Array<{ id: number | string; name: string; ageBand?: string; code: string; teacherName?: string; students: Array<{ id: number | string; name: string; approved?: boolean }> }> =
+        Array.isArray(saved) && saved.length > 0 ? saved : [
+          {
+            id: 1,
+            name: 'Wednesday Explorers',
+            ageBand: 'Ages 8–11',
+            code: 'LION-482',
+            teacherName: 'Sarah',
+            students: [{ id: 1, name: 'Amara A.', approved: true }],
+          },
+          {
+            id: 2,
+            name: 'Friday Teen Circle',
+            ageBand: 'Ages 13–16',
+            code: 'LAMP-731',
+            teacherName: 'Sarah',
+            students: [{ id: 2, name: 'Tobi A.', approved: true }],
+          },
+        ];
+
+      const currentName = charDisplayName || 'Amara';
+      const matchedClass = teacherClasses.find((cls) =>
+        cls.students?.some((st) => String(st.id) === String(activeId) || st.name.toLowerCase().includes(currentName.toLowerCase()))
+      );
+
+      if (matchedClass) {
+        const student = matchedClass.students.find((st) => String(st.id) === String(activeId) || st.name.toLowerCase().includes(currentName.toLowerCase()));
+        const isApproved = student?.approved !== false;
+        setChildClassroom({
+          connected: true,
+          approved: isApproved,
+          classroom: {
+            id: String(matchedClass.id),
+            name: matchedClass.name,
+            code: matchedClass.code,
+            ageBand: matchedClass.ageBand || null,
+          },
+          teacherName: matchedClass.teacherName || 'Sarah',
+        });
+      } else {
+        setChildClassroom({
+          connected: false,
+          approved: false,
+          classroom: null,
+          teacherName: null,
+        });
+      }
+    } catch {
+      setChildClassroom(null);
+    }
+  }
+
   useActivityHeartbeat(hydrated && !isPreview);
 
   useEffect(() => {
@@ -173,6 +236,22 @@ export default function ChildDashboardPage() {
       })
       .catch(() => { /* Offline — widget stays hidden. */ });
   }, [hydrated, isPreview, activeId]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    fetch('/api/child/classroom')
+      .then((res) => (res.ok ? (res.json() as Promise<ChildClassroomConnection>) : null))
+      .then((data) => {
+        if (data && data.connected) {
+          setChildClassroom(data);
+        } else {
+          loadChildDemoClassroom();
+        }
+      })
+      .catch(() => {
+        loadChildDemoClassroom();
+      });
+  }, [hydrated, activeId, charDisplayName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchStreakCalendar() {
     try {
@@ -727,6 +806,28 @@ export default function ChildDashboardPage() {
 
               <AssignmentsWidget tone="child" onViewAll={() => setActiveTab('assignments')} />
               <ClassChallengeWidget tone="child" />
+
+              {childClassroom?.connected && childClassroom.approved && (
+                <section className="kid-class-capsule" aria-label="My Teacher and Classroom">
+                  <div className="kid-class-capsule-icon">🏫</div>
+                  <div className="kid-class-capsule-info">
+                    <span className="kid-class-kicker">MY CLASS &amp; TEACHER</span>
+                    <strong>{childClassroom.classroom?.name} · Teacher {childClassroom.teacherName}</strong>
+                    <p>Connected to your Sunday School class!</p>
+                  </div>
+                </section>
+              )}
+
+              {childClassroom?.connected && !childClassroom.approved && (
+                <section className="kid-class-capsule kid-class-pending" aria-label="Classroom Pending Approval">
+                  <div className="kid-class-capsule-icon">⏳</div>
+                  <div className="kid-class-capsule-info">
+                    <span className="kid-class-kicker">MY CLASS &amp; TEACHER</span>
+                    <strong>{childClassroom.classroom?.name} · Teacher {childClassroom.teacherName}</strong>
+                    <p>Waiting for parent approval on your parent&rsquo;s dashboard</p>
+                  </div>
+                </section>
+              )}
 
               {/* 2. THREE QUICK-ACTION STATUS CARDS ROW */}
               <section className="kid-three-cards-row">

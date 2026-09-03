@@ -33,3 +33,27 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (error) return NextResponse.json({ error: 'Could not update approval.' }, { status: 500 });
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string; studentId: string }> }) {
+  const user = await getAuthenticatedUser();
+  if (!user) return NextResponse.json({ error: 'Please sign in as a parent first.' }, { status: 401 });
+
+  const { id: classroomId, studentId } = await ctx.params;
+  const admin = createServerAdminClient();
+
+  const { data: child } = await admin.from('children').select('id, family_id').eq('id', studentId).maybeSingle();
+  if (!child) return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
+
+  const { data: family } = await admin.from('families').select('id').eq('id', child.family_id).eq('owner_id', user.id).maybeSingle();
+  if (!family) return NextResponse.json({ error: 'You are not authorized to manage this student.' }, { status: 403 });
+
+  const { error } = await admin
+    .from('classroom_students')
+    .delete()
+    .eq('classroom_id', classroomId)
+    .eq('child_id', studentId);
+
+  if (error) return NextResponse.json({ error: 'Could not remove connection.' }, { status: 500 });
+  return NextResponse.json({ success: true });
+}
+
