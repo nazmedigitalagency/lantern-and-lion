@@ -7,9 +7,16 @@ import type {
   ClassroomsListResponse,
 } from '../lib/classrooms/types';
 import type { AssignmentBucket, AssignmentListItem } from '../lib/assignments/types';
+import type { ClassActivityResponse, TimelineRange } from '../lib/timeline/types';
 import StudentCard from './StudentCard';
 import StudentDetailModal from './StudentDetailModal';
 import CreateAssignmentModal from './CreateAssignmentModal';
+
+const CLASS_ACTIVITY_RANGES: { value: TimelineRange; label: string }[] = [
+  { value: 'today', label: 'Today' },
+  { value: 'week', label: 'This week' },
+  { value: 'month', label: 'This month' },
+];
 
 const AGE_BAND_OPTIONS = ['Ages 5–7', 'Ages 8–11', 'Ages 13–16'];
 const MEETING_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -248,6 +255,10 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
   const [assignOpen, setAssignOpen] = useState(false);
   const [deleteAssignmentBusyId, setDeleteAssignmentBusyId] = useState<string | null>(null);
 
+  const [activityRange, setActivityRange] = useState<TimelineRange>('week');
+  const [classActivity, setClassActivity] = useState<ClassActivityResponse | null>(null);
+  const [activityLoading, setActivityLoading] = useState(true);
+
   function loadDetail() {
     fetch(`/api/classrooms/${classroomId}`)
       .then((res) => (res.ok ? (res.json() as Promise<ClassroomDetailResponse>) : Promise.reject()))
@@ -273,6 +284,29 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
     loadAssignments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classroomId]);
+
+  function selectActivityRange(next: TimelineRange) {
+    setActivityRange(next);
+    setActivityLoading(true);
+  }
+
+  useEffect(() => {
+    let active = true;
+    fetch(`/api/classrooms/${classroomId}/activity?range=${activityRange}`)
+      .then((res) => (res.ok ? (res.json() as Promise<ClassActivityResponse>) : Promise.reject()))
+      .then((d) => {
+        if (active) {
+          setClassActivity(d);
+          setActivityLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setActivityLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [classroomId, activityRange]);
 
   const assignmentsByTab = useMemo(() => {
     if (!assignments) return [];
@@ -424,18 +458,52 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
       </section>
 
       <section className="classroom-detail-section">
-        <h2>Class activity</h2>
-        {detail.activity.length === 0 ? (
-          <p className="student-detail-empty">No class activity yet this week.</p>
-        ) : (
-          <ul className="student-detail-activity classroom-activity-list">
-            {detail.activity.map((item) => (
-              <li key={item.id}>
-                <time>{new Date(item.occurredAt).toLocaleDateString()}</time>
-                <span>{item.label}</span>
-              </li>
+        <div className="classroom-section-head">
+          <h2>Activity</h2>
+          <div className="student-activity-filters">
+            {CLASS_ACTIVITY_RANGES.map((opt) => (
+              <button key={opt.value} type="button" className={activityRange === opt.value ? 'active' : ''} onClick={() => selectActivityRange(opt.value)}>
+                {opt.label}
+              </button>
             ))}
-          </ul>
+          </div>
+        </div>
+
+        {activityLoading || !classActivity ? (
+          <p className="student-detail-empty">Loading activity…</p>
+        ) : (
+          <>
+            <div className="student-activity-summary">
+              <div><b>{classActivity.summary.studentsActiveCount}/{classActivity.summary.studentCount}</b><span>Active students</span></div>
+              <div><b>{classActivity.summary.storiesCompletedCount}</b><span>Bible stories completed</span></div>
+            </div>
+
+            {classActivity.assignments.length > 0 && (
+              <ul className="class-activity-assignments">
+                {classActivity.assignments.map((a) => (
+                  <li key={a.assignmentId}>
+                    <strong>{a.title}</strong>
+                    <p>
+                      {a.completedCount} student{a.completedCount === 1 ? '' : 's'} completed it, {a.inProgressCount} currently working on it, {a.notStartedCount} haven&apos;t started.
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {classActivity.activity.length === 0 ? (
+              <p className="student-detail-empty">No class activity in this time range.</p>
+            ) : (
+              <ul className="student-detail-activity classroom-activity-list">
+                {classActivity.activity.map((item) => (
+                  <li key={item.id}>
+                    <time>{new Date(item.occurredAt).toLocaleDateString()}</time>
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
       </section>
 

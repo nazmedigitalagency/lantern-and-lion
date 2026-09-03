@@ -5,6 +5,7 @@ import type { StudentDetailResponse } from '../lib/classrooms/types';
 import type { SuggestedAssignment } from '../lib/insights/types';
 import { ACTIVITY_LABEL, dayLetter } from './format';
 import CreateAssignmentModal, { type AssignmentTemplatePrefill } from './CreateAssignmentModal';
+import StudentActivityPanel from './StudentActivityPanel';
 
 function toPrefill(s: SuggestedAssignment): AssignmentTemplatePrefill {
   return { title: s.title, instructions: s.instructions, assignmentType: s.assignmentType, referenceId: s.referenceId, timeLimitMinutes: null, requiredScore: null, xpReward: null, ageGroup: s.ageGroup };
@@ -174,19 +175,8 @@ export default function StudentDetailModal({ studentId, onClose, onRemoved }: { 
             )}
 
             <div className="student-detail-section">
-              <p className="teacher-kicker">Recent activity</p>
-              {detail.recentActivity.length === 0 ? (
-                <p className="student-detail-empty">No activity yet — check back once {detail.student.name.split(' ')[0]} starts learning.</p>
-              ) : (
-                <ul className="student-detail-activity">
-                  {detail.recentActivity.map((item) => (
-                    <li key={item.id}>
-                      <time>{new Date(item.occurredAt).toLocaleDateString()}</time>
-                      <span>{item.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <p className="teacher-kicker">Activity</p>
+              <StudentActivityPanel studentId={studentId} />
             </div>
 
             <div className="student-detail-section">

@@ -25,8 +25,8 @@ type RosterRow = { classroom_id: string; child_id: string; approved: boolean; ne
 
 const MASTERY_COLUMNS = 'child_id, concept_id, mastery_score, status, correct_count, incorrect_count, consecutive_correct, consecutive_incorrect, review_interval_days, last_practiced_at, next_review_at';
 
-/** Every approved student across this teacher's classrooms (or one, if `classroomId` is given) — the same shape /api/teacher/students builds its roster from. */
-async function resolveScope(admin: SupabaseClient, teacherId: string, classroomId?: string | null) {
+/** Every approved student across this teacher's classrooms (or one, if `classroomId` is given) — the same shape /api/teacher/students builds its roster from. Exported for reuse by the class-activity aggregation (Feature 7), which needs the identical authorized roster. */
+export async function resolveTeacherScope(admin: SupabaseClient, teacherId: string, classroomId?: string | null) {
   const { data: classroomRows } = await admin.from('classrooms').select('id, name').eq('teacher_id', teacherId);
   const allClassrooms = classroomRows || [];
   if (classroomId && !allClassrooms.some((c) => c.id === classroomId)) return null;
@@ -65,7 +65,7 @@ function trackForAge(age: number): CurriculumModule['track'] {
  * round-trips, no polling.
  */
 export async function computeClassInsights(admin: SupabaseClient, teacherId: string, classroomId?: string | null): Promise<ClassInsightsResponse | null> {
-  const scope = await resolveScope(admin, teacherId, classroomId);
+  const scope = await resolveTeacherScope(admin, teacherId, classroomId);
   if (!scope) return null;
   const { allClassrooms, children, needsHelpByChild } = scope;
   const childIds = children.map((c) => c.id);
