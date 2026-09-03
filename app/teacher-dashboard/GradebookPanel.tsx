@@ -273,47 +273,91 @@ function QueueView({
       {filtered.length === 0 ? (
         <p className="student-detail-empty">Nothing here.</p>
       ) : (
-        <div className="gradebook-queue-table">
-          <div className="gradebook-queue-row gradebook-queue-head">
-            <span></span><span>Class</span><span>Student</span><span>Assignment</span><span>Status</span><span>Score</span><span>Submitted</span><span>Graded</span><span>Feedback</span><span></span>
+        <>
+          <div className="gradebook-queue-table">
+            <div className="gradebook-queue-row gradebook-queue-head">
+              <span></span><span>Class</span><span>Student</span><span>Assignment</span><span>Status</span><span>Score</span><span>Submitted</span><span>Graded</span><span>Feedback</span><span></span>
+            </div>
+            {filtered.map((it) => {
+              const key = rowKey(it);
+              return (
+                <div key={key} className="gradebook-queue-row">
+                  <span><input type="checkbox" checked={selected.has(key)} onChange={() => toggle(key)} aria-label={`Select ${it.studentName} — ${it.assignmentTitle}`} /></span>
+                  <span>{it.classroomName || '—'}</span>
+                  <span>{it.studentName}</span>
+                  <span>{it.assignmentTitle}</span>
+                  <span className={`tsc-status assignment-status-${it.status}`}>{STATUS_LABEL[it.status]}{it.overdue ? ' · Overdue' : ''}</span>
+                  <span>{it.score === null ? '—' : `${it.score}%`}{it.scoreOverridden ? ' (overridden)' : ''}</span>
+                  <span>{fmtDate(it.submittedAt)}</span>
+                  <span>{it.status === 'graded' || it.status === 'returned' ? '✓' : '—'}</span>
+                  <span>{it.feedback ? '💬' : '—'}</span>
+                  <span>
+                    {(it.status === 'submitted' || it.status === 'graded' || it.status === 'returned') && (
+                      <button
+                        type="button"
+                        className="student-detail-remove"
+                        onClick={() => setGradeTarget({
+                          assignmentId: it.assignmentId,
+                          assignmentType: it.assignmentType,
+                          childId: it.childId,
+                          studentName: it.studentName,
+                          responseText: it.responseText,
+                          currentScore: it.score,
+                          currentFeedback: it.feedback,
+                          scoreOverridden: it.scoreOverridden,
+                        })}
+                      >
+                        {it.status === 'submitted' ? 'Grade' : 'Edit'}
+                      </button>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          {filtered.map((it) => {
-            const key = rowKey(it);
-            return (
-              <div key={key} className="gradebook-queue-row">
-                <span><input type="checkbox" checked={selected.has(key)} onChange={() => toggle(key)} aria-label={`Select ${it.studentName} — ${it.assignmentTitle}`} /></span>
-                <span>{it.classroomName || '—'}</span>
-                <span>{it.studentName}</span>
-                <span>{it.assignmentTitle}</span>
-                <span className={`tsc-status assignment-status-${it.status}`}>{STATUS_LABEL[it.status]}{it.overdue ? ' · Overdue' : ''}</span>
-                <span>{it.score === null ? '—' : `${it.score}%`}{it.scoreOverridden ? ' (overridden)' : ''}</span>
-                <span>{fmtDate(it.submittedAt)}</span>
-                <span>{it.status === 'graded' || it.status === 'returned' ? '✓' : '—'}</span>
-                <span>{it.feedback ? '💬' : '—'}</span>
-                <span>
-                  {(it.status === 'submitted' || it.status === 'graded' || it.status === 'returned') && (
-                    <button
-                      type="button"
-                      className="student-detail-remove"
-                      onClick={() => setGradeTarget({
-                        assignmentId: it.assignmentId,
-                        assignmentType: it.assignmentType,
-                        childId: it.childId,
-                        studentName: it.studentName,
-                        responseText: it.responseText,
-                        currentScore: it.score,
-                        currentFeedback: it.feedback,
-                        scoreOverridden: it.scoreOverridden,
-                      })}
-                    >
-                      {it.status === 'submitted' ? 'Grade' : 'Edit'}
-                    </button>
-                  )}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+
+          <div className="gradebook-queue-cards">
+            {filtered.map((it) => {
+              const key = rowKey(it);
+              return (
+                <div key={`card-${key}`} className="gradebook-queue-card">
+                  <div className="gradebook-queue-card-top">
+                    <label className="gradebook-queue-card-check">
+                      <input type="checkbox" checked={selected.has(key)} onChange={() => toggle(key)} aria-label={`Select ${it.studentName}`} />
+                      <strong>{it.studentName}</strong>
+                    </label>
+                    <span className={`tsc-status assignment-status-${it.status}`}>{STATUS_LABEL[it.status]}{it.overdue ? ' · Overdue' : ''}</span>
+                  </div>
+                  <div className="gradebook-queue-card-title">
+                    {it.assignmentTitle}
+                    <small>{it.classroomName || 'Class'} · {fmtDate(it.submittedAt)}</small>
+                  </div>
+                  <div className="gradebook-queue-card-foot">
+                    <span>Score: <b>{it.score === null ? '—' : `${it.score}%`}</b>{it.feedback ? ' 💬' : ''}</span>
+                    {(it.status === 'submitted' || it.status === 'graded' || it.status === 'returned') && (
+                      <button
+                        type="button"
+                        className="button button-secondary gradebook-queue-card-btn"
+                        onClick={() => setGradeTarget({
+                          assignmentId: it.assignmentId,
+                          assignmentType: it.assignmentType,
+                          childId: it.childId,
+                          studentName: it.studentName,
+                          responseText: it.responseText,
+                          currentScore: it.score,
+                          currentFeedback: it.feedback,
+                          scoreOverridden: it.scoreOverridden,
+                        })}
+                      >
+                        {it.status === 'submitted' ? 'Grade' : 'Edit'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {gradeTarget && (

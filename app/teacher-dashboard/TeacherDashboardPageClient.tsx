@@ -113,6 +113,21 @@ export default function TeacherDashboardPage() {
   const [newLiveClassName, setNewLiveClassName] = useState('');
   const [deepLinkTarget, setDeepLinkTarget] = useState<TeacherDeepLink | null>(null);
   const [prefModalOpen, setPrefModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = origOverflow;
+    };
+  }, [mobileMenuOpen]);
 
   function handleNotificationNavigate(dest: TeacherDeepLink) {
     setDeepLinkTarget(dest);
@@ -344,9 +359,20 @@ export default function TeacherDashboardPage() {
 
       <section className="teacher-main">
         <header className="teacher-topbar">
-          <div>
-            <span>Teacher workspace</span>
-            <strong>{teacherName}</strong>
+          <div className="teacher-topbar-left">
+            <button
+              type="button"
+              className="teacher-mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open navigation menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              ☰
+            </button>
+            <div className="teacher-topbar-title">
+              <span>Teacher workspace</span>
+              <strong>{teacherName}</strong>
+            </div>
           </div>
           <div className="teacher-topbar-actions">
             {classes.length > 0 && classroom && (
@@ -367,6 +393,21 @@ export default function TeacherDashboardPage() {
             />
           </div>
         </header>
+
+        {/* ── Mobile Horizontal Quick-Tab Strip ── */}
+        <nav className="teacher-mobile-tab-strip" aria-label="Quick tabs">
+          {nav.map(([id, , label]) => (
+            <button
+              key={id}
+              type="button"
+              className={page === id ? 'active' : ''}
+              onClick={() => setPage(id)}
+            >
+              {label}
+              {id === 'safety' && helpStudents.length > 0 ? <b>{helpStudents.length}</b> : null}
+            </button>
+          ))}
+        </nav>
 
         {sessionUnverified && (
           <div className="teacher-session-banner">
@@ -873,6 +914,75 @@ export default function TeacherDashboardPage() {
             onClose={() => setPrefModalOpen(false)}
             onSaved={() => setNotice('Notification preferences saved.')}
           />
+        )}
+
+        {/* ── Slide-over Navigation Drawer for Mobile & Tablet ── */}
+        {mobileMenuOpen && (
+          <div
+            className="teacher-mobile-drawer-overlay"
+            role="presentation"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <aside
+              className="teacher-mobile-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Teacher Navigation"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="teacher-mobile-drawer-head">
+                <Link href="/" className="teacher-brand" onClick={() => setMobileMenuOpen(false)}>
+                  <Image src="/lantern-lion-logo.png" alt="" width={44} height={44} />
+                  <span>
+                    <strong>Lantern &amp; Lion</strong>
+                    <small>Teacher space</small>
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  className="teacher-mobile-drawer-close"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close navigation"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <nav className="teacher-mobile-drawer-nav" aria-label="Teacher mobile dashboard">
+                {nav.map(([id, mark, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={page === id ? 'active' : ''}
+                    aria-pressed={page === id}
+                    onClick={() => {
+                      setPage(id);
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <span>{mark}</span>
+                    {label}
+                    {id === 'safety' && helpStudents.length > 0 ? <b>{helpStudents.length}</b> : null}
+                  </button>
+                ))}
+              </nav>
+
+              <div className="teacher-mobile-drawer-foot">
+                <Link href="/learn?activity=david-chooses-courage" onClick={() => setMobileMenuOpen(false)}>
+                  Preview an activity
+                </Link>
+                <Link
+                  href="/teacher-access"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    signOut();
+                  }}
+                >
+                  Sign out of demo
+                </Link>
+              </div>
+            </aside>
+          </div>
         )}
       </section>
     </main>

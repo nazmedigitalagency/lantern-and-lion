@@ -2693,8 +2693,8 @@ footer a:hover{color:var(--gold)}
 .teacher-session-banner>button{flex:none;min-height:38px;padding:0 16px;border:2px solid var(--error-dark);border-radius:9px;background:var(--error-dark);color:white;font:900 12px var(--font-nunito);cursor:pointer}
 @media(max-width:620px){.teacher-session-banner{margin:14px 12px 0}}.teacher-title>p:last-child{margin:0;color:var(--muted);font-size:16px;line-height:1.55}.teacher-metrics{margin:30px 0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.teacher-metrics article{padding:18px;border:2px solid var(--navy);border-radius:15px;background:white;box-shadow:3px 3px 0 var(--navy)}.teacher-metrics article.attention{background:#fff0f2;box-shadow:3px 3px 0 var(--coral)}.teacher-metrics span,.teacher-metrics strong,.teacher-metrics small{display:block}.teacher-metrics span{color:var(--teal-dark);font-size:11px;font-weight:900;text-transform:uppercase}.teacher-metrics strong{margin:4px 0;font:700 30px var(--font-fredoka)}.teacher-metrics small{color:var(--muted);font-size:12px}.teacher-overview-grid{margin-top:22px;display:grid;grid-template-columns:1.35fr .65fr;gap:18px;align-items:start}.teacher-panel,.teacher-help-panel,.teacher-create-class,.teacher-assignment-builder,.teacher-message-layout,.teacher-safety-banner{border:2px solid var(--navy);border-radius:18px;background:white;box-shadow:5px 5px 0 var(--navy);overflow:hidden}.teacher-panel-head{padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid #d0dde5}.teacher-panel-head h2,.teacher-help-panel h2{margin:0;font-size:30px}.teacher-panel-head>button{min-height:44px;border:0;background:transparent;color:var(--teal-dark);font-weight:900;text-decoration:underline;cursor:pointer}.teacher-roster-mini article,.teacher-table article{padding:15px 20px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;border-bottom:1px solid #d0dde5}.teacher-roster-mini article:last-child,.teacher-table article:last-child{border:0}.teacher-roster-mini article>span,.teacher-table article>span{width:43px;height:43px;display:grid;place-items:center;border:2px solid var(--navy);border-radius:50%;background:var(--gold);font-weight:900}.teacher-roster-mini strong,.teacher-roster-mini small,.teacher-table strong,.teacher-table small{display:block}.teacher-roster-mini small,.teacher-table small{color:var(--muted);font-size:12px}.teacher-roster-mini i{height:7px;margin-top:6px;display:block;border-radius:10px;background:#dce5eb;overflow:hidden}.teacher-roster-mini i b{height:100%;display:block;background:var(--teal)}.teacher-roster-mini article>em{padding:5px 8px;border-radius:7px;background:#fff0f2;color:var(--error);font-size:10px;font-style:normal;font-weight:900}.teacher-roster-mini article>b{font-size:11px}.teacher-help-panel{padding:25px;background:#fff8e8;box-shadow:5px 5px 0 var(--gold)}.teacher-help-panel>p:not(.teacher-kicker){color:var(--muted);font-size:13px;line-height:1.55}.teacher-help-panel button{width:100%;min-height:44px;border:2px solid var(--navy);border-radius:9px;background:white;color:var(--navy);font-weight:900;cursor:pointer}.teacher-class-tabs{margin:28px 0 18px;display:flex;flex-wrap:wrap;gap:10px}.teacher-class-tabs button{min-width:210px;min-height:58px;padding:9px 13px;border:2px solid var(--navy);border-radius:11px;background:white;color:var(--navy);font-family:var(--font-nunito);text-align:left;cursor:pointer}.teacher-class-tabs button.active{background:var(--gold)}.teacher-class-tabs strong,.teacher-class-tabs small{display:block}.teacher-class-tabs small{margin-top:3px;color:var(--muted)}.teacher-class-detail .teacher-panel-head{align-items:flex-start}.join-code{text-align:right}.join-code span,.join-code strong{display:block}.join-code span{font-size:10px;font-weight:900;text-transform:uppercase}.join-code strong{margin:3px 0;font:700 24px var(--font-fredoka);letter-spacing:.05em}.join-code button{min-height:44px;border:0;background:transparent;color:var(--teal-dark);font-weight:900;text-decoration:underline;cursor:pointer}.teacher-table article{grid-template-columns:auto 1fr auto auto}.teacher-table article>b{font-size:13px}.teacher-table article>button{min-width:44px;min-height:44px;border:0;background:transparent;color:var(--teal-dark);font-weight:900;text-decoration:underline;cursor:pointer}.teacher-table>p{padding:20px}.teacher-add-student{padding:18px 20px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px;border-top:1px solid #d0dde5;background:var(--sky)}.teacher-add-student label,.teacher-create-class label,.teacher-assignment-builder label{display:grid;gap:6px;font-size:12px;font-weight:900}.teacher-add-student input,.teacher-create-class input,.teacher-create-class select,.teacher-assignment-builder select{min-height:46px;padding:0 11px;border:2px solid #9bb0bf;border-radius:9px;background:white;color:var(--navy);font:800 14px var(--font-nunito)}.teacher-add-student button,.teacher-create-class>button,.teacher-assignment-builder>div>button{min-height:46px;padding:0 16px;border:2px solid var(--navy);border-radius:9px;background:var(--teal);color:white;font-weight:900;cursor:pointer}.teacher-create-class{margin-top:22px;padding:22px;display:grid;grid-template-columns:1fr 1fr 1fr auto;align-items:end;gap:14px;background:var(--sky)}.teacher-create-class h2{margin:0;font-size:30px}.teacher-assignment-builder{margin-top:30px;display:grid;grid-template-columns:.85fr 1.15fr}.teacher-assignment-builder>div{padding:26px;display:grid;gap:16px;border-right:2px solid var(--navy);background:var(--sky)}.teacher-assignment-builder>aside{padding:25px}.teacher-assignment-builder aside article{padding:13px 0;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;border-bottom:1px solid #d0dde5}.teacher-assignment-builder aside article>span{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--gold);font-weight:900}.teacher-assignment-builder strong,.teacher-assignment-builder small{display:block}.teacher-assignment-builder small{color:var(--muted);font-size:12px}.teacher-assignment-builder aside button{min-height:44px;border:0;background:transparent;color:var(--error);font-weight:900;text-decoration:underline;cursor:pointer}.teacher-message-layout{margin-top:28px;display:grid;grid-template-columns:270px 1fr;min-height:560px}.teacher-message-layout>aside{padding:12px;border-right:2px solid var(--navy);background:var(--sky)}.teacher-message-layout>aside button{width:100%;min-height:58px;padding:9px;display:flex;align-items:center;gap:9px;border:0;border-radius:10px;background:transparent;color:var(--navy);text-align:left;cursor:pointer}.teacher-message-layout>aside button.active{background:white;box-shadow:0 0 0 2px var(--navy)}.teacher-message-layout>aside button>span{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--gold);font-weight:900}.teacher-message-layout strong,.teacher-message-layout small{display:block}.teacher-message-layout small{color:var(--muted)}.teacher-message-layout>div{display:flex;flex-direction:column}.teacher-message-layout header{padding:16px 20px;border-bottom:1px solid #d0dde5}.teacher-message-list{padding:22px;display:flex;flex:1;flex-direction:column;gap:12px;background:#f7fafc}.teacher-message-list p{max-width:72%;margin:0;padding:13px;border:1px solid #b7cad6;border-radius:12px;background:white;line-height:1.45}.teacher-message-list p.sent{align-self:flex-end;background:var(--teal-soft)}.teacher-message-list b{display:block;margin-bottom:4px;font-size:11px}.teacher-message-layout form{padding:14px;display:grid;grid-template-columns:1fr auto;gap:9px;border-top:1px solid #d0dde5}.teacher-message-layout textarea{min-height:70px;padding:10px;border:2px solid #9bb0bf;border-radius:10px;color:var(--navy);font:700 14px var(--font-nunito);resize:vertical}.teacher-message-layout form button{padding:0 17px;border:2px solid var(--navy);border-radius:9px;background:var(--teal);color:white;font-weight:900;cursor:pointer}.teacher-safety-banner{margin:28px 0 18px;padding:17px 20px;display:grid;gap:4px;background:var(--navy);color:white;box-shadow:4px 4px 0 var(--gold)}.teacher-safety-banner strong{color:var(--gold)}.teacher-safety-banner span{font-size:13px}.teacher-flags article{padding:20px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;border-bottom:1px solid #d0dde5}.teacher-flags article>span{width:43px;height:43px;display:grid;place-items:center;border:2px solid var(--navy);border-radius:12px;background:var(--purple-dark);color:white;font-weight:900}.teacher-flags article p{margin:5px 0;color:var(--muted);font-size:13px;line-height:1.45}.teacher-flags article small{color:var(--muted)}.teacher-flags article button{min-height:44px;padding:0 12px;border:2px solid var(--navy);border-radius:9px;background:white;color:var(--navy);font-weight:900;cursor:pointer}.teacher-empty{padding:30px;display:flex;align-items:center;gap:12px}.teacher-empty span{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:var(--gold);font-weight:900}.teacher-toast{position:fixed;right:22px;bottom:22px;z-index:70;max-width:430px;padding:13px 16px;display:flex;align-items:center;gap:10px;border:2px solid var(--navy);border-radius:12px;background:white;box-shadow:4px 4px 0 var(--gold);animation:toast-in 300ms ease}.teacher-toast>span{width:33px;height:33px;display:grid;place-items:center;border-radius:50%;background:var(--gold);font-weight:900}.teacher-toast p{margin:0;font-size:16px;font-weight:800}.teacher-toast button{min-height:44px;border:0;background:transparent;color:var(--teal-dark);font-weight:900;text-decoration:underline;cursor:pointer}
 .teacher-student-pending{opacity:.65}.teacher-roster-mini article.teacher-student-pending>em,.teacher-table article.teacher-student-pending strong>em{background:#fff8e8;color:var(--teal-dark);border:1px solid var(--gold)}.teacher-table article.teacher-student-pending strong>em{margin-left:6px;padding:3px 7px;border-radius:6px;font-size:10px;font-style:normal;font-weight:900;text-transform:uppercase}
-@media(max-width:950px){.teacher-access-page{grid-template-columns:1fr}.teacher-access-story{min-height:560px}.teacher-dashboard{grid-template-columns:1fr}.teacher-sidebar{min-height:auto;padding:10px 14px;position:static}.teacher-brand{padding:0;border:0}.teacher-sidebar nav{margin:0;grid-template-columns:repeat(6,1fr)}.teacher-sidebar nav button{display:flex;justify-content:center;font-size:11px}.teacher-sidebar nav button>span,.teacher-sidebar nav button>b{display:none}.teacher-sidebar>div{display:none}.teacher-overview-grid{grid-template-columns:1fr}.teacher-create-class{grid-template-columns:1fr 1fr}.teacher-create-class>div{grid-column:1/-1}.teacher-assignment-builder{grid-template-columns:1fr}.teacher-assignment-builder>div{border-right:0;border-bottom:2px solid var(--navy)}}
-@media(max-width:620px){.teacher-access-story{min-height:520px;padding:28px 20px}.teacher-access-story h1{font-size:50px}.teacher-access-story>div>p:not(.teacher-kicker){font-size:16px}.teacher-access-form{padding:44px 16px}.teacher-demo{grid-template-columns:1fr}.teacher-topbar{padding:9px 12px}.teacher-topbar>div span{display:none}.teacher-topbar>div strong{font-size:15px}.teacher-topbar label{font-size:0}.teacher-topbar select{max-width:190px}.teacher-content{width:calc(100% - 24px);padding-top:34px}.teacher-title h1{font-size:42px}.teacher-metrics{grid-template-columns:1fr 1fr}.teacher-panel-head{align-items:flex-start;flex-direction:column}.teacher-class-tabs{display:grid;grid-template-columns:1fr}.teacher-class-tabs button{min-width:0}.teacher-class-detail .teacher-panel-head{display:grid}.join-code{text-align:left}.teacher-table article{grid-template-columns:auto 1fr}.teacher-table article>b,.teacher-table article>button{grid-column:2;justify-self:start}.teacher-add-student,.teacher-create-class{grid-template-columns:1fr}.teacher-create-class>div{grid-column:auto}.teacher-message-layout{grid-template-columns:1fr}.teacher-message-layout>aside{display:flex;overflow:auto;border-right:0;border-bottom:2px solid var(--navy)}.teacher-message-layout>aside button{min-width:190px}.teacher-message-list p{max-width:90%}.teacher-message-layout form{grid-template-columns:1fr}.teacher-message-layout form button{min-height:44px}.teacher-flags article{grid-template-columns:auto 1fr}.teacher-flags article button{grid-column:2;justify-self:start}.teacher-toast{left:14px;right:14px;bottom:14px}.teacher-sidebar nav{grid-template-columns:none;display:flex;overflow-x:auto;gap:6px;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.teacher-sidebar nav::-webkit-scrollbar{display:none}.teacher-sidebar nav button{flex:0 0 auto;width:auto;min-width:78px;padding:8px 12px;white-space:nowrap}}
+@media(max-width:950px){.teacher-access-page{grid-template-columns:1fr}.teacher-access-story{min-height:560px}.teacher-dashboard{grid-template-columns:1fr}.teacher-sidebar{display:none}.teacher-overview-grid{grid-template-columns:1fr}.teacher-create-class{grid-template-columns:1fr 1fr}.teacher-create-class>div{grid-column:1/-1}.teacher-assignment-builder{grid-template-columns:1fr}.teacher-assignment-builder>div{border-right:0;border-bottom:2px solid var(--navy)}}
+@media(max-width:620px){.teacher-access-story{min-height:520px;padding:28px 20px}.teacher-access-story h1{font-size:50px}.teacher-access-story>div>p:not(.teacher-kicker){font-size:16px}.teacher-access-form{padding:44px 16px}.teacher-demo{grid-template-columns:1fr}.teacher-topbar{padding:9px 12px}.teacher-topbar>div span{display:none}.teacher-topbar>div strong{font-size:15px}.teacher-topbar label{font-size:0}.teacher-topbar select{max-width:190px}.teacher-content{width:calc(100% - 24px);padding-top:34px}.teacher-title h1{font-size:42px}.teacher-metrics{grid-template-columns:1fr 1fr}.teacher-panel-head{align-items:flex-start;flex-direction:column}.teacher-class-tabs{display:grid;grid-template-columns:1fr}.teacher-class-tabs button{min-width:0}.teacher-class-detail .teacher-panel-head{display:grid}.join-code{text-align:left}.teacher-table article{grid-template-columns:auto 1fr}.teacher-table article>b,.teacher-table article>button{grid-column:2;justify-self:start}.teacher-add-student,.teacher-create-class{grid-template-columns:1fr}.teacher-create-class>div{grid-column:auto}.teacher-message-layout{grid-template-columns:1fr}.teacher-message-layout>aside{display:flex;overflow:auto;border-right:0;border-bottom:2px solid var(--navy)}.teacher-message-layout>aside button{min-width:190px}.teacher-message-list p{max-width:90%}.teacher-message-layout form{grid-template-columns:1fr}.teacher-message-layout form button{min-height:44px}.teacher-flags article{grid-template-columns:auto 1fr}.teacher-flags article button{grid-column:2;justify-self:start}.teacher-toast{left:14px;right:14px;bottom:14px}}
 
 /* ── Teacher Dashboard: My Students ───────────────────── */
 .teacher-students-loading{padding:60px 20px;display:grid;justify-items:center;gap:12px;color:var(--muted)}
@@ -8743,50 +8743,611 @@ footer a:hover{color:var(--gold)}
   min-width: 120px;
 }
 
-/* ── Mobile & Tablet Responsiveness ────────────────────────────── */
+/* ── Mobile Navigation Drawer & Quick-Tabs ────────────────────────── */
+.teacher-mobile-menu-btn {
+  display: none;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  color: var(--navy);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.teacher-mobile-menu-btn:hover {
+  background: var(--sky);
+  border-color: var(--blue-dark);
+}
+
+.teacher-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.teacher-topbar-title {
+  min-width: 0;
+}
+
+.teacher-mobile-tab-strip {
+  display: none;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border-bottom: 1.5px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.teacher-mobile-tab-strip::-webkit-scrollbar {
+  display: none;
+}
+.teacher-mobile-tab-strip button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--sky);
+  color: var(--navy);
+  font: 800 12.5px var(--font-nunito);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 130ms ease;
+}
+.teacher-mobile-tab-strip button:hover {
+  border-color: var(--navy);
+}
+.teacher-mobile-tab-strip button.active {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+.teacher-mobile-tab-strip button b {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: white;
+  font-size: 10px;
+}
+
+/* Slide-over Drawer */
+.teacher-mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  animation: drawerFadeIn 180ms ease forwards;
+}
+
+@keyframes drawerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.teacher-mobile-drawer {
+  width: min(320px, 85vw);
+  height: 100%;
+  background: var(--navy);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.4);
+  animation: drawerSlideIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow-y: auto;
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.teacher-mobile-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px;
+  border-bottom: 1px solid #334155;
+}
+
+.teacher-mobile-drawer-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #1e293b;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.teacher-mobile-drawer-nav {
+  padding: 16px 12px;
+  display: grid;
+  gap: 6px;
+  flex: 1;
+}
+
+.teacher-mobile-drawer-nav button {
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #e2e8f0;
+  font: 800 13.5px var(--font-nunito);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.teacher-mobile-drawer-nav button:hover,
+.teacher-mobile-drawer-nav button.active {
+  background: white;
+  color: var(--navy);
+}
+
+.teacher-mobile-drawer-nav button > span {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.teacher-mobile-drawer-nav button > b {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: white;
+  font-size: 10px;
+}
+
+.teacher-mobile-drawer-foot {
+  padding: 18px 16px;
+  border-top: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #0f172a;
+}
+
+.teacher-mobile-drawer-foot a {
+  color: #94a3b8;
+  font: 800 13px var(--font-nunito);
+  text-decoration: underline;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.teacher-mobile-drawer-foot a:hover {
+  color: white;
+}
+
+/* ── Gradebook Queue Cards (Mobile Layout) ────────────────────────── */
+.gradebook-queue-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gradebook-queue-card {
+  padding: 16px;
+  border: 2px solid var(--navy);
+  border-radius: 14px;
+  background: white;
+  box-shadow: 2px 2px 0 var(--border-alt);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gradebook-queue-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gradebook-queue-card-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.gradebook-queue-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.4;
+}
+
+.gradebook-queue-card-title small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--slate);
+  font-weight: 600;
+}
+
+.gradebook-queue-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.gradebook-queue-card-foot span {
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.gradebook-queue-card-foot span b {
+  color: var(--navy);
+}
+
+.gradebook-queue-card-btn {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 12.5px;
+}
+
+/* ── Tablet Responsiveness (max-width: 950px) ─────────────────────── */
 @media (max-width: 950px) {
+  .teacher-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .teacher-sidebar {
+    display: none !important;
+  }
+  .teacher-mobile-menu-btn {
+    display: flex;
+  }
+  .teacher-mobile-tab-strip {
+    display: flex;
+  }
+  .teacher-content {
+    width: min(calc(100% - 32px), 900px);
+    padding: 24px 0 60px;
+  }
+  .teacher-title h1 {
+    font-size: clamp(28px, 4vw, 42px);
+  }
+  .teacher-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .teacher-overview-grid {
+    grid-template-columns: 1fr;
+  }
   .cal-month-layout {
     grid-template-columns: 1fr;
   }
+  .insights-two-col,
+  .insights-topics-grid {
+    grid-template-columns: 1fr;
+  }
+  .teacher-assignment-builder {
+    grid-template-columns: 1fr;
+  }
+  .teacher-assignment-builder > div {
+    border-right: 0;
+    border-bottom: 2px solid var(--navy);
+  }
+  .teacher-message-layout {
+    grid-template-columns: 1fr;
+  }
+  .teacher-message-layout > aside {
+    display: flex;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 2px solid var(--navy);
+    padding: 8px 12px;
+    scrollbar-width: none;
+  }
+  .teacher-message-layout > aside::-webkit-scrollbar {
+    display: none;
+  }
+  .teacher-message-layout > aside button {
+    min-width: 180px;
+    flex: 0 0 auto;
+  }
 }
 
-@media (max-width: 620px) {
-  .teacher-topbar-actions {
+/* ── Mobile Responsiveness (max-width: 640px) ─────────────────────── */
+@media (max-width: 640px) {
+  .teacher-topbar {
+    padding: 10px 14px;
     gap: 10px;
+    min-height: 64px;
+  }
+  .teacher-topbar-title span {
+    display: none;
+  }
+  .teacher-topbar-title strong {
+    font-size: 15px;
+  }
+  .teacher-topbar-actions {
+    gap: 8px;
+  }
+  .teacher-topbar-actions label {
+    font-size: 0;
+  }
+  .teacher-topbar-actions select {
+    max-width: 140px;
+    min-height: 40px;
+    font-size: 12.5px;
+    padding: 0 30px 0 10px;
   }
   .teacher-notif-panel {
-    width: 320px;
-    right: -40px;
+    position: fixed;
+    top: 60px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100vh - 80px);
   }
-  .teacher-calendar-toolbar {
+  .teacher-content {
+    width: calc(100% - 20px);
+    padding: 18px 0 50px;
+  }
+  .teacher-title h1,
+  .teacher-title h1.teacher-title-oneline {
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+  .teacher-title > p:last-child {
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .teacher-metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 18px 0 20px;
+  }
+  .teacher-metrics article {
+    padding: 12px 14px;
+  }
+  .teacher-metrics strong {
+    font-size: 22px;
+  }
+
+  /* Students Panel */
+  .teacher-students-toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .teacher-students-toolbar input[type="search"],
+  .teacher-students-toolbar select,
+  .teacher-students-attention-toggle {
+    width: 100%;
+    font-size: 16px; /* prevent iOS auto-zoom */
+    min-height: 44px;
+  }
+  .teacher-students-grid {
+    grid-template-columns: 1fr;
+  }
+  .teacher-add-student-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Gradebook */
+  .gradebook-queue-table {
+    display: none !important;
+  }
+  .gradebook-queue-cards {
+    display: flex;
+  }
+  .gradebook-top-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .gradebook-classroom-select {
+    width: 100%;
+  }
+  .gradebook-classroom-select select {
+    width: 100%;
+    font-size: 16px;
+  }
+  .student-activity-filters {
+    width: 100%;
+    display: flex;
+  }
+  .student-activity-filters button {
+    flex: 1;
+    text-align: center;
+  }
+  .gradebook-bulk-bar {
     flex-direction: column;
     align-items: stretch;
   }
+  .gradebook-bulk-bar button {
+    width: 100%;
+  }
+
+  /* Calendar */
+  .teacher-calendar-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
   .cal-toolbar-left,
   .cal-toolbar-right {
+    width: 100%;
     justify-content: space-between;
   }
+  .cal-toolbar-right button {
+    flex: 1;
+  }
+  .cal-type-filters {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cal-type-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .cal-type-pill {
+    flex: 0 0 auto;
+    font-size: 11.5px;
+    padding: 5px 11px;
+  }
   .cal-grid-card {
-    padding: 12px;
+    padding: 10px 8px;
   }
   .cal-cell {
-    min-height: 60px;
-    padding: 4px;
+    min-height: 52px;
+    padding: 2px 3px;
+  }
+  .cal-cell-day {
+    font-size: 11px;
   }
   .cal-mini-badge span {
     display: none;
   }
   .cal-mini-badge {
+    padding: 2px 4px;
     justify-content: center;
-    padding: 2px;
-  }
-  .teacher-form-row,
-  .teacher-form-row.three-col {
-    grid-template-columns: 1fr;
   }
   .cal-agenda-card {
     flex-direction: column;
     gap: 12px;
+    padding: 14px;
+  }
+  .cal-agenda-date-badge {
+    width: 44px;
+    height: 44px;
+  }
+  .cal-agenda-date-badge strong {
+    font-size: 16px;
+  }
+  .cal-agenda-actions {
+    width: 100%;
+  }
+  .cal-agenda-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Assignments */
+  .classroom-assignment-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .classroom-assignment-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .classroom-assignment-tabs button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .assignment-center-list li {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .assignment-center-row-stats {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+
+  /* Challenges */
+  .challenge-card {
+    padding: 14px;
+  }
+  .challenge-card-head {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .challenge-stats-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .challenge-stats-row div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Messages */
+  .teacher-message-list p {
+    max-width: 88%;
+    font-size: 13.5px;
+  }
+  .teacher-message-layout form {
+    grid-template-columns: 1fr;
+  }
+  .teacher-message-layout textarea {
+    font-size: 16px; /* prevent iOS auto-zoom */
+  }
+
+  /* Modals: prevent iOS zoom and ensure full modal view */
+  .teacher-modal-card,
+  .add-student-dialog,
+  .classroom-manage-dialog,
+  .student-detail-dialog {
+    width: min(calc(100vw - 20px), 520px);
+    max-height: calc(100vh - 24px);
+    padding: 18px 14px;
+    border-radius: 16px;
+  }
+  .teacher-form-row,
+  .teacher-form-row.three-col {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .teacher-modal-form input,
+  .teacher-modal-form select,
+  .teacher-modal-form textarea,
+  .add-student-field input,
+  .add-student-field select,
+  .add-student-field textarea {
+    font-size: 16px !important; /* prevent iOS Safari zoom */
+  }
+  .teacher-modal-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .teacher-modal-actions button {
+    width: 100%;
+    justify-content: center;
   }
 }
 
