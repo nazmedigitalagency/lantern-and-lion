@@ -6395,6 +6395,52 @@ footer a:hover{color:var(--gold)}
 .char-item-action:hover{opacity:.9}
 .char-item-action-unequip{background:var(--white);color:var(--navy)}
 
+/* Real-time 3D Action Pose Toolbar */
+.char-pose-controls{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;background:rgba(255,255,255,0.9);backdrop-filter:blur(6px);padding:4px;border:2px solid var(--navy);border-radius:999px;box-shadow:2px 2px 0 var(--navy)}
+.char-pose-btn{border:0;background:transparent;color:var(--navy);font:900 11px var(--font-nunito);padding:5px 12px;border-radius:999px;cursor:pointer;transition:all 120ms ease;white-space:nowrap}
+.char-pose-btn:hover{background:rgba(250,204,21,0.25);transform:scale(1.05)}
+.char-pose-btn.active{background:var(--gold);color:var(--navy);font-weight:900;box-shadow:0 1px 4px rgba(245,158,11,0.3)}
+
+/* Pixar Character Studio */
+.char-customize-studio{margin-top:20px;display:grid;gap:20px}
+.char-studio-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.char-studio-tabs::-webkit-scrollbar{display:none}
+.char-studio-tab{min-height:42px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:2px solid var(--navy);border-radius:999px;background:var(--white);color:var(--navy);font:900 13px var(--font-nunito);cursor:pointer;box-shadow:2px 2px 0 var(--navy);transition:all 120ms ease;white-space:nowrap}
+.char-studio-tab:hover{transform:translateY(-1px);background:var(--cream)}
+.char-studio-tab.active{background:var(--gold);border-color:var(--navy);transform:translateY(1px);box-shadow:1px 1px 0 var(--navy)}
+.char-studio-group{display:grid;gap:18px}
+.char-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.char-panel-head small{color:var(--muted);font-size:12px;font-weight:700}
+.char-unequip-link{border:0;background:transparent;color:var(--error);font:900 11px var(--font-nunito);cursor:pointer;text-decoration:underline;padding:2px 6px}
+.char-unequip-link:hover{color:var(--error-dark)}
+.char-studio-items-grid{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.char-studio-item-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #cbd5e1;border-radius:14px;background:var(--white);box-shadow:2px 2px 0 rgba(0,0,0,0.04);transition:all 140ms ease}
+.char-studio-item-card:hover{border-color:var(--navy);box-shadow:3px 3px 0 var(--navy);transform:translateY(-2px)}
+.char-studio-item-card.char-studio-equipped{border-color:var(--gold-dark);background:#fffdf0;box-shadow:3px 3px 0 var(--gold-dark)}
+.char-studio-item-card.char-studio-locked{opacity:0.72;background:#f8fafc}
+.char-studio-item-art{position:relative;width:50px;height:50px;flex-shrink:0;display:grid;place-items:center;border:2px solid var(--navy);border-radius:12px;background:#f8fafc}
+.char-equipped-badge{position:absolute;top:-6px;right:-6px;background:#10b981;color:#ffffff;border:1.5px solid #047857;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;font-size:12px;font-weight:900;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.char-studio-item-details{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.char-studio-item-title-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.char-studio-item-title-row strong{font-size:13px;color:var(--navy)}
+.char-studio-item-desc{font-size:11px;color:var(--slate);line-height:1.3}
+.char-studio-item-lock{font-size:11px;font-weight:800;color:var(--error)}
+.char-action-btn{font-size:11px !important;font-weight:900 !important;padding:6px 12px !important;border-radius:8px !important;white-space:nowrap}
+.char-action-btn.equipped{background:#f1f5f9 !important;color:var(--slate) !important;border-color:#cbd5e1 !important}
+.char-action-btn.equip{background:var(--teal) !important;color:var(--white) !important}
+.char-action-btn.shop-jump{background:var(--gold) !important;color:var(--navy) !important}
+
+/* Curated Pixar Presets */
+.char-presets-grid{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.char-preset-card{display:flex;flex-direction:column;justify-content:space-between;padding:16px;border:2.5px solid var(--navy);border-radius:16px;background:var(--white);box-shadow:4px 4px 0 var(--navy);transition:all 140ms ease}
+.char-preset-card:hover{transform:translateY(-2px);box-shadow:5px 5px 0 var(--navy)}
+.char-preset-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.char-preset-icon{font-size:32px;width:48px;height:48px;display:grid;place-items:center;background:var(--cream);border:2px solid var(--navy);border-radius:12px;flex-shrink:0}
+.char-preset-head strong{display:block;font:700 16px var(--font-fredoka);color:var(--navy)}
+.char-preset-badge{display:inline-block;font:900 10px var(--font-nunito);padding:2px 8px;border-radius:999px;background:#fff8db;color:var(--navy);border:1px solid var(--gold-dark);margin-top:2px}
+.char-preset-desc{font-size:12px;color:var(--slate);margin:0 0 14px;line-height:1.4;font-weight:700;flex:1}
+.char-preset-apply-btn{width:100%;font-size:13px;padding:8px 14px}
+
 /* ── CHILD DASHBOARD CHARACTER SHOWCASE ───────────────────────── */
 .child-character-showcase{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;padding:24px;border:3px solid var(--kid-navy);border-radius:24px;background:var(--white);box-shadow:6px 6px 0 var(--kid-purple);margin:16px 0}
 .child-char-avatar-frame{display:grid;place-items:center;background:var(--kid-sky);border:2.5px solid var(--kid-navy);border-radius:20px;padding:12px}

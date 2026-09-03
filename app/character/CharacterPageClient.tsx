@@ -15,10 +15,12 @@ import {
   CharacterAvatar,
   InventoryItemCard,
   ItemIllustration,
+  RarityBadge,
   ShopItemCard,
   SkillStars,
   StatChip,
 } from './components';
+import { playRewardSound } from '../lib/sound/sound-effects';
 import { EQUIPMENT_SLOTS, getAppearanceOptionsForSlot, getItem, getItemsForSlot } from './catalog';
 import {
   describeRequirement,
@@ -46,6 +48,77 @@ import type { CharacterAppearance, CharacterEquipment, EquipmentItem, EquipmentS
 import TeenSidebar from '../teen-dashboard/TeenSidebar';
 
 type Tab = 'overview' | 'customize' | 'shop' | 'inventory' | 'skills';
+type CustomizeCategory = 'appearance' | 'wardrobe' | 'gear' | 'lanterns' | 'companions' | 'presets';
+
+const ADVENTURER_PRESETS = [
+  {
+    id: 'judah-trailblazer',
+    name: 'Lion Trailblazer',
+    badge: '🦁 Courage',
+    icon: '🦁',
+    description: 'Courageous explorer with Lion Cub & Trail Boots.',
+    appearance: { skinTone: 'honey', hairStyle: 'curls', face: 'smile' },
+    equipment: {
+      clothing: 'explorer-hoodie',
+      shoes: 'adventurers-boots',
+      backpack: 'starter-satchel',
+      lantern: 'starter-lantern',
+      pet: 'lion-cub-pet',
+      emote: 'emote-wave',
+    },
+  },
+  {
+    id: 'royal-guardian',
+    name: 'Royal Guardian',
+    badge: '👑 Glory',
+    icon: '👑',
+    description: 'Majestic champion draped in Golden Cloak & Crown.',
+    appearance: { skinTone: 'amber', hairStyle: 'waves', face: 'victory' },
+    equipment: {
+      clothing: 'golden-cloak',
+      headwear: 'kingdom-crown',
+      shoes: 'adventurers-boots',
+      lantern: 'golden-lantern',
+      backpack: 'celestial-wings-pack',
+      special: 'tomb-light-halo',
+      emote: 'emote-celebrate',
+    },
+  },
+  {
+    id: 'galilee-scout',
+    name: 'Galilee Scout',
+    badge: '🕊️ Peace',
+    icon: '🕊️',
+    description: 'Gentle wilderness traveler guided by the Peace Dove.',
+    appearance: { skinTone: 'sand', hairStyle: 'braids', face: 'calm' },
+    equipment: {
+      clothing: 'starter-tunic',
+      headwear: 'scouts-hood',
+      shoes: 'runners-sandals',
+      accessory: 'garden-leaf-pin',
+      lantern: 'starter-lantern',
+      pet: 'peace-dove-pet',
+      emote: 'emote-prayer',
+    },
+  },
+  {
+    id: 'temple-scholar',
+    name: 'Temple Scholar',
+    badge: '📜 Wisdom',
+    icon: '📜',
+    description: 'Devoted seeker studying ancient scrolls in silver robes.',
+    appearance: { skinTone: 'walnut', hairStyle: 'fade', face: 'thinking' },
+    equipment: {
+      clothing: 'silver-robe',
+      shoes: 'starter-sandals',
+      accessory: 'scholar-glasses',
+      backpack: 'scrolls-backpack',
+      lantern: 'starter-lantern',
+      pet: 'lost-sheep-companion',
+      emote: 'emote-wave',
+    },
+  },
+];
 
 export function CharacterBuilder({
   embedded = false,
@@ -62,6 +135,7 @@ export function CharacterBuilder({
   const [nameDraft, setNameDraft] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [tab, setTab] = useState<Tab>('overview');
+  const [customCategory, setCustomCategory] = useState<CustomizeCategory>('appearance');
   const [activeSlot, setActiveSlot] = useState<EquipmentSlot>('headwear');
   const [shopCategory, setShopCategory] = useState<EquipmentSlot>('clothing');
   const [shopNotice, setShopNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -94,6 +168,7 @@ export function CharacterBuilder({
 
   function updateAppearance(slot: keyof CharacterAppearance, value: string) {
     if (!profile) return;
+    playRewardSound('tap');
     const next = { ...appearance, [slot]: value };
     setAppearance(next);
     saveAppearance(profile.id, next);
@@ -103,6 +178,7 @@ export function CharacterBuilder({
 
   function equip(slot: EquipmentSlot, itemId: string) {
     if (!profile) return;
+    playRewardSound('tap');
     const next = { ...equipment, [slot]: itemId };
     setEquipment(next);
     saveEquipment(profile.id, next);
@@ -112,12 +188,26 @@ export function CharacterBuilder({
 
   function unequip(slot: EquipmentSlot) {
     if (!profile) return;
+    playRewardSound('tap');
     const next = { ...equipment };
     delete next[slot];
     setEquipment(next);
     saveEquipment(profile.id, next);
     setSaveNotice('Gear unequipped.');
     window.setTimeout(() => setSaveNotice(null), 2500);
+  }
+
+  function applyPreset(preset: (typeof ADVENTURER_PRESETS)[0]) {
+    if (!profile) return;
+    const nextAppearance = { ...appearance, ...preset.appearance };
+    const nextEquipment = { ...equipment, ...preset.equipment };
+    setAppearance(nextAppearance);
+    setEquipment(nextEquipment);
+    saveAppearance(profile.id, nextAppearance);
+    saveEquipment(profile.id, nextEquipment);
+    playRewardSound('questComplete');
+    setSaveNotice(`Equipped ${preset.name}!`);
+    window.setTimeout(() => setSaveNotice(null), 2800);
   }
 
   function handleBuy(item: EquipmentItem) {
@@ -130,6 +220,65 @@ export function CharacterBuilder({
       setShopNotice({ type: 'error', message: res.error });
     }
     window.setTimeout(() => setShopNotice(null), 3500);
+  }
+
+  function renderStudioItemCard(item: EquipmentItem) {
+    if (!profile) return null;
+    const owned = isItemOwned(profile.id, item.id);
+    const isEquipped = equipment[item.slot] === item.id;
+    const isGated = !requirementsMet(item.unlockRequirement, ctx);
+    const gateReason = isGated
+      ? item.unlockRequirement.map((req) => describeRequirement(req, ctx.kind)).join(' and ')
+      : undefined;
+
+    return (
+      <article
+        key={item.id}
+        className={`char-studio-item-card ${isEquipped ? 'char-studio-equipped' : ''} ${!owned && isGated ? 'char-studio-locked' : ''}`}
+      >
+        <div className="char-studio-item-art">
+          <ItemIllustration itemId={item.id} size={48} />
+          {isEquipped && <span className="char-equipped-badge" aria-label="Equipped">✓</span>}
+        </div>
+        <div className="char-studio-item-details">
+          <div className="char-studio-item-title-row">
+            <strong>{item.name}</strong>
+            <RarityBadge rarity={item.rarity || 'common'} />
+          </div>
+          {item.description && <small className="char-studio-item-desc">{item.description}</small>}
+          {isGated && gateReason && (
+            <small className="char-studio-item-lock">🔒 {gateReason}</small>
+          )}
+        </div>
+        <div className="char-studio-item-action">
+          {isEquipped ? (
+            <button
+              type="button"
+              className="button button-secondary char-action-btn equipped"
+              onClick={() => unequip(item.slot)}
+            >
+              Unequip
+            </button>
+          ) : owned ? (
+            <button
+              type="button"
+              className="button button-primary char-action-btn equip"
+              onClick={() => equip(item.slot, item.id)}
+            >
+              Equip
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="button button-secondary char-action-btn shop-jump"
+              onClick={() => { setTab('shop'); setShopCategory(item.slot); }}
+            >
+              Shop →
+            </button>
+          )}
+        </div>
+      </article>
+    );
   }
 
   function submitName() {
@@ -172,6 +321,43 @@ export function CharacterBuilder({
         <section className="char-hero">
           <div className="char-avatar-hero-display">
             <CharacterAvatar appearance={appearance} equipment={equipment} size="large" showPedestal={true} />
+            
+            {/* Real-time 3D Action Pose Toolbar */}
+            <div className="char-pose-controls" role="toolbar" aria-label="Character Action Pose">
+              <button
+                type="button"
+                className={`char-pose-btn ${!equipment.emote ? 'active' : ''}`}
+                onClick={() => { unequip('emote'); }}
+                title="Stand Ready"
+              >
+                🧍 Stand
+              </button>
+              <button
+                type="button"
+                className={`char-pose-btn ${equipment.emote === 'emote-wave' ? 'active' : ''}`}
+                onClick={() => { equip('emote', 'emote-wave'); }}
+                title="Friendly Wave"
+              >
+                👋 Wave
+              </button>
+              <button
+                type="button"
+                className={`char-pose-btn ${equipment.emote === 'emote-prayer' ? 'active' : ''}`}
+                onClick={() => { equip('emote', 'emote-prayer'); }}
+                title="Reverent Prayer"
+              >
+                🙏 Pray
+              </button>
+              <button
+                type="button"
+                className={`char-pose-btn ${equipment.emote === 'emote-victory' || equipment.emote === 'emote-celebrate' ? 'active' : ''}`}
+                onClick={() => { equip('emote', 'emote-victory'); }}
+                title="Victory Leap"
+              >
+                🎉 Victory
+              </button>
+            </div>
+
             {saveNotice && (
               <div className="char-saved-badge" aria-live="polite">
                 ✨ {saveNotice}
@@ -323,43 +509,288 @@ export function CharacterBuilder({
           </div>
         )}
 
-        {/* CUSTOMIZE TAB */}
+        {/* PIXAR CHARACTER STUDIO - CUSTOMIZE TAB */}
         {tab === 'customize' && (
-          <div className="char-customize">
-            <section className="char-panel">
-              <p className="child-kicker">Skin tone</p>
-              <div className="char-swatch-row">
-                {getAppearanceOptionsForSlot('skinTone').map((option) => (
-                  <AppearanceSwatch key={option.id} active={appearance.skinTone === option.id} onSelect={() => updateAppearance('skinTone', option.id)} label={option.name}>
-                    <span className="char-swatch-color" style={{ background: option.value }} />
-                  </AppearanceSwatch>
-                ))}
-              </div>
-            </section>
+          <div className="char-customize-studio">
+            {/* Studio Subcategory Selector Tabs */}
+            <div className="char-studio-tabs" role="tablist" aria-label="Customization Studio Categories">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={customCategory === 'appearance'}
+                className={`char-studio-tab ${customCategory === 'appearance' ? 'active' : ''}`}
+                onClick={() => { setCustomCategory('appearance'); playRewardSound('tap'); }}
+              >
+                <span>🎨</span> Appearance
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={customCategory === 'wardrobe'}
+                className={`char-studio-tab ${customCategory === 'wardrobe' ? 'active' : ''}`}
+                onClick={() => { setCustomCategory('wardrobe'); playRewardSound('tap'); }}
+              >
+                <span>👕</span> Wardrobe
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={customCategory === 'gear'}
+                className={`char-studio-tab ${customCategory === 'gear' ? 'active' : ''}`}
+                onClick={() => { setCustomCategory('gear'); playRewardSound('tap'); }}
+              >
+                <span>🎒</span> Gear
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={customCategory === 'lanterns'}
+                className={`char-studio-tab ${customCategory === 'lanterns' ? 'active' : ''}`}
+                onClick={() => { setCustomCategory('lanterns'); playRewardSound('tap'); }}
+              >
+                <span>🏮</span> Lanterns
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={customCategory === 'companions'}
+                className={`char-studio-tab ${customCategory === 'companions' ? 'active' : ''}`}
+                onClick={() => { setCustomCategory('companions'); playRewardSound('tap'); }}
+              >
+                <span>🦁</span> Companions
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={customCategory === 'presets'}
+                className={`char-studio-tab ${customCategory === 'presets' ? 'active' : ''}`}
+                onClick={() => { setCustomCategory('presets'); playRewardSound('tap'); }}
+              >
+                <span>✨</span> Presets
+              </button>
+            </div>
 
-            <section className="char-panel">
-              <p className="child-kicker">Hair style &amp; texture</p>
-              <div className="char-swatch-row">
-                {getAppearanceOptionsForSlot('hairStyle').map((option) => (
-                  <AppearanceSwatch key={option.id} active={appearance.hairStyle === option.id} onSelect={() => updateAppearance('hairStyle', option.id)} label={option.name}>
-                    <span className={`char-swatch-hair char-hair-${option.value}`} />
-                  </AppearanceSwatch>
-                ))}
-              </div>
-            </section>
+            {/* 1. APPEARANCE CATEGORY */}
+            {customCategory === 'appearance' && (
+              <div className="char-studio-group">
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">3D Skin Tone &amp; Complexion</p>
+                    <small>Subsurface warm Pixar lighting</small>
+                  </div>
+                  <div className="char-swatch-row">
+                    {getAppearanceOptionsForSlot('skinTone').map((option) => (
+                      <AppearanceSwatch
+                        key={option.id}
+                        active={appearance.skinTone === option.id}
+                        onSelect={() => updateAppearance('skinTone', option.id)}
+                        label={option.name}
+                      >
+                        <span className="char-swatch-color" style={{ background: option.value }} />
+                      </AppearanceSwatch>
+                    ))}
+                  </div>
+                </section>
 
-            <section className="char-panel">
-              <p className="child-kicker">Expression &amp; Face</p>
-              <div className="char-swatch-row">
-                {getAppearanceOptionsForSlot('face').map((option) => (
-                  <AppearanceSwatch key={option.id} active={appearance.face === option.id} onSelect={() => updateAppearance('face', option.id)} label={option.name}>
-                    <span className="char-swatch-emoji" aria-hidden="true">
-                      {option.id === 'smile' ? '🙂' : option.id === 'grin' ? '😄' : option.id === 'calm' ? '😌' : option.id === 'wonder' ? '😲' : option.id === 'thinking' ? '🤔' : option.id === 'celebrating' ? '🥳' : option.id === 'victory' ? '😉' : '🙂'}
-                    </span>
-                  </AppearanceSwatch>
-                ))}
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">3D Hair Sculpt &amp; Texture</p>
+                    <small>Volumetric strands, curls &amp; braids</small>
+                  </div>
+                  <div className="char-swatch-row">
+                    {getAppearanceOptionsForSlot('hairStyle').map((option) => (
+                      <AppearanceSwatch
+                        key={option.id}
+                        active={appearance.hairStyle === option.id}
+                        onSelect={() => updateAppearance('hairStyle', option.id)}
+                        label={option.name}
+                      >
+                        <span className={`char-swatch-hair char-hair-${option.value}`} />
+                      </AppearanceSwatch>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">Expression &amp; Soulful Eyes</p>
+                    <small>Pixar micro-expressions with dual catchlights</small>
+                  </div>
+                  <div className="char-swatch-row">
+                    {getAppearanceOptionsForSlot('face').map((option) => (
+                      <AppearanceSwatch
+                        key={option.id}
+                        active={appearance.face === option.id}
+                        onSelect={() => updateAppearance('face', option.id)}
+                        label={option.name}
+                      >
+                        <span className="char-swatch-emoji" aria-hidden="true">
+                          {option.id === 'smile'
+                            ? '🙂'
+                            : option.id === 'grin'
+                            ? '😄'
+                            : option.id === 'calm'
+                            ? '😌'
+                            : option.id === 'wonder'
+                            ? '😲'
+                            : option.id === 'thinking'
+                            ? '🤔'
+                            : option.id === 'celebrating'
+                            ? '🥳'
+                            : option.id === 'victory'
+                            ? '😉'
+                            : '🙂'}
+                        </span>
+                      </AppearanceSwatch>
+                    ))}
+                  </div>
+                </section>
               </div>
-            </section>
+            )}
+
+            {/* 2. WARDROBE CATEGORY (Clothing, Headwear, Shoes) */}
+            {customCategory === 'wardrobe' && (
+              <div className="char-studio-group">
+                {/* Clothing */}
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">👕 Clothing &amp; Tunics</p>
+                    <small>Fabric weave texture &amp; folds</small>
+                  </div>
+                  <div className="char-studio-items-grid">
+                    {getItemsForSlot('clothing').map((item) => renderStudioItemCard(item))}
+                  </div>
+                </section>
+
+                {/* Headwear */}
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">🧢 Headwear &amp; Crowns</p>
+                    {equipment.headwear && (
+                      <button type="button" className="char-unequip-link" onClick={() => unequip('headwear')}>
+                        Remove Headwear
+                      </button>
+                    )}
+                  </div>
+                  <div className="char-studio-items-grid">
+                    {getItemsForSlot('headwear').map((item) => renderStudioItemCard(item))}
+                  </div>
+                </section>
+
+                {/* Shoes */}
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">🥾 Footwear &amp; Boots</p>
+                    <small>Textured leather, soles &amp; wings</small>
+                  </div>
+                  <div className="char-studio-items-grid">
+                    {getItemsForSlot('shoes').map((item) => renderStudioItemCard(item))}
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* 3. GEAR CATEGORY (Backpacks & Accessories) */}
+            {customCategory === 'gear' && (
+              <div className="char-studio-group">
+                {/* Backpacks */}
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">🎒 Packs &amp; Wings</p>
+                    {equipment.backpack && (
+                      <button type="button" className="char-unequip-link" onClick={() => unequip('backpack')}>
+                        Remove Pack
+                      </button>
+                    )}
+                  </div>
+                  <div className="char-studio-items-grid">
+                    {getItemsForSlot('backpack').map((item) => renderStudioItemCard(item))}
+                  </div>
+                </section>
+
+                {/* Accessories */}
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">📿 Accessories &amp; Pendants</p>
+                    {equipment.accessory && (
+                      <button type="button" className="char-unequip-link" onClick={() => unequip('accessory')}>
+                        Remove Accessory
+                      </button>
+                    )}
+                  </div>
+                  <div className="char-studio-items-grid">
+                    {getItemsForSlot('accessory').map((item) => renderStudioItemCard(item))}
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* 4. LANTERNS CATEGORY */}
+            {customCategory === 'lanterns' && (
+              <div className="char-studio-group">
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">🏮 Sacred Light &amp; Lanterns</p>
+                    <small>Volumetric light glow casting on character</small>
+                  </div>
+                  <div className="char-studio-items-grid">
+                    {getItemsForSlot('lantern').map((item) => renderStudioItemCard(item))}
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* 5. COMPANIONS (PETS) CATEGORY */}
+            {customCategory === 'companions' && (
+              <div className="char-studio-group">
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">🦁 Bible Pets &amp; Companions</p>
+                    {equipment.pet && (
+                      <button type="button" className="char-unequip-link" onClick={() => unequip('pet')}>
+                        Dismiss Companion
+                      </button>
+                    )}
+                  </div>
+                  <div className="char-studio-items-grid">
+                    {getItemsForSlot('pet').map((item) => renderStudioItemCard(item))}
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* 6. PIXAR ADVENTURER PRESETS */}
+            {customCategory === 'presets' && (
+              <div className="char-studio-group">
+                <section className="char-panel">
+                  <div className="char-panel-head">
+                    <p className="child-kicker">✨ Curated Pixar Adventurer Presets</p>
+                    <small>1-tap complete outfits and styling</small>
+                  </div>
+                  <div className="char-presets-grid">
+                    {ADVENTURER_PRESETS.map((preset) => (
+                      <article key={preset.id} className="char-preset-card">
+                        <div className="char-preset-head">
+                          <span className="char-preset-icon">{preset.icon}</span>
+                          <div>
+                            <strong>{preset.name}</strong>
+                            <span className="char-preset-badge">{preset.badge}</span>
+                          </div>
+                        </div>
+                        <p className="char-preset-desc">{preset.description}</p>
+                        <button
+                          type="button"
+                          className="button button-primary char-preset-apply-btn"
+                          onClick={() => applyPreset(preset)}
+                        >
+                          ✨ Apply Preset
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            )}
           </div>
         )}
 
