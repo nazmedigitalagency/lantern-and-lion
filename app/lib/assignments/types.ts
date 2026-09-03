@@ -44,6 +44,7 @@ export type AssignmentSubmissionRow = {
   gradedAt: string | null;
   feedback: string | null;
   responseText: string | null;
+  scoreOverridden: boolean;
 };
 
 export type AssignmentDetail = AssignmentListItem & {

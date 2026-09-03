@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { AssignmentBucket, AssignmentDetail, AssignmentListItem, SubmissionStatus } from '../lib/assignments/types';
-import { isAutoScoredType } from '../lib/assignments/types';
 import CreateAssignmentModal from './CreateAssignmentModal';
 import SaveTemplateModal from './SaveTemplateModal';
 import PublishAssignmentModal from './PublishAssignmentModal';
+import GradeSubmissionModal, { type GradeTarget } from './GradeSubmissionModal';
 
 const BUCKET_TABS: { value: AssignmentBucket; label: string }[] = [
   { value: 'draft', label: 'Drafts' },
@@ -136,11 +136,7 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submissionFilter, setSubmissionFilter] = useState<'all' | SubmissionStatus>('all');
-  const [gradingChildId, setGradingChildId] = useState<string | null>(null);
-  const [gradeScore, setGradeScore] = useState('');
-  const [gradeFeedback, setGradeFeedback] = useState('');
-  const [gradeBusy, setGradeBusy] = useState(false);
-  const [gradeError, setGradeError] = useState('');
+  const [gradeTarget, setGradeTarget] = useState<GradeTarget | null>(null);
   const [duplicateBusy, setDuplicateBusy] = useState(false);
   const [duplicated, setDuplicated] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -162,42 +158,6 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
     if (!detail) return [];
     return submissionFilter === 'all' ? detail.submissions : detail.submissions.filter((s) => s.status === submissionFilter);
   }, [detail, submissionFilter]);
-
-  function openGrading(childId: string, currentScore: number | null, currentFeedback: string | null) {
-    setGradingChildId(childId);
-    setGradeScore(currentScore === null ? '' : String(currentScore));
-    setGradeFeedback(currentFeedback || '');
-    setGradeError('');
-  }
-
-  async function submitGrade(returnToStudent: boolean) {
-    if (!gradingChildId) return;
-    setGradeBusy(true);
-    setGradeError('');
-    try {
-      const res = await fetch(`/api/assignments/${assignmentId}/grade`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          childId: gradingChildId,
-          score: gradeScore ? Number(gradeScore) : undefined,
-          feedback: gradeFeedback.trim() || undefined,
-          returnToStudent,
-        }),
-      });
-      const data = (await res.json().catch(() => null)) as { error?: string; success?: boolean } | null;
-      if (!res.ok || !data?.success) {
-        setGradeError(data?.error || 'Could not save this grade.');
-        return;
-      }
-      setGradingChildId(null);
-      load();
-    } catch {
-      setGradeError('Could not save this grade. Check your connection and try again.');
-    } finally {
-      setGradeBusy(false);
-    }
-  }
 
   async function duplicate() {
     setDuplicateBusy(true);
@@ -226,9 +186,6 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
       </div>
     );
   }
-
-  const gradingRow = detail.submissions.find((s) => s.childId === gradingChildId);
-  const manuallyGraded = !isAutoScoredType(detail.assignmentType);
 
   return (
     <div className="classroom-detail">
@@ -304,8 +261,21 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
                 <span>{s.score === null ? '—' : `${s.score}%`}</span>
                 <span>{s.submittedAt ? new Date(s.submittedAt).toLocaleDateString() : '—'}</span>
                 <span>
-                  {(manuallyGraded && (s.status === 'submitted' || s.status === 'graded' || s.status === 'returned')) ? (
-                    <button type="button" className="student-detail-remove" onClick={() => openGrading(s.childId, s.score, s.feedback)}>
+                  {(s.status === 'submitted' || s.status === 'graded' || s.status === 'returned') ? (
+                    <button
+                      type="button"
+                      className="student-detail-remove"
+                      onClick={() => setGradeTarget({
+                        assignmentId,
+                        assignmentType: detail.assignmentType,
+                        childId: s.childId,
+                        studentName: s.studentName,
+                        responseText: s.responseText,
+                        currentScore: s.score,
+                        currentFeedback: s.feedback,
+                        scoreOverridden: s.scoreOverridden,
+                      })}
+                    >
                       {s.status === 'submitted' ? 'Grade' : 'Edit grade'}
                     </button>
                   ) : (
@@ -318,36 +288,12 @@ function AssignmentDetailView({ assignmentId, onBack }: { assignmentId: string; 
         )}
       </section>
 
-      {gradingChildId && gradingRow && (
-        <div className="add-student-overlay" role="presentation" onClick={() => setGradingChildId(null)}>
-          <section className="add-student-dialog classroom-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="grade-title" onClick={(e) => e.stopPropagation()}>
-            <button className="student-detail-close" aria-label="Close" onClick={() => setGradingChildId(null)}>×</button>
-            <h2 id="grade-title">Grade {gradingRow.studentName}&apos;s work</h2>
-            {gradingRow.responseText && (
-              <div className="assignment-response-box">
-                <p className="teacher-kicker">Response</p>
-                <p>{gradingRow.responseText}</p>
-              </div>
-            )}
-            <label className="add-student-field">
-              Score % <small>(optional)</small>
-              <input type="number" min={0} max={100} value={gradeScore} onChange={(e) => setGradeScore(e.target.value)} />
-            </label>
-            <label className="add-student-field">
-              Feedback <small>(private, visible only to this student)</small>
-              <textarea value={gradeFeedback} onChange={(e) => setGradeFeedback(e.target.value)} rows={3} maxLength={2000} placeholder="Great work! Review verse 6 once more." />
-            </label>
-            {gradeError && <p className="add-student-error" role="alert">{gradeError}</p>}
-            <div className="add-student-actions">
-              <button type="button" className="add-student-secondary" disabled={gradeBusy} onClick={() => submitGrade(false)}>
-                {gradeBusy ? 'Saving…' : 'Save grade'}
-              </button>
-              <button type="button" className="add-student-primary" disabled={gradeBusy} onClick={() => submitGrade(true)}>
-                {gradeBusy ? 'Returning…' : 'Save & Return'}
-              </button>
-            </div>
-          </section>
-        </div>
+      {gradeTarget && (
+        <GradeSubmissionModal
+          target={gradeTarget}
+          onClose={() => setGradeTarget(null)}
+          onSaved={() => { setGradeTarget(null); load(); }}
+        />
       )}
     </div>
   );

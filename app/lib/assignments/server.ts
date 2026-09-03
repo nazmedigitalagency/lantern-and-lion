@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { bumpDailySummary, notifyChildOnce } from '../activity/server';
+import { bumpDailySummary, notifyChildOnce, notifyOnce } from '../activity/server';
 import type { AssignmentBucket, AssignmentType } from './types';
 
 // "Due soon" mirrors the same short-horizon window used for "needs
@@ -55,7 +55,8 @@ function scoreFromMistakes(mistakes: number | null | undefined): number {
   return Math.max(0, 100 - (mistakes || 0) * 10);
 }
 
-async function awardXpIfDue(admin: SupabaseClient, childId: string, assignment: AssignmentRow, score: number | null): Promise<boolean> {
+/** Exported for reuse by the gradebook's bulk-grade action, which awards XP through the same rule as a single manual grade or the automatic scorer — never a separate calculation. */
+export async function awardXpIfDue(admin: SupabaseClient, childId: string, assignment: AssignmentRow, score: number | null): Promise<boolean> {
   if (!assignment.xp_reward || assignment.xp_reward <= 0) return false;
   if (assignment.required_score !== null && (score === null || score < assignment.required_score)) return false;
   const { data: child } = await admin.from('children').select('family_id').eq('id', childId).maybeSingle();
@@ -170,6 +171,50 @@ export async function syncAssignmentSubmissions(admin: SupabaseClient, assignmen
       body: `“${assignment.title}” — ${found.score}%`,
       payload: { assignmentId: assignment.id, score: found.score },
       dedupeKey: `assignment_graded_child:${assignment.id}:${submission.child_id}`,
+    }).catch(() => {});
+  }
+}
+
+/**
+ * The one notification pattern for "a teacher returned a grade to a
+ * student" — reused by the single-submission grade route and the
+ * gradebook's bulk-return action, instead of each reimplementing the same
+ * three notifyOnce/notifyChildOnce calls with slightly different wording.
+ */
+export async function sendGradeNotifications(admin: SupabaseClient, params: { assignmentId: string; assignmentTitle: string; childId: string; score: number | null; feedback: string | null }): Promise<void> {
+  const nowIso = new Date().toISOString();
+  const { data: child } = await admin.from('children').select('family_id').eq('id', params.childId).maybeSingle();
+  const { data: family } = child ? await admin.from('families').select('owner_id').eq('id', child.family_id).maybeSingle() : { data: null };
+
+  if (family?.owner_id) {
+    await notifyOnce(admin, {
+      recipientId: family.owner_id,
+      childId: params.childId,
+      type: 'ASSIGNMENT_GRADED',
+      title: 'Assignment graded',
+      body: `"${params.assignmentTitle}" was graded${params.score !== null ? ` — ${params.score}%` : ''}.`,
+      payload: { assignmentId: params.assignmentId, score: params.score },
+      dedupeKey: `assignment_graded:${params.assignmentId}:${params.childId}:${nowIso}`,
+    });
+  }
+
+  await notifyChildOnce(admin, {
+    childId: params.childId,
+    type: 'ASSIGNMENT_GRADED',
+    title: 'Your teacher graded your assignment',
+    body: `“${params.assignmentTitle}”${params.score !== null ? ` — ${params.score}%` : ''}`,
+    payload: { assignmentId: params.assignmentId, score: params.score },
+    dedupeKey: `assignment_graded_child:${params.assignmentId}:${params.childId}:${nowIso}`,
+  }).catch(() => {});
+
+  if (params.feedback && params.feedback.trim()) {
+    await notifyChildOnce(admin, {
+      childId: params.childId,
+      type: 'ASSIGNMENT_FEEDBACK',
+      title: 'Your teacher left feedback',
+      body: `On “${params.assignmentTitle}”: “${params.feedback.trim()}”`,
+      payload: { assignmentId: params.assignmentId },
+      dedupeKey: `assignment_feedback_child:${params.assignmentId}:${params.childId}:${nowIso}`,
     }).catch(() => {});
   }
 }

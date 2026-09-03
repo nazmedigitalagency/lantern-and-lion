@@ -27,11 +27,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   const { data: submissionRows } = await admin
     .from('assignment_submissions')
-    .select('id, child_id, status, score, submitted_at, graded_at, feedback, response_text, xp_awarded, children(name)')
+    .select('id, child_id, status, score, submitted_at, graded_at, feedback, response_text, xp_awarded, score_overridden, children(name)')
     .eq('assignment_id', id);
   const submissions = (submissionRows || []) as unknown as Array<{
     id: string; child_id: string; status: string; score: number | null; submitted_at: string | null;
-    graded_at: string | null; feedback: string | null; response_text: string | null; xp_awarded: boolean;
+    graded_at: string | null; feedback: string | null; response_text: string | null; xp_awarded: boolean; score_overridden: boolean;
     children: { name: string } | null;
   }>;
 
@@ -60,6 +60,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       gradedAt: s.graded_at,
       feedback: s.feedback,
       responseText: s.response_text,
+      scoreOverridden: s.score_overridden || false,
     }))
     .sort((a, b) => a.studentName.localeCompare(b.studentName));
 
