@@ -605,18 +605,19 @@ export default function TeenDashboardPage() {
   }
 
   function statsForSibling(member: Teen) {
+    const w = getWallet(member.id);
     if (member.id === activeId) {
-      return { track: trackForAge(member.age), points, streak: dailyQuestSummary.streak };
+      return { track: trackForAge(member.age), points, streak: dailyQuestSummary.streak, coins: wallet.coins, gems: wallet.gems };
     }
     if (member.age >= 13) {
       const memberPoints = readTeenMap<number | null>(localStorage.getItem('lanternLionTeenPoints'), member.id, null) ?? 220;
-      return { track: trackForAge(member.age), points: memberPoints, streak: computeStreak(readHistory(member.id)).current };
+      return { track: trackForAge(member.age), points: memberPoints, streak: computeStreak(readHistory(member.id)).current, coins: w.coins || 45, gems: w.gems || 12 };
     }
     const track = trackForAge(member.age);
     const modules = curriculumModules.filter((m) => m.track === track);
     const progress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}')?.[member.id] || {};
     const done = modules.reduce((sum: number, m) => sum + (progress[m.id]?.completedIndices.length || 0), 0);
-    return { track, points: done * 8, streak: computeStreak(readHistory(member.id)).current };
+    return { track, points: done * 8, streak: computeStreak(readHistory(member.id)).current, coins: w.coins || 45, gems: w.gems || 12 };
   }
 
   function openScenario(scenario: Scenario) { setActiveScenario(scenario); setNodeId('start'); }
@@ -816,41 +817,6 @@ export default function TeenDashboardPage() {
                   <strong>{teen.name}</strong>
                   <small>{familyData.familyName}</small>
                 </div>
-                {teens.length > 1 && (
-                  <div className="teen-profile-switcher-list" style={{ borderBottom: '1px solid #334155', paddingBottom: '4px', marginBottom: '4px' }}>
-                    {teens.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        role="menuitem"
-                        className={`teen-profile-menu-item ${t.id === activeId ? 'active' : ''}`}
-                        onClick={() => {
-                          setActiveId(t.id);
-                          persistActiveTeenIdentity(t.id, t.name, t.age, t.username);
-                          const progress = loadTeenProgress(t.id);
-                          setPoints(progress.points);
-                          setCasesSolved(progress.casesSolved);
-                          setDecisionsMade(progress.decisionsMade);
-                          setNotes(progress.notes);
-                          setJourneyDone(progress.journeyDone);
-                          setJourneyAwarded(progress.journeyAwarded);
-                          setJourneyDraft(progress.journeyDraft);
-                          setJourneyLive(progress.journeyLive);
-                          setJourneySubmitted(progress.journeySubmitted);
-                          setConnectedClass(progress.connectedClass);
-                          setCharAppearance(readAppearance(t.id));
-                          setCharEquipment(readEquipment(t.id));
-                          setCharDisplayName(readCharacterName(t.id, t.name));
-                          const w = getWallet(t.id);
-                          setWallet(w.xp > 0 ? w : { xp: progress.points, coins: w.coins || 45, gems: w.gems || 12 });
-                          setShowProfiles(false);
-                        }}
-                      >
-                        {t.name} {t.id === activeId ? '✓' : ''}
-                      </button>
-                    ))}
-                  </div>
-                )}
                 <button
                   type="button"
                   className="teen-profile-menu-item"
@@ -1672,6 +1638,9 @@ export default function TeenDashboardPage() {
             <div className="family-modal-badge">👨‍👩‍👧</div>
             <p className="child-kicker">Family Account</p>
             <h2>{familyData.familyName}</h2>
+            <p className="family-modal-parent-line" style={{ margin: '0 0 16px', color: '#94a3b8', fontSize: '13px' }}>
+              Account created by: <strong style={{ color: 'white' }}>{familyData.parentName}</strong>
+            </p>
             <div className="family-modal-child-grid">
               {familyMembers.map((c) => {
                 const s = statsForSibling(c);
@@ -1681,14 +1650,19 @@ export default function TeenDashboardPage() {
                     <div className="fam-card-info">
                       <strong>{c.name} {c.id === activeId ? '(You)' : ''}</strong>
                       <small>{c.age} years old · {s.streak}d streak</small>
-                    </div>
-                    <div className="fam-card-points">
-                      <b>⭐ {s.points}</b>
+                      <div className="fam-card-stat-row" style={{ display: 'flex', gap: '8px', marginTop: '6px', fontSize: '12px', flexWrap: 'wrap' }}>
+                        <span className="fam-stat-chip chip-xp" style={{ color: '#38bdf8' }}>⭐ {s.points} XP</span>
+                        <span className="fam-stat-chip chip-coins" style={{ color: '#facc15' }}>🪙 {s.coins}</span>
+                        <span className="fam-stat-chip chip-gems" style={{ color: '#c084fc' }}>💎 {s.gems}</span>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+            <p className="family-modal-privacy-note" style={{ margin: '14px 0', fontSize: '12px', color: '#94a3b8', lineHeight: 1.5 }}>
+              🔒 You can see how everyone in your family is doing, but each person’s sign-in stays private — only they can play on their own profile, and grown-up settings aren’t shown here.
+            </p>
             <button type="button" className="family-modal-close-btn" onClick={closeFamilyModal}>
               Close Overview
             </button>

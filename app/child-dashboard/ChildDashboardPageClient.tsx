@@ -506,26 +506,10 @@ export default function ChildDashboardPage() {
 
             {showProfiles && (
               <div className="profile-menu" role="menu">
-                {children.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setActiveId(c.id);
-                      persistActiveChildIdentity(c.id, c.name, c.age);
-                      loadProfileData(c.id, children);
-                      setShowProfiles(false);
-                    }}
-                    className={c.id === activeId ? 'active' : ''}
-                  >
-                    <span>{c.name.slice(0, 1)}</span>
-                    <div>
-                      <strong>{c.name}</strong>
-                      <small>{c.age} yrs · {statsForChild(c).points} Stars</small>
-                    </div>
-                  </button>
-                ))}
+                <div className="profile-menu-head" style={{ padding: '12px 14px', borderBottom: '1px solid #e1e9ee' }}>
+                  <strong style={{ display: 'block', fontSize: '15px', color: 'var(--navy)' }}>{charDisplayName}</strong>
+                  <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{familyData.familyName}</small>
+                </div>
                 <button
                   type="button"
                   className="child-family-summary-btn"
