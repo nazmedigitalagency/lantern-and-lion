@@ -4047,9 +4047,14 @@ footer a:hover{color:var(--gold)}
 
 .teen-signout-link {
   display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #334155;
+  text-align: left;
+  cursor: pointer;
   margin-top: 4px;
   padding: 8px 10px;
-  border-top: 1px solid #334155;
   color: #f87171;
   font-size: 12px;
   font-weight: 900;
@@ -5556,6 +5561,9 @@ footer a:hover{color:var(--gold)}
 
 .teen-signout-full {
   display: block;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
   margin-top: 20px;
   padding: 14px;
   text-align: center;

@@ -349,6 +349,24 @@ function loadTeenProgress(teenId: number): TeenProgressState {
   };
 }
 
+function persistActiveTeenIdentity(teenId: number, name?: string, age?: number, username?: string) {
+  localStorage.setItem('lanternLionActiveChildId', String(teenId));
+  try {
+    const raw = localStorage.getItem('lanternLionTeenSession');
+    const existing = raw ? JSON.parse(raw) : {};
+    localStorage.setItem(
+      'lanternLionTeenSession',
+      JSON.stringify({
+        ...existing,
+        teenId,
+        ...(name ? { name } : {}),
+        ...(age !== undefined ? { age } : {}),
+        ...(username ? { username } : {}),
+      })
+    );
+  } catch { /* Storage error */ }
+}
+
 export default function TeenDashboardPage() {
   const router = useRouter();
   const [teens, setTeens] = useState<Teen[]>(fallbackTeens);
@@ -475,13 +493,7 @@ export default function TeenDashboardPage() {
         // /character, /adventure, /arcade) agree on who is logged in
         // instead of falling back to the hardcoded demo profile.
         const matchedForSession = teenList.find((t) => t.id === currentTeenId);
-        localStorage.setItem('lanternLionActiveChildId', String(currentTeenId));
-        localStorage.setItem('lanternLionTeenSession', JSON.stringify({
-          teenId: currentTeenId,
-          username: matchedForSession?.username || session?.username,
-          name: matchedForSession?.name || session?.name,
-          age: matchedForSession?.age || session?.age,
-        }));
+        persistActiveTeenIdentity(currentTeenId, matchedForSession?.name || session?.name, matchedForSession?.age || session?.age, matchedForSession?.username || session?.username);
 
         const teenModuleProgress = JSON.parse(localStorage.getItem('lanternLionModuleProgress') || '{}')?.[currentTeenId] || {};
         const todaySet = getOrCreateTodaySet(currentTeenId, { moduleProgress: teenModuleProgress, masteredQuestIds: [], kind: 'teen' });
@@ -530,6 +542,35 @@ export default function TeenDashboardPage() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [router]);
+
+  useEffect(() => {
+    if (!showProfiles) return;
+    const close = (event: Event) => {
+      if ((event as KeyboardEvent).key && (event as KeyboardEvent).key !== 'Escape') return;
+      if (event.type === 'pointerdown' && (event.target as HTMLElement).closest('.teen-profile-switch')) return;
+      setShowProfiles(false);
+    };
+    document.addEventListener('keydown', close);
+    document.addEventListener('pointerdown', close);
+    return () => {
+      document.removeEventListener('keydown', close);
+      document.removeEventListener('pointerdown', close);
+    };
+  }, [showProfiles]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [mobileMenuOpen]);
 
   useEffect(() => { if (hydrated) writeTeenMap('lanternLionTeenPoints', activeId, points); }, [points, activeId, hydrated]);
   useEffect(() => { if (hydrated) writeTeenMap('lanternLionTeenCases', activeId, casesSolved); }, [casesSolved, activeId, hydrated]);
@@ -775,6 +816,41 @@ export default function TeenDashboardPage() {
                   <strong>{teen.name}</strong>
                   <small>{familyData.familyName}</small>
                 </div>
+                {teens.length > 1 && (
+                  <div className="teen-profile-switcher-list" style={{ borderBottom: '1px solid #334155', paddingBottom: '4px', marginBottom: '4px' }}>
+                    {teens.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        role="menuitem"
+                        className={`teen-profile-menu-item ${t.id === activeId ? 'active' : ''}`}
+                        onClick={() => {
+                          setActiveId(t.id);
+                          persistActiveTeenIdentity(t.id, t.name, t.age, t.username);
+                          const progress = loadTeenProgress(t.id);
+                          setPoints(progress.points);
+                          setCasesSolved(progress.casesSolved);
+                          setDecisionsMade(progress.decisionsMade);
+                          setNotes(progress.notes);
+                          setJourneyDone(progress.journeyDone);
+                          setJourneyAwarded(progress.journeyAwarded);
+                          setJourneyDraft(progress.journeyDraft);
+                          setJourneyLive(progress.journeyLive);
+                          setJourneySubmitted(progress.journeySubmitted);
+                          setConnectedClass(progress.connectedClass);
+                          setCharAppearance(readAppearance(t.id));
+                          setCharEquipment(readEquipment(t.id));
+                          setCharDisplayName(readCharacterName(t.id, t.name));
+                          const w = getWallet(t.id);
+                          setWallet(w.xp > 0 ? w : { xp: progress.points, coins: w.coins || 45, gems: w.gems || 12 });
+                          setShowProfiles(false);
+                        }}
+                      >
+                        {t.name} {t.id === activeId ? '✓' : ''}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <button
                   type="button"
                   className="teen-profile-menu-item"
@@ -782,15 +858,17 @@ export default function TeenDashboardPage() {
                 >
                   👨‍👩‍👧 Family Progress Overview
                 </button>
-                <Link
-                  href="/teen-access"
-                  onClick={() => {
-                    void signOutOfPersona('teen');
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setShowProfiles(false);
+                    await signOutOfPersona('teen');
+                    router.replace('/teen-access');
                   }}
                   className="teen-signout-link"
                 >
                   Sign out / Switch account
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -1405,6 +1483,7 @@ export default function TeenDashboardPage() {
                     <input
                       value={classCode}
                       onChange={(e) => setClassCode(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') connectClass(); }}
                       placeholder="Enter your teacher’s join code"
                       maxLength={12}
                     />
@@ -1570,15 +1649,16 @@ export default function TeenDashboardPage() {
                 {pinNotice && <p className="teen-pin-notice">{pinNotice}</p>}
               </section>
 
-              <Link
-                href="/teen-access"
-                onClick={() => {
-                  void signOutOfPersona('teen');
+              <button
+                type="button"
+                onClick={async () => {
+                  await signOutOfPersona('teen');
+                  router.replace('/teen-access');
                 }}
                 className="teen-signout-full"
               >
                 Sign Out of {teen.name}
-              </Link>
+              </button>
             </div>
           )}
         </div>
