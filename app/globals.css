@@ -7360,5 +7360,71 @@ footer a:hover{color:var(--gold)}
   .notif-panel{position:fixed;top:64px;right:8px;left:8px;width:auto;max-height:calc(100vh - 80px)}
 }
 
+/* ── Teacher Dashboard: Insights ──────────────────────────── */
+.insights-classroom-filter{margin:0 0 20px}
+.insights-classroom-filter label{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:900;color:var(--navy)}
+.insights-classroom-filter select{min-height:42px;padding:0 12px;border:2px solid var(--border-alt);border-radius:9px;background:white;color:var(--navy);font:700 13px var(--font-nunito);cursor:pointer}
+
+.insights-section{margin-bottom:30px}
+.insights-section h2{margin:0 0 14px;font-size:18px;color:var(--navy)}
+.insights-two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+
+.insights-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.insights-metric-card{padding:16px;display:flex;flex-direction:column;gap:2px;border:2px solid var(--navy);border-radius:14px;background:white}
+.insights-metric-emoji{font-size:18px}
+.insights-metric-card strong{margin-top:4px;font:700 26px var(--font-fredoka);color:var(--navy)}
+.insights-metric-label{font-size:12px;font-weight:800;color:var(--slate)}
+.insights-metric-card small{color:var(--slate);opacity:.75;font-size:11px}
+
+.insights-card-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.insights-card{padding:14px;display:flex;align-items:flex-start;gap:12px;border-radius:12px;background:white}
+.insights-card-strength{border:2px solid var(--green);background:#F0FDF4}
+.insights-card-practice{border:2px solid var(--gold);background:#FFFBEB}
+.insights-card-emoji{flex:none;font-size:20px}
+.insights-card-body{flex:1;min-width:0}
+.insights-card-body strong{display:block;color:var(--navy);font-size:14px}
+.insights-card-body p{margin:4px 0 0;color:var(--slate);font-size:12px;line-height:1.5}
+.insights-card>button{flex:none;min-height:36px;padding:0 14px;border:2px solid var(--blue-dark);border-radius:8px;background:var(--blue-dark);color:white;font:900 12px var(--font-nunito);cursor:pointer}
+
+.insights-topics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.insights-topic-column{padding:14px;border:1px solid var(--border);border-radius:12px;background:white}
+.insights-topic-title{margin:0 0 10px;font-size:13px;font-weight:900;color:var(--navy)}
+.insights-topic-column ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.insights-topic-column li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border)}
+.insights-topic-column li:first-child{border-top:0}
+.insights-topic-column li span{color:var(--navy);font-size:13px;font-weight:700}
+.insights-topic-column li b{color:var(--blue-dark);font-size:12px;font-weight:800}
+
+.insights-attention-list,.insights-progress-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.insights-attention-row,.insights-progress-row{padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:white;cursor:pointer}
+.insights-attention-row:hover,.insights-progress-row:hover{border-color:var(--blue-dark)}
+.insights-attention-row strong,.insights-progress-row strong{display:block;color:var(--navy);font-size:14px}
+.insights-attention-row ul{margin:6px 0 0;padding-left:18px;color:var(--slate);font-size:12px;line-height:1.6}
+.insights-progress-row p{margin:4px 0 0;color:var(--slate);font-size:12px;line-height:1.5}
+
+.student-insights-section{padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--sky)}
+.student-insights-trend{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;color:var(--navy);font-size:13px}
+.student-insights-trend-badge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:900;text-transform:uppercase}
+.trend-improving{background:#F0FDF4;color:#15803D}
+.trend-declining{background:#FFFBEB;color:#B45309}
+.trend-stable{background:var(--blue-tint);color:var(--blue-dark)}
+.student-insights-recommendation{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.student-insights-recommendation p{margin:4px 0;color:var(--navy);font-size:13px;line-height:1.5}
+.student-insights-recommendation-action{color:var(--slate) !important;font-size:12px !important}
+.student-insights-recommendation button{margin-top:8px}
+
+@media(max-width:900px){
+  .insights-two-col{grid-template-columns:1fr}
+  .insights-topics-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:620px){
+  .insights-classroom-filter label{flex-wrap:wrap}
+  .insights-classroom-filter select{width:100%}
+  .insights-overview-grid{grid-template-columns:1fr 1fr}
+  .insights-card{flex-wrap:wrap}
+  .insights-card>button{width:100%;justify-content:center}
+}
+
 
 
