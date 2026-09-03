@@ -8,6 +8,7 @@ import { getConcept } from '../../../../lib/adaptive/concepts';
 import { getLevelInfo } from '../../../../lib/xp-levels';
 import { getStory } from '../../../../stories/catalog';
 import { ageGroupForAge, buildNeedsAttention, computeActivityStatus } from '../../../../lib/classrooms/server';
+import { computeStudentInsightsPayload } from '../../../../lib/insights/aggregate';
 import type { StudentActivityItem, StudentCard, StudentClassroomRef } from '../../../../lib/classrooms/types';
 import type { CurriculumModule } from '../../../../curriculum-data';
 
@@ -140,19 +141,24 @@ export async function GET(_req: Request, ctx: { params: Promise<{ studentId: str
     .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
     .slice(0, 20);
 
+  const strengthList = learning.strengths.map((s) => ({ conceptId: s.conceptId, label: s.label, masteryScore: s.masteryScore }));
+  const needsPracticeList = learning.needsPractice.map((s) => ({ conceptId: s.conceptId, label: s.label, masteryScore: s.masteryScore }));
+  const insights = await computeStudentInsightsPayload(admin, child.id, child.name, child.age, masteryRows, student, strengthList, needsPracticeList);
+
   return NextResponse.json({
     student,
     longestStreak: streak.longestStreak,
     graceDays: streak.graceDays,
     weekCalendar: calendar,
     learning: {
-      strengths: learning.strengths.map((s) => ({ conceptId: s.conceptId, label: s.label, masteryScore: s.masteryScore })),
-      needsPractice: learning.needsPractice.map((s) => ({ conceptId: s.conceptId, label: s.label, masteryScore: s.masteryScore })),
+      strengths: strengthList,
+      needsPractice: needsPracticeList,
       dueReviewCount: learning.dueReviews.length,
       conceptsTracked: masteryRows.length,
     },
     stories,
     recentActivity,
+    insights,
   });
 }
 

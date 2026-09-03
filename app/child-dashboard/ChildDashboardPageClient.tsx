@@ -41,6 +41,7 @@ import { STORY_CATALOG } from '../stories/catalog';
 import { signOutOfPersona } from '../lib/session';
 import { useDialogA11y } from '../lib/use-dialog';
 import LanternCodesPanel from '../lib/codes/LanternCodesPanel';
+import SoundToggle from '../lib/sound/SoundToggle';
 
 // Every implemented arcade game now opens as an in-dashboard popup instead
 // of navigating to its own page (see VerseBuilderGame's `embedded` mode).
@@ -436,6 +437,8 @@ export default function ChildDashboardPage() {
           </div>
 
           <NotificationBell tone="child" dashboardHref="/child-dashboard" />
+
+          <SoundToggle variant="child" />
 
           {/* Ask for Help Button */}
           <button

@@ -2,6 +2,8 @@
 // Used by both the teacher/students API routes and their client components,
 // so the roster list and the student detail view never drift apart.
 
+import type { StudentInsightsResponse } from '../insights/types';
+
 export type AgeGroup = 'child' | 'teen';
 export type ActivityStatus = 'active' | 'recently_active' | 'inactive';
 
@@ -64,6 +66,7 @@ export type StudentDetailResponse = {
   };
   stories: { storyId: string; title: string; completedAt: string | null }[];
   recentActivity: StudentActivityItem[];
+  insights: StudentInsightsResponse;
 };
 
 // "Add Student with Teacher Code" — the two-step lookup-then-request flow.

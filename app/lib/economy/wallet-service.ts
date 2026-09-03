@@ -17,6 +17,7 @@
 
 import { getLevelInfo, type LevelInfo } from '../xp-levels';
 import { addSeasonXp } from '../leagues/storage';
+import { playRewardSound } from '../sound/sound-effects';
 import type { AwardResult, CurrencyType, RewardSource, Transaction, Wallet } from './types';
 
 const WALLET_KEY = 'lanternLionWallet';
@@ -125,15 +126,33 @@ export function awardXP(profileId: number | string, amount: number, source: Rewa
       addSeasonXp(profileId, rounded);
     } catch { /* Storage unavailable or non-browser */ }
   }
-  return record(profileId, 'xp', rounded, source, description);
+  const result = record(profileId, 'xp', rounded, source, description);
+  if (rounded > 0) {
+    if (result.levelUp) {
+      playRewardSound('levelUp');
+    } else {
+      playRewardSound('xp');
+    }
+  }
+  return result;
 }
 
 export function awardCoins(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult {
-  return record(profileId, 'coins', Math.max(0, Math.round(amount)), source, description);
+  const rounded = Math.max(0, Math.round(amount));
+  const result = record(profileId, 'coins', rounded, source, description);
+  if (rounded > 0) {
+    playRewardSound('coins');
+  }
+  return result;
 }
 
 export function awardGems(profileId: number | string, amount: number, source: RewardSource, description: string): AwardResult {
-  return record(profileId, 'gems', Math.max(0, Math.round(amount)), source, description);
+  const rounded = Math.max(0, Math.round(amount));
+  const result = record(profileId, 'gems', rounded, source, description);
+  if (rounded > 0) {
+    playRewardSound('gems');
+  }
+  return result;
 }
 
 /** Returns null (and records nothing) if the wallet doesn't have enough coins. */

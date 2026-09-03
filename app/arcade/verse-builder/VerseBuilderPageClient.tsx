@@ -8,6 +8,7 @@ import { pickRandomUnique, shuffle } from '../../lib/shuffle';
 import { DifficultyPicker, GameResultModal } from '../components';
 import { VERSE_POOLS, VERSE_ROUNDS_PER_SESSION, allowedDifficultiesFor, defaultDifficultyFor } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
+import { playRewardSound } from '../../lib/sound/sound-effects';
 import type { DifficultyLevel, GameOutcome } from '../types';
 
 type WordSlotItem = { w: string; i: number };
@@ -79,6 +80,7 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
   }
 
   function placeInSlot(item: WordSlotItem, slotIndex: number) {
+    playRewardSound('tap');
     setSlots((prev) => {
       const next = [...prev];
       const bumped = next[slotIndex];
@@ -102,6 +104,7 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
   function tapSlot(slotIndex: number) {
     const item = slots[slotIndex];
     if (!item) return;
+    playRewardSound('tap');
     setSlots((prev) => prev.map((s, i) => (i === slotIndex ? null : s)));
     setBank((prev) => [...prev, item]);
     setWrongSlots(new Set());
@@ -124,6 +127,7 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
     setTotalAttempts((a) => a + 1);
 
     if (wrong.size === 0) {
+      playRewardSound('correct');
       setResolving(true);
       const roundScore = Math.max(20, 100 - roundAttempts * 20);
       window.setTimeout(() => {
@@ -137,12 +141,14 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
         }
       }, 500);
     } else {
+      playRewardSound('wrong');
       setWrongSlots(wrong);
     }
   }
 
   function finishGame(finalRoundScores: number[]) {
     if (!profile) return;
+    playRewardSound('questComplete');
     const timeSeconds = Math.round((Date.now() - startedAt) / 1000);
     const totalScore = finalRoundScores.reduce((a, b) => a + b, 0);
     const accuracy = Math.round((finalRoundScores.reduce((a, b) => a + b, 0) / (finalRoundScores.length * 100)) * 100);

@@ -31,6 +31,8 @@ import type { Wallet } from '../lib/economy/types';
 import { signOutOfPersona } from '../lib/session';
 import { useDialogA11y } from '../lib/use-dialog';
 import LanternCodesPanel from '../lib/codes/LanternCodesPanel';
+import SoundToggle from '../lib/sound/SoundToggle';
+import { playRewardSound } from '../lib/sound/sound-effects';
 import TeenSidebar from './TeenSidebar';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
@@ -576,9 +578,10 @@ export default function TeenDashboardPage() {
   }
 
   function openScenario(scenario: Scenario) { setActiveScenario(scenario); setNodeId('start'); }
-  function chooseBranch(to: string) { setNodeId(to); }
+  function chooseBranch(to: string) { playRewardSound('tap'); setNodeId(to); }
   function finishScenario(scenario: Scenario, verdictTag: 'wise' | 'risky' | 'unwise') {
     if (!decisionsMade.includes(scenario.id)) {
+      playRewardSound('questComplete');
       setDecisionsMade([...decisionsMade, scenario.id]);
       addPoints(verdictTag === 'wise' ? 30 : verdictTag === 'risky' ? 15 : 10);
     }
@@ -587,13 +590,18 @@ export default function TeenDashboardPage() {
   function closeScenario() { setActiveScenario(null); setNodeId('start'); }
 
   function openCase(c: CaseFile) { setActiveCase(c); setReviewedEvidence([]); setVerdict(null); setVerdictSubmitted(false); }
-  function markReviewed(id: string) { if (!reviewedEvidence.includes(id)) setReviewedEvidence([...reviewedEvidence, id]); }
+  function markReviewed(id: string) { if (!reviewedEvidence.includes(id)) { playRewardSound('tap'); setReviewedEvidence([...reviewedEvidence, id]); } }
   function submitVerdict() {
     if (!verdict || !activeCase) return;
     setVerdictSubmitted(true);
-    if (verdict === activeCase.correct && !casesSolved.includes(activeCase.id)) {
-      setCasesSolved([...casesSolved, activeCase.id]);
-      addPoints(50);
+    if (verdict === activeCase.correct) {
+      playRewardSound('correct');
+      if (!casesSolved.includes(activeCase.id)) {
+        setCasesSolved([...casesSolved, activeCase.id]);
+        addPoints(50);
+      }
+    } else {
+      playRewardSound('wrong');
     }
   }
   function closeCase() { setActiveCase(null); }
@@ -603,10 +611,16 @@ export default function TeenDashboardPage() {
     if (quizAnswer !== null) return;
     setQuizAnswer(optionIndex);
     const correct = optionIndex === ASK_WORD_QUESTIONS[quizIndex].correct;
-    if (correct) setQuizScore((s) => s + 1);
+    if (correct) {
+      playRewardSound('correct');
+      setQuizScore((s) => s + 1);
+    } else {
+      playRewardSound('wrong');
+    }
     window.setTimeout(() => {
       if (quizIndex + 1 >= ASK_WORD_QUESTIONS.length) {
         setQuizDone(true);
+        playRewardSound('questComplete');
         addPoints(quizScore * 10 + (correct ? 10 : 0));
       } else {
         setQuizIndex((i) => i + 1);
@@ -630,6 +644,7 @@ export default function TeenDashboardPage() {
   }
 
   function toggleJourneyStage(stage: JourneyStage) {
+    playRewardSound('tap');
     const wasDone = journeyDone[stage];
     setJourneyDone({ ...journeyDone, [stage]: !wasDone });
     if (!wasDone && !journeyAwarded[stage]) {
@@ -637,7 +652,7 @@ export default function TeenDashboardPage() {
       setJourneyAwarded({ ...journeyAwarded, [stage]: true });
     }
   }
-  function submitJourney() { setJourneySubmitted(true); addPoints(20); }
+  function submitJourney() { playRewardSound('questComplete'); setJourneySubmitted(true); addPoints(20); }
 
   function handleChatSafetyFlag(message: string) {
     const report = { child: teen.name, kind: 'Chat: please check in', message, time: new Date().toISOString() };
@@ -734,6 +749,8 @@ export default function TeenDashboardPage() {
           </div>
 
           <NotificationBell tone="teen" dashboardHref="/teen-dashboard" />
+
+          <SoundToggle variant="teen" />
 
           {/* Profile Switcher Capsule */}
           <div className="teen-profile-switch">

@@ -12,8 +12,9 @@ import StudentsPanel from './StudentsPanel';
 import ClassesPanel from './ClassesPanel';
 import AssignmentsPanel from './AssignmentsPanel';
 import TemplatesPanel from './TemplatesPanel';
+import InsightsPanel from './InsightsPanel';
 
-type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'messages' | 'safety';
+type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'insights' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
 type Classroom = { id: number; name: string; ageBand: string; code: string; students: Student[]; teacherEmail: string; teacherName: string };
 type Assignment = { id: number; classId: number; title: string; due: string; completed: number };
@@ -279,6 +280,7 @@ export default function TeacherDashboardPage() {
     ['students', 'St', 'My Students'],
     ['classes', 'C', 'Classes'],
     ['assignments', 'A', 'Assignments'],
+    ['insights', 'I', 'Insights'],
     ['messages', 'M', 'Parent messages'],
     ['safety', 'S', 'Safety'],
   ];
@@ -648,6 +650,17 @@ export default function TeacherDashboardPage() {
                   <button type="button" className={assignmentsSubTab === 'templates' ? 'active' : ''} onClick={() => setAssignmentsSubTab('templates')}>Templates</button>
                 </div>
                 {assignmentsSubTab === 'assignments' ? <AssignmentsPanel /> : <TemplatesPanel />}
+              </div>
+            )}
+
+            {page === 'insights' && (
+              <div className="teacher-content">
+                <div className="teacher-title">
+                  <p className="teacher-kicker">Insights</p>
+                  <h1 className="teacher-title-oneline">Understand how they&apos;re learning.</h1>
+                  <p>Real strengths, real gaps, and what to try next — built from the same activity, quiz, and assignment data as the rest of your dashboard.</p>
+                </div>
+                <InsightsPanel />
               </div>
             )}
 

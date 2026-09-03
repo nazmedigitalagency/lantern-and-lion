@@ -9,6 +9,7 @@ import { useDialogA11y } from '../../lib/use-dialog';
 import { DifficultyPicker } from '../components';
 import { allowedDifficultiesFor, defaultDifficultyFor, getGameDefinition } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
+import { playRewardSound } from '../../lib/sound/sound-effects';
 import type { DifficultyLevel, GameOutcome } from '../types';
 import {
   DEFAULT_MATCH_MODE,
@@ -80,6 +81,7 @@ export function MemoryMatchGame({ embedded = false, onClose }: { embedded?: bool
     const card = deck.find((c) => c.uid === uid);
     if (!card || card.matched || flipped.includes(uid) || flipped.length >= 2) return;
 
+    playRewardSound('tap');
     const nextFlipped = [...flipped, uid];
     setFlipped(nextFlipped);
     if (nextFlipped.length < 2) return;
@@ -92,11 +94,13 @@ export function MemoryMatchGame({ embedded = false, onClose }: { embedded?: bool
 
     window.setTimeout(() => {
       if (isMatch) {
+        playRewardSound('correct');
         setDeck((prev) => prev.map((c) => (c.uid === firstUid || c.uid === secondUid ? { ...c, matched: true } : c)));
         setMatchedPairs((count) => count + 1);
         setFlipped([]);
         setResolving(false);
       } else {
+        playRewardSound('wrong');
         setMistakes((m) => m + 1);
         setFlipped([]);
         setResolving(false);
@@ -106,6 +110,7 @@ export function MemoryMatchGame({ embedded = false, onClose }: { embedded?: bool
 
   function finishGame(finalMatchedPairs: number) {
     if (!profile) return;
+    playRewardSound('questComplete');
     const timeSeconds = Math.round((Date.now() - startedAtRef.current) / 1000);
     const { score, accuracy } = computeMemoryMatchScore({ pairCount: finalMatchedPairs, mistakes, timeSeconds, difficulty });
     const result = recordGameSession(profile.id, {

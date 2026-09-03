@@ -9,6 +9,7 @@ import { useDialogA11y } from '../../lib/use-dialog';
 import { DifficultyPicker } from '../components';
 import { allowedDifficultiesFor, defaultDifficultyFor, getGameDefinition } from '../catalog';
 import { getPersonalBest, recordGameSession } from '../storage';
+import { playRewardSound } from '../../lib/sound/sound-effects';
 import type { DifficultyLevel, GameOutcome } from '../types';
 import {
   QUIZ_MODES,
@@ -125,6 +126,11 @@ export function LightningQuizGame({ embedded = false, onClose }: { embedded?: bo
     setStreak(newStreak);
     setSelectedChoice(index);
     setFeedback(correct ? 'correct' : 'incorrect');
+    if (correct) {
+      playRewardSound('correct');
+    } else {
+      playRewardSound('wrong');
+    }
 
     if (profile) {
       logGameEvent('QUESTION_ANSWERED', {

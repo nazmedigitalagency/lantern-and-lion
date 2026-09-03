@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import type { StudentDetailResponse } from '../lib/classrooms/types';
+import type { SuggestedAssignment } from '../lib/insights/types';
 import { ACTIVITY_LABEL, dayLetter } from './format';
+import CreateAssignmentModal, { type AssignmentTemplatePrefill } from './CreateAssignmentModal';
+
+function toPrefill(s: SuggestedAssignment): AssignmentTemplatePrefill {
+  return { title: s.title, instructions: s.instructions, assignmentType: s.assignmentType, referenceId: s.referenceId, timeLimitMinutes: null, requiredScore: null, xpReward: null, ageGroup: s.ageGroup };
+}
+
+const TREND_LABEL: Record<string, string> = { improving: '📈 Improving', declining: '📉 Declining', stable: '➡️ Stable' };
 
 /**
  * Self-fetching student detail panel — reused by both the "My Students"
@@ -17,6 +25,7 @@ export default function StudentDetailModal({ studentId, onClose, onRemoved }: { 
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
   const [removeBusy, setRemoveBusy] = useState(false);
   const [removeError, setRemoveError] = useState('');
+  const [assignPrefill, setAssignPrefill] = useState<AssignmentTemplatePrefill | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -131,6 +140,32 @@ export default function StudentDetailModal({ studentId, onClose, onRemoved }: { 
               )}
             </div>
 
+            {(detail.insights.trend.trend !== 'insufficient_data' || detail.insights.recommendation) && (
+              <div className="student-detail-section student-insights-section">
+                <p className="teacher-kicker">Learning Insights</p>
+
+                {detail.insights.trend.trend !== 'insufficient_data' && (
+                  <p className="student-insights-trend">
+                    <span className={`student-insights-trend-badge trend-${detail.insights.trend.trend}`}>{TREND_LABEL[detail.insights.trend.trend]}</span>
+                    {detail.insights.trend.detail && <span>{detail.insights.trend.detail}</span>}
+                  </p>
+                )}
+
+                {detail.insights.recommendation && (
+                  <div className="student-insights-recommendation">
+                    <p className="teacher-kicker">What should I do next?</p>
+                    <p>{detail.insights.recommendation.headline}</p>
+                    {detail.insights.recommendation.recommendation && <p className="student-insights-recommendation-action">{detail.insights.recommendation.recommendation}</p>}
+                    {detail.insights.recommendation.suggestedAssignment && (
+                      <button type="button" className="add-student-primary" onClick={() => setAssignPrefill(toPrefill(detail.insights.recommendation!.suggestedAssignment!))}>
+                        Create Assignment
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {detail.stories.length > 0 && (
               <div className="student-detail-section">
                 <p className="teacher-kicker">Interactive Bible stories</p>
@@ -179,6 +214,10 @@ export default function StudentDetailModal({ studentId, onClose, onRemoved }: { 
           </>
         )}
       </section>
+
+      {assignPrefill && (
+        <CreateAssignmentModal initialTemplate={assignPrefill} onClose={() => setAssignPrefill(null)} onCreated={() => {}} />
+      )}
     </div>
   );
 }
