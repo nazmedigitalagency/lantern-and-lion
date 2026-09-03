@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { getTierForXp, LEAGUE_TIERS } from '../lib/leagues/config';
 import { canonicalRegions } from '../adventure/world-data';
 import { signOutOfPersona } from '../lib/session';
+import { createClient } from '../lib/supabase/client';
 import StudentsPanel from './StudentsPanel';
 import ClassesPanel from './ClassesPanel';
 import AssignmentsPanel from './AssignmentsPanel';
@@ -98,6 +99,7 @@ export default function TeacherDashboardPage() {
   const [sentMessages, setSentMessages] = useState<Array<{ studentId: number; body: string }>>([]);
   const [reviewed, setReviewed] = useState<number[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [sessionUnverified, setSessionUnverified] = useState(false);
   const [liveClassrooms, setLiveClassrooms] = useState<LiveClassroom[]>([]);
   const [liveClassId, setLiveClassId] = useState<string | null>(null);
   const [liveSummary, setLiveSummary] = useState<LiveClassSummary | null>(null);
@@ -196,6 +198,35 @@ export default function TeacherDashboardPage() {
     }, 0);
     return () => clearTimeout(timer);
   }, [router]);
+
+  // A localStorage session with no matching real Supabase Auth user (stale, or
+  // created by a since-removed local-only sign-in fallback) renders the dashboard
+  // fine — it's all client-side — but every server-backed feature (My Students,
+  // Classes, Assignments) fails with a generic connection error and no clue why.
+  // Verify the real session once and surface a clear recovery path instead of a
+  // confusing "check your connection" error on three unrelated tabs. The short
+  // delay gives a just-completed Google sign-in time to finish exchanging its
+  // OAuth code for a session before this treats it as missing.
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const session = JSON.parse(localStorage.getItem('lanternLionTeacherSession') || 'null');
+        if (!session?.email) return;
+        const { data: { user } } = await createClient().auth.getUser();
+        if (!cancelled && !user) setSessionUnverified(true);
+      } catch {
+        /* Best-effort verification only — leave the dashboard as-is on failure. */
+      }
+    }, 800);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, []);
+
+  async function reauthenticate() {
+    await signOutOfPersona('teacher');
+    try { sessionStorage.setItem('lanternLionPendingModuleRedirect', '/teacher-dashboard'); } catch { /* Storage unavailable. */ }
+    router.replace('/teacher-access');
+  }
 
   useEffect(() => {
     if (!notice) return;
@@ -312,6 +343,14 @@ export default function TeacherDashboardPage() {
             </label>
           )}
         </header>
+
+        {sessionUnverified && (
+          <div className="teacher-session-banner">
+            <span>!</span>
+            <p>We couldn’t verify your sign-in, so My Students, Classes, and Assignments can’t load. Sign in again to fix this.</p>
+            <button type="button" onClick={reauthenticate}>Sign in again</button>
+          </div>
+        )}
 
         {classes.length === 0 || !classroom ? (
           <div className="teacher-content">
@@ -616,7 +655,7 @@ export default function TeacherDashboardPage() {
               <div className="teacher-content">
                 <div className="teacher-title">
                   <p className="teacher-kicker">Parent messages</p>
-                  <h1>Keep adults in the conversation.</h1>
+                  <h1 className="teacher-title-oneline">Keep adults in the conversation.</h1>
                   <p>Teachers message a verified parent account. Children cannot receive or send private messages.</p>
                 </div>
 

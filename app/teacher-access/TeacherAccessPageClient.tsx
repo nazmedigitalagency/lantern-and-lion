@@ -74,38 +74,39 @@ export default function TeacherAccessPage() {
         email: cleanEmail,
         password,
       });
-      if (!signInError && data.user) {
-        const teacherName =
-          data.user.user_metadata?.full_name ||
-          data.user.user_metadata?.name ||
-          data.user.email?.split('@')[0] ||
-          'Teacher';
-        localStorage.setItem(
-          'lanternLionTeacherSession',
-          JSON.stringify({ name: teacherName, email: cleanEmail })
+      if (signInError || !data.user) {
+        // A local-only fallback session used to be created here whenever real sign-in
+        // failed, silently landing the teacher on a dashboard where every real feature
+        // (My Students, Classes, Assignments) fails with a generic connection error and
+        // no indication their password was wrong. Show the real reason instead.
+        setError(
+          signInError?.message?.toLowerCase().includes('invalid')
+            ? 'That email and password combination isn’t recognized. Check your details, or use Google sign-in.'
+            : signInError?.message || 'Could not sign in. Please try again.'
         );
-        let pending: string | null = null;
-        try {
-          pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
-          if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
-        } catch { /* No-op */ }
-        window.location.href = pending || '/teacher-dashboard';
+        setIsSubmitting(false);
         return;
       }
-    } catch {
-      // Local fallback
-    }
 
-    // Direct local teacher session if credentials match user inputs
-    const teacherName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ');
-    const formattedName = teacherName.charAt(0).toUpperCase() + teacherName.slice(1);
-    localStorage.setItem('lanternLionTeacherSession', JSON.stringify({ name: formattedName, email: cleanEmail }));
-    let pending: string | null = null;
-    try {
-      pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
-      if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
-    } catch { /* No-op */ }
-    window.location.href = pending || '/teacher-dashboard';
+      const teacherName =
+        data.user.user_metadata?.full_name ||
+        data.user.user_metadata?.name ||
+        data.user.email?.split('@')[0] ||
+        'Teacher';
+      localStorage.setItem(
+        'lanternLionTeacherSession',
+        JSON.stringify({ name: teacherName, email: cleanEmail })
+      );
+      let pending: string | null = null;
+      try {
+        pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
+        if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
+      } catch { /* No-op */ }
+      window.location.href = pending || '/teacher-dashboard';
+    } catch {
+      setError('Could not sign in. Check your connection and try again.');
+      setIsSubmitting(false);
+    }
   }
 
   return (
