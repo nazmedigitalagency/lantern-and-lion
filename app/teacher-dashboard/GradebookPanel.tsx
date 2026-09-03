@@ -22,7 +22,17 @@ function fmtDate(iso: string | null): string {
   return iso ? new Date(iso).toLocaleDateString() : '—';
 }
 
-export default function GradebookPanel() {
+export default function GradebookPanel({
+  initialFilter,
+  focusSubmissionId,
+  focusAssignmentId,
+  focusChildId,
+}: {
+  initialFilter?: QueueFilter;
+  focusSubmissionId?: string;
+  focusAssignmentId?: string;
+  focusChildId?: string;
+} = {}) {
   const [classrooms, setClassrooms] = useState<ClassroomCard[]>([]);
   const [classroomId, setClassroomId] = useState('');
   const [view, setView] = useState<'queue' | 'grid'>('queue');
@@ -52,16 +62,38 @@ export default function GradebookPanel() {
         </div>
       </div>
 
-      {view === 'queue' ? <QueueView classroomId={classroomId} /> : <GridView classroomId={classroomId} classrooms={classrooms} />}
+      {view === 'queue' ? (
+        <QueueView
+          classroomId={classroomId}
+          initialFilter={initialFilter}
+          focusSubmissionId={focusSubmissionId}
+          focusAssignmentId={focusAssignmentId}
+          focusChildId={focusChildId}
+        />
+      ) : (
+        <GridView classroomId={classroomId} classrooms={classrooms} />
+      )}
     </div>
   );
 }
 
-function QueueView({ classroomId }: { classroomId: string }) {
+function QueueView({
+  classroomId,
+  initialFilter,
+  focusSubmissionId,
+  focusAssignmentId,
+  focusChildId,
+}: {
+  classroomId: string;
+  initialFilter?: QueueFilter;
+  focusSubmissionId?: string;
+  focusAssignmentId?: string;
+  focusChildId?: string;
+}) {
   const [items, setItems] = useState<GradebookQueueItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<QueueFilter>('all');
+  const [filter, setFilter] = useState<QueueFilter>(initialFilter || 'all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [gradeTarget, setGradeTarget] = useState<GradeTarget | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -86,6 +118,23 @@ function QueueView({ classroomId }: { classroomId: string }) {
           setItems(data.items);
           setLoading(false);
           setSelected(new Set());
+
+          const match = (focusAssignmentId && focusChildId)
+            ? data.items.find((it) => it.assignmentId === focusAssignmentId && it.childId === focusChildId)
+            : (focusAssignmentId ? data.items.find((it) => it.assignmentId === focusAssignmentId) : null);
+
+          if (match) {
+            setGradeTarget({
+              assignmentId: match.assignmentId,
+              assignmentType: match.assignmentType,
+              childId: match.childId,
+              studentName: match.studentName,
+              currentScore: match.score,
+              currentFeedback: match.feedback,
+              responseText: match.responseText,
+              scoreOverridden: match.scoreOverridden,
+            });
+          }
         }
       })
       .catch(() => {
@@ -97,7 +146,7 @@ function QueueView({ classroomId }: { classroomId: string }) {
     return () => {
       active = false;
     };
-  }, [classroomId, reloadToken]);
+  }, [classroomId, reloadToken, focusAssignmentId, focusChildId, focusSubmissionId]);
 
   if (loading) return <p className="student-detail-empty">Loading gradebook…</p>;
   if (error) return <p className="student-detail-empty">{error}</p>;

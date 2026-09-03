@@ -47,5 +47,34 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     .eq('id', submission.id);
 
   if (error) return NextResponse.json({ error: 'Could not save your work.' }, { status: 500 });
+
+  if (!parsed.data.draft) {
+    try {
+      const { data: assignmentInfo } = await admin
+        .from('assignments')
+        .select('id, title, classroom_id, classrooms(teacher_id)')
+        .eq('id', id)
+        .maybeSingle();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const teacherId = (assignmentInfo?.classrooms as any)?.teacher_id;
+      if (teacherId && assignmentInfo) {
+        const { data: child } = await admin.from('children').select('name').eq('id', session.childId).maybeSingle();
+        const { notifyTeacherAssignmentSubmitted } = await import('../../../../../lib/teacher-notifications/server');
+        await notifyTeacherAssignmentSubmitted(admin, {
+          teacherId,
+          assignmentId: assignmentInfo.id,
+          assignmentTitle: assignmentInfo.title,
+          studentName: child?.name || 'A student',
+          childId: session.childId,
+          submissionId: submission.id,
+        }).catch(() => {});
+      }
+    } catch {
+      /* Best effort notification delivery */
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
+

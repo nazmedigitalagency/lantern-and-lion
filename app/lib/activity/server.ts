@@ -136,7 +136,14 @@ export type NotificationType =
   | 'ASSIGNMENT_GRADED'
   | 'ASSIGNMENT_FEEDBACK'
   | 'MULTIPLAYER_INVITATION'
-  | 'TEACHER_ANNOUNCEMENT';
+  | 'TEACHER_ANNOUNCEMENT'
+  | 'TEACHER_ASSIGNMENT_SUBMITTED'
+  | 'TEACHER_AWAITING_GRADING'
+  | 'TEACHER_CHALLENGE_PROGRESS'
+  | 'TEACHER_CHALLENGE_COMPLETED'
+  | 'TEACHER_STUDENT_ATTENTION'
+  | 'TEACHER_DEADLINE_APPROACHING'
+  | 'TEACHER_EVENT_APPROACHING';
 
 /** Inserts a notification at most once per (recipient, dedupeKey) — the anti-spam guarantee. For a parent/teacher's own auth.users inbox. */
 export async function notifyOnce(

@@ -101,3 +101,76 @@ export function relativeTime(iso: string): string {
   const days = Math.round(hours / 24);
   return `${days} day${days === 1 ? '' : 's'} ago`;
 }
+
+// ── TEACHER NOTIFICATIONS ─────────────────────────────────────────
+
+export type TeacherNotificationType =
+  | 'TEACHER_ASSIGNMENT_SUBMITTED'
+  | 'TEACHER_AWAITING_GRADING'
+  | 'TEACHER_CHALLENGE_PROGRESS'
+  | 'TEACHER_CHALLENGE_COMPLETED'
+  | 'TEACHER_STUDENT_ATTENTION'
+  | 'TEACHER_DEADLINE_APPROACHING'
+  | 'TEACHER_EVENT_APPROACHING';
+
+export type TeacherNotification = {
+  id: string;
+  type: TeacherNotificationType | string;
+  title: string;
+  body: string;
+  payload: Record<string, unknown>;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export const TEACHER_NOTIFICATION_ICON: Record<string, string> = {
+  TEACHER_ASSIGNMENT_SUBMITTED: '📝',
+  TEACHER_AWAITING_GRADING: '📋',
+  TEACHER_CHALLENGE_PROGRESS: '🎯',
+  TEACHER_CHALLENGE_COMPLETED: '🏆',
+  TEACHER_STUDENT_ATTENTION: '⚠️',
+  TEACHER_DEADLINE_APPROACHING: '⏰',
+  TEACHER_EVENT_APPROACHING: '📅',
+  ASSIGNMENT: '📝',
+  ACHIEVEMENT: '🏆',
+};
+
+export type TeacherDeepLink = {
+  page: 'gradebook' | 'challenges' | 'students' | 'assignments' | 'calendar';
+  submissionId?: string;
+  childId?: string;
+  assignmentId?: string;
+  challengeId?: string;
+  filter?: string;
+};
+
+export function teacherNotificationDestination(n: Pick<TeacherNotification, 'type' | 'payload'>): TeacherDeepLink | null {
+  const payload = n.payload || {};
+  const submissionId = typeof payload.submissionId === 'string' ? payload.submissionId : undefined;
+  const childId = typeof payload.childId === 'string' ? payload.childId : undefined;
+  const assignmentId = typeof payload.assignmentId === 'string' ? payload.assignmentId : undefined;
+  const challengeId = typeof payload.challengeId === 'string' ? payload.challengeId : undefined;
+
+  switch (n.type) {
+    case 'TEACHER_ASSIGNMENT_SUBMITTED':
+      return { page: 'gradebook', submissionId, childId, assignmentId, filter: 'submitted' };
+    case 'TEACHER_AWAITING_GRADING':
+      return { page: 'gradebook', assignmentId, filter: 'submitted' };
+    case 'TEACHER_CHALLENGE_PROGRESS':
+    case 'TEACHER_CHALLENGE_COMPLETED':
+      return { page: 'challenges', challengeId };
+    case 'TEACHER_STUDENT_ATTENTION':
+      return { page: 'students', childId };
+    case 'TEACHER_DEADLINE_APPROACHING':
+      return { page: 'assignments', assignmentId };
+    case 'TEACHER_EVENT_APPROACHING':
+      return { page: 'calendar' };
+    default:
+      if (payload.tab === 'gradebook') return { page: 'gradebook', submissionId, childId, assignmentId };
+      if (payload.tab === 'challenges') return { page: 'challenges', challengeId };
+      if (payload.tab === 'students') return { page: 'students', childId };
+      if (payload.tab === 'assignments') return { page: 'assignments', assignmentId };
+      if (payload.tab === 'calendar') return { page: 'calendar' };
+      return null;
+  }
+}

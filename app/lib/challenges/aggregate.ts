@@ -111,6 +111,19 @@ async function syncChallenge(admin: SupabaseClient, challenge: ChallengeRow, chi
         dedupeKey: `challenge_completed_child:${challenge.id}:${childId}`,
       }).catch(() => {});
     }
+
+    try {
+      const { notifyTeacherChallengeCompleted } = await import('../teacher-notifications/server');
+      await notifyTeacherChallengeCompleted(admin, {
+        teacherId: challenge.teacher_id,
+        challengeId: challenge.id,
+        challengeName: challenge.name,
+        classroomId: challenge.classroom_id,
+      }).catch(() => {});
+    } catch {
+      /* Best effort */
+    }
+
     updates.notified_completed = true;
   }
 

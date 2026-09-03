@@ -15,8 +15,12 @@ import TemplatesPanel from './TemplatesPanel';
 import InsightsPanel from './InsightsPanel';
 import GradebookPanel from './GradebookPanel';
 import ChallengesPanel from './ChallengesPanel';
+import CalendarPanel from './CalendarPanel';
+import TeacherNotificationBell from './TeacherNotificationBell';
+import NotificationPreferencesModal from './NotificationPreferencesModal';
+import type { TeacherDeepLink } from '../lib/notifications/types';
 
-type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'challenges' | 'insights' | 'messages' | 'safety';
+type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'challenges' | 'calendar' | 'insights' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
 type Classroom = { id: number; name: string; ageBand: string; code: string; students: Student[]; teacherEmail: string; teacherName: string };
 type Assignment = { id: number; classId: number; title: string; due: string; completed: number };
@@ -107,6 +111,13 @@ export default function TeacherDashboardPage() {
   const [liveClassId, setLiveClassId] = useState<string | null>(null);
   const [liveSummary, setLiveSummary] = useState<LiveClassSummary | null>(null);
   const [newLiveClassName, setNewLiveClassName] = useState('');
+  const [deepLinkTarget, setDeepLinkTarget] = useState<TeacherDeepLink | null>(null);
+  const [prefModalOpen, setPrefModalOpen] = useState(false);
+
+  function handleNotificationNavigate(dest: TeacherDeepLink) {
+    setDeepLinkTarget(dest);
+    setPage(dest.page);
+  }
 
   useEffect(() => {
     if (!hydrated) return;
@@ -284,6 +295,7 @@ export default function TeacherDashboardPage() {
     ['assignments', 'A', 'Assignments'],
     ['gradebook', 'G', 'Gradebook'],
     ['challenges', 'Ch', 'Challenges'],
+    ['calendar', '📅', 'Calendar'],
     ['insights', 'I', 'Insights'],
     ['messages', 'M', 'Parent messages'],
     ['safety', 'S', 'Safety'],
@@ -336,18 +348,24 @@ export default function TeacherDashboardPage() {
             <span>Teacher workspace</span>
             <strong>{teacherName}</strong>
           </div>
-          {classes.length > 0 && classroom && (
-            <label>
-              Current class
-              <select value={activeClass} onChange={(e) => setActiveClass(Number(e.target.value))}>
-                {classes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          <div className="teacher-topbar-actions">
+            {classes.length > 0 && classroom && (
+              <label>
+                Current class
+                <select value={activeClass} onChange={(e) => setActiveClass(Number(e.target.value))}>
+                  {classes.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <TeacherNotificationBell
+              onNavigate={handleNotificationNavigate}
+              onOpenPreferences={() => setPrefModalOpen(true)}
+            />
+          </div>
         </header>
 
         {sessionUnverified && (
@@ -664,7 +682,13 @@ export default function TeacherDashboardPage() {
                   <h1 className="teacher-title-oneline">Grade, feedback, and results.</h1>
                   <p>Every submission across your classes, spreadsheet-style scores per class, and one place to grade and return work.</p>
                 </div>
-                <GradebookPanel />
+                <GradebookPanel
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  initialFilter={deepLinkTarget?.filter as any}
+                  focusSubmissionId={deepLinkTarget?.submissionId}
+                  focusAssignmentId={deepLinkTarget?.assignmentId}
+                  focusChildId={deepLinkTarget?.childId}
+                />
               </div>
             )}
 
@@ -676,6 +700,26 @@ export default function TeacherDashboardPage() {
                   <p>Optional class-wide challenges — real progress from real activity, with positive recognition when the class comes through.</p>
                 </div>
                 <ChallengesPanel />
+              </div>
+            )}
+
+            {page === 'calendar' && (
+              <div className="teacher-content">
+                <div className="teacher-title">
+                  <p className="teacher-kicker">Calendar &amp; Schedule</p>
+                  <h1 className="teacher-title-oneline">Class deadlines, events &amp; announcements.</h1>
+                  <p>A unified schedule of assignment due dates, group challenges, scheduled classroom events, and class announcements.</p>
+                </div>
+                <CalendarPanel
+                  onNavigateToAssignments={(assignmentId) => {
+                    if (assignmentId) setDeepLinkTarget({ page: 'assignments', assignmentId });
+                    setPage('assignments');
+                  }}
+                  onNavigateToChallenges={(challengeId) => {
+                    if (challengeId) setDeepLinkTarget({ page: 'challenges', challengeId });
+                    setPage('challenges');
+                  }}
+                />
               </div>
             )}
 
@@ -822,6 +866,13 @@ export default function TeacherDashboardPage() {
             <p>{notice}</p>
             <button onClick={() => setNotice('')}>Close</button>
           </div>
+        )}
+
+        {prefModalOpen && (
+          <NotificationPreferencesModal
+            onClose={() => setPrefModalOpen(false)}
+            onSaved={() => setNotice('Notification preferences saved.')}
+          />
         )}
       </section>
     </main>
