@@ -161,7 +161,18 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
     setEquipment(eq);
 
     const currentReg = getCurrentRegionId(loadedCtx);
-    setSelectedRegionId(currentReg);
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const requestedRegion = searchParams?.get('region') as RegionId | null;
+    const requestedTab = searchParams?.get('tab') as LocationTab | null;
+    if (requestedRegion && canonicalRegions.some((r) => r.id === requestedRegion)) {
+      setSelectedRegionId(requestedRegion);
+      setShowRegionModal(true);
+      if (requestedTab && ['chapters', 'memory', 'boss', 'secrets', 'collectibles'].includes(requestedTab)) {
+        setLocationTab(requestedTab);
+      }
+    } else {
+      setSelectedRegionId(currentReg);
+    }
   }
 
   useEffect(() => {

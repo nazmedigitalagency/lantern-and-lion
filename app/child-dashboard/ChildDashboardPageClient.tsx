@@ -87,6 +87,25 @@ function readModuleProgressForChild(childId: number | string): Record<string, Mo
   }
 }
 
+function persistActiveChildIdentity(childId: number | string, childName?: string, childAge?: number) {
+  const strId = String(childId);
+  localStorage.setItem('lanternLionActiveChildId', strId);
+  localStorage.setItem('lanternLionActiveChild', strId);
+  try {
+    const raw = localStorage.getItem('lanternLionChildSession');
+    const existing = raw ? JSON.parse(raw) : {};
+    localStorage.setItem(
+      'lanternLionChildSession',
+      JSON.stringify({
+        ...existing,
+        childId,
+        ...(childName ? { name: childName } : {}),
+        ...(childAge !== undefined ? { age: childAge } : {}),
+      })
+    );
+  } catch { /* Storage error */ }
+}
+
 export default function ChildDashboardPage() {
   const router = useRouter();
   const [children, setChildren] = useState<Child[]>(fallbackChildren);
@@ -123,7 +142,10 @@ export default function ChildDashboardPage() {
   const [activeGameModal, setActiveGameModal] = useState<string | null>(null);
   const closeGameModal = useCallback(() => setActiveGameModal(null), []);
   const gameModalRef = useDialogA11y<HTMLDivElement>(!!activeGameModal, closeGameModal);
-  const EMBEDDABLE_GAME_IDS = useMemo(() => new Set(GAME_DEFINITIONS.map((g) => g.id)), []);
+  const EMBEDDABLE_GAME_IDS = useMemo(
+    () => new Set(['verse-builder', 'scripture-maze', 'scripture-scramble', 'lightning-quiz', 'memory-match', 'build-the-story', 'bible-detective', 'scripture-connections']),
+    []
+  );
   type TodaySummaryData = { active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number };
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
 
@@ -251,12 +273,8 @@ export default function ChildDashboardPage() {
       // Persist the resolved identity every time this effect runs, so other
       // pages that independently call readActiveProfile() agree on who is
       // logged in instead of falling back to the hardcoded demo profile.
-      localStorage.setItem('lanternLionActiveChildId', String(resolvedActiveId));
-      localStorage.setItem('lanternLionActiveChild', String(resolvedActiveId));
-      try {
-        const existingSession = childSessionJson ? JSON.parse(childSessionJson) : null;
-        localStorage.setItem('lanternLionChildSession', JSON.stringify({ ...existingSession, childId: resolvedActiveId }));
-      } catch { /* Storage error */ }
+      const resolvedChild = resolvedChildren.find((c) => c.id === resolvedActiveId);
+      persistActiveChildIdentity(resolvedActiveId, resolvedChild?.name, resolvedChild?.age);
 
       loadProfileData(resolvedActiveId, resolvedChildren);
       setHydrated(true);
@@ -294,6 +312,20 @@ export default function ChildDashboardPage() {
     document.addEventListener('keydown', close); document.addEventListener('pointerdown', close);
     return () => { document.removeEventListener('keydown', close); document.removeEventListener('pointerdown', close); };
   }, [showProfiles]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [mobileMenuOpen]);
 
   const child = children.find((item) => item.id === activeId) || children[0];
   const teen = child.age >= 13;
@@ -481,13 +513,7 @@ export default function ChildDashboardPage() {
                     role="menuitem"
                     onClick={() => {
                       setActiveId(c.id);
-                      localStorage.setItem('lanternLionActiveChild', String(c.id));
-                      localStorage.setItem('lanternLionActiveChildId', String(c.id));
-                      try {
-                        const childSessionJson = localStorage.getItem('lanternLionChildSession');
-                        const existingSession = childSessionJson ? JSON.parse(childSessionJson) : null;
-                        localStorage.setItem('lanternLionChildSession', JSON.stringify({ ...existingSession, childId: c.id, name: c.name, age: c.age }));
-                      } catch { /* Non-blocking */ }
+                      persistActiveChildIdentity(c.id, c.name, c.age);
                       loadProfileData(c.id, children);
                       setShowProfiles(false);
                     }}
@@ -514,13 +540,17 @@ export default function ChildDashboardPage() {
                 >
                   🔑 My Lantern &amp; Lion Codes
                 </button>
-                <Link
-                  href="/child-access"
+                <button
+                  type="button"
                   className="child-signout-link"
-                  onClick={() => { void signOutOfPersona('child'); }}
+                  onClick={async () => {
+                    setShowProfiles(false);
+                    await signOutOfPersona('child');
+                    router.replace('/child-access');
+                  }}
                 >
                   Sign out / Switch account
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -679,11 +709,15 @@ export default function ChildDashboardPage() {
                     📍 <b>{nextExpedition.region.name}:</b> {nextExpedition.title}
                   </p>
                   <div className="kid-hero-btn-row">
-                    <Link href={nextExpedition.actionHref} className="kid-hero-start-btn">
+                    <button
+                      type="button"
+                      className="kid-hero-start-btn"
+                      onClick={() => setActiveTab('adventure')}
+                    >
                       <span className="kid-hero-btn-icon" aria-hidden="true">📖</span>
-                      <span>Start Lesson</span>
+                      <span>Start Expedition</span>
                       <span className="kid-hero-arrow-bubble" aria-hidden="true">›</span>
-                    </Link>
+                    </button>
                   </div>
                 </div>
 
@@ -739,9 +773,13 @@ export default function ChildDashboardPage() {
                       <p>“Thy word is a lamp unto my feet.”</p>
                     </div>
                   </div>
-                  <Link href="/arcade/verse-builder" className="kid-pill-btn btn-green-pill">
-                    <span>Correct!</span> ✓
-                  </Link>
+                  <button
+                    type="button"
+                    className="kid-pill-btn btn-green-pill"
+                    onClick={() => setActiveGameModal('verse-builder')}
+                  >
+                    <span>Practice Verse</span> 🧱
+                  </button>
                 </div>
 
                 {/* Card 3: Daily Quest Progress */}
@@ -808,16 +846,23 @@ export default function ChildDashboardPage() {
                   </div>
 
                   {/* Star Rating Track */}
-                  <div className="kid-star-track-row">
-                    <span>Next Level: {nextLevelRequirement} Stars</span>
-                    <div className="kid-five-stars-row" aria-label="Level Progress Stars">
-                      <span className="star-filled">⭐</span>
-                      <span className="star-filled">⭐</span>
-                      <span className="star-filled">⭐</span>
-                      <span className="star-filled">⭐</span>
-                      <span className="star-empty">☆</span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const currentBaseXp = (currentLevelNum - 1) * 100;
+                    const levelProgressXp = Math.max(0, starsEarned - currentBaseXp);
+                    const starsOutOfFive = Math.min(5, Math.max(0, Math.floor((levelProgressXp / 100) * 5)));
+                    return (
+                      <div className="kid-star-track-row">
+                        <span>Next Level: {nextLevelRequirement} Stars ({levelProgressXp}/100 XP)</span>
+                        <div className="kid-five-stars-row" aria-label={`Level Progress: ${starsOutOfFive} of 5 stars`}>
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <span key={s} className={s <= starsOutOfFive ? 'star-filled' : 'star-empty'}>
+                              {s <= starsOutOfFive ? '⭐' : '☆'}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Right Card: Mascot Celebration Card */}
@@ -1130,7 +1175,12 @@ export default function ChildDashboardPage() {
         <div className="help-overlay" role="presentation" onClick={closeGameModal}>
           <div ref={gameModalRef} className="game-modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="close-help game-modal-close" aria-label="Close game" onClick={closeGameModal}>✕</button>
-            {renderGameModal(activeGameModal, closeGameModal)}
+            {renderGameModal(activeGameModal, closeGameModal) || (
+              <div style={{ padding: '24px', textAlign: 'center' }}>
+                <p>Game could not be loaded.</p>
+                <button type="button" className="button button-secondary" onClick={closeGameModal}>Close</button>
+              </div>
+            )}
           </div>
         </div>
       )}
