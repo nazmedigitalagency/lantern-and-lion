@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ClassroomCard } from '../lib/classrooms/types';
+import { useDialogA11y } from '../lib/use-dialog';
 
 export default function CreateEventModal({
   classrooms,
@@ -16,6 +17,7 @@ export default function CreateEventModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
   const [title, setTitle] = useState('');
   const [eventType, setEventType] = useState<'sunday_school' | 'bible_study' | 'youth_meeting' | 'scripture_challenge' | 'review' | 'other'>('sunday_school');
   const [classroomId, setClassroomId] = useState(initialClassroomId || (classrooms[0]?.id ?? ''));
@@ -74,8 +76,8 @@ export default function CreateEventModal({
   }
 
   return (
-    <div className="teacher-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="create-event-title">
-      <div className="teacher-modal-card teacher-event-modal">
+    <div className="teacher-modal-overlay" onClick={onClose}>
+      <div ref={dialogRef} className="teacher-modal-card teacher-event-modal" role="dialog" aria-modal="true" aria-labelledby="create-event-title" onClick={(e) => e.stopPropagation()}>
         <div className="teacher-modal-header">
           <div>
             <span className="teacher-kicker">Calendar</span>

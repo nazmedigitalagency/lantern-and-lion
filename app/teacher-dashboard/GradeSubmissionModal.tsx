@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { isAutoScoredType, type AssignmentType } from '../lib/assignments/types';
+import { useDialogA11y } from '../lib/use-dialog';
 
 export type GradeTarget = {
   assignmentId: string;
@@ -24,6 +25,7 @@ export type GradeTarget = {
  * automatic score is never silently overwritten.
  */
 export default function GradeSubmissionModal({ target, onClose, onSaved }: { target: GradeTarget; onClose: () => void; onSaved: () => void }) {
+  const dialogRef = useDialogA11y<HTMLElement>(true, onClose);
   const autoScored = isAutoScoredType(target.assignmentType);
   const [overrideConfirmed, setOverrideConfirmed] = useState(false);
   const [score, setScore] = useState(target.currentScore === null ? '' : String(target.currentScore));
@@ -63,7 +65,7 @@ export default function GradeSubmissionModal({ target, onClose, onSaved }: { tar
 
   return (
     <div className="add-student-overlay" role="presentation" onClick={onClose}>
-      <section className="add-student-dialog classroom-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="grade-title" onClick={(e) => e.stopPropagation()}>
+      <section ref={dialogRef} className="add-student-dialog classroom-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="grade-title" onClick={(e) => e.stopPropagation()}>
         <button className="student-detail-close" aria-label="Close" onClick={onClose}>×</button>
         <h2 id="grade-title">Grade {target.studentName}&apos;s work</h2>
 

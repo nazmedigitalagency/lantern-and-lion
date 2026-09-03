@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ClassroomCard } from '../lib/classrooms/types';
+import { useDialogA11y } from '../lib/use-dialog';
 
 export default function CreateAnnouncementModal({
   classrooms,
@@ -14,6 +15,7 @@ export default function CreateAnnouncementModal({
   onClose: () => void;
   onCreated: (count?: number) => void;
 }) {
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [classroomId, setClassroomId] = useState(initialClassroomId || (classrooms[0]?.id ?? ''));
@@ -66,8 +68,8 @@ export default function CreateAnnouncementModal({
   }
 
   return (
-    <div className="teacher-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="announcement-modal-title">
-      <div className="teacher-modal-card teacher-announcement-modal">
+    <div className="teacher-modal-overlay" onClick={onClose}>
+      <div ref={dialogRef} className="teacher-modal-card teacher-announcement-modal" role="dialog" aria-modal="true" aria-labelledby="announcement-modal-title" onClick={(e) => e.stopPropagation()}>
         <div className="teacher-modal-header">
           <div>
             <span className="teacher-kicker">Communication</span>

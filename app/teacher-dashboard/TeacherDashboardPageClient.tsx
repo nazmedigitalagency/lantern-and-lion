@@ -299,8 +299,9 @@ export default function TeacherDashboardPage() {
     setNotice(`${nextClass.name} is ready. Share its code only with approved families.`);
   }
 
-  function signOut() {
-    void signOutOfPersona('teacher');
+  async function signOut() {
+    await signOutOfPersona('teacher');
+    router.replace('/teacher-access');
   }
 
   const nav: Array<[Page, string, string]> = [
@@ -351,9 +352,9 @@ export default function TeacherDashboardPage() {
         </nav>
         <div>
           <Link href="/learn?activity=david-chooses-courage">Preview an activity</Link>
-          <Link href="/teacher-access" onClick={signOut}>
+          <button type="button" onClick={signOut} className="teacher-signout-btn">
             Sign out of demo
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -971,15 +972,16 @@ export default function TeacherDashboardPage() {
                 <Link href="/learn?activity=david-chooses-courage" onClick={() => setMobileMenuOpen(false)}>
                   Preview an activity
                 </Link>
-                <Link
-                  href="/teacher-access"
+                <button
+                  type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    signOut();
+                    void signOut();
                   }}
+                  className="teacher-signout-btn"
                 >
                   Sign out of demo
-                </Link>
+                </button>
               </div>
             </aside>
           </div>

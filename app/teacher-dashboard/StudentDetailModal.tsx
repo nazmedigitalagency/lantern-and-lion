@@ -6,6 +6,7 @@ import type { SuggestedAssignment } from '../lib/insights/types';
 import { ACTIVITY_LABEL, dayLetter } from './format';
 import CreateAssignmentModal, { type AssignmentTemplatePrefill } from './CreateAssignmentModal';
 import StudentActivityPanel from './StudentActivityPanel';
+import { useDialogA11y } from '../lib/use-dialog';
 
 function toPrefill(s: SuggestedAssignment): AssignmentTemplatePrefill {
   return { title: s.title, instructions: s.instructions, assignmentType: s.assignmentType, referenceId: s.referenceId, timeLimitMinutes: null, requiredScore: null, xpReward: null, ageGroup: s.ageGroup };
@@ -19,6 +20,7 @@ const TREND_LABEL: Record<string, string> = { improving: '📈 Improving', decli
  * the exact same profile no matter where it was clicked from.
  */
 export default function StudentDetailModal({ studentId, onClose, onRemoved }: { studentId: string; onClose: () => void; onRemoved?: () => void }) {
+  const dialogRef = useDialogA11y<HTMLElement>(true, onClose);
   const [detail, setDetail] = useState<StudentDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -74,6 +76,7 @@ export default function StudentDetailModal({ studentId, onClose, onRemoved }: { 
   return (
     <div className="student-detail-overlay" role="presentation" onClick={onClose}>
       <section
+        ref={dialogRef}
         className="student-detail-dialog"
         role="dialog"
         aria-modal="true"

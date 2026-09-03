@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { TeacherNotificationPreferences } from '../lib/teacher-notifications/server';
+import { useDialogA11y } from '../lib/use-dialog';
 
 export default function NotificationPreferencesModal({
   onClose,
@@ -10,6 +11,7 @@ export default function NotificationPreferencesModal({
   onClose: () => void;
   onSaved?: () => void;
 }) {
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
   const [prefs, setPrefs] = useState<TeacherNotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,8 +59,8 @@ export default function NotificationPreferencesModal({
   }
 
   return (
-    <div className="teacher-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pref-modal-title">
-      <div className="teacher-modal-card teacher-pref-modal">
+    <div className="teacher-modal-overlay" onClick={onClose}>
+      <div ref={dialogRef} className="teacher-modal-card teacher-pref-modal" role="dialog" aria-modal="true" aria-labelledby="pref-modal-title" onClick={(e) => e.stopPropagation()}>
         <div className="teacher-modal-header">
           <div>
             <span className="teacher-kicker">Preferences</span>
