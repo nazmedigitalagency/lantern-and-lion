@@ -1,7 +1,7 @@
-import test, { describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { recordConnectionAudit, type ConnectionAuditAction } from '../app/lib/classrooms/audit.ts';
-import type { ConnectionStatus, PendingStudent } from '../app/lib/classrooms/types.ts';
+import type { ConnectionStatus } from '../app/lib/classrooms/types.ts';
 
 describe('Feature 18: Connection & Consent System Lifecycle', () => {
   it('defines the required connection status states', () => {
@@ -151,9 +151,10 @@ describe('Feature 18: Connection & Consent System Lifecycle', () => {
       }),
     };
 
-    await recordConnectionAudit(mockAdmin as any, {
+    await recordConnectionAudit(mockAdmin as unknown as Parameters<typeof recordConnectionAudit>[0], {
       classroomId: membership.classroom_id,
       childId: membership.child_id,
+      teacherId: 'teacher-user-abc',
       action: 'approved',
       actorId: parentUserId,
       actorRole: 'parent',
@@ -190,9 +191,10 @@ describe('Feature 18: Connection & Consent System Lifecycle', () => {
       }),
     };
 
-    await recordConnectionAudit(mockAdmin as any, {
+    await recordConnectionAudit(mockAdmin as unknown as Parameters<typeof recordConnectionAudit>[0], {
       classroomId: membership.classroom_id,
       childId: membership.child_id,
+      teacherId: 'teacher-user-abc',
       action: 'declined',
       actorId: parentUserId,
       actorRole: 'parent',
@@ -257,13 +259,14 @@ describe('Feature 18: Connection & Consent System Lifecycle', () => {
       }),
     };
 
-    await recordConnectionAudit(mockAdmin as any, {
+    await recordConnectionAudit(mockAdmin as unknown as Parameters<typeof recordConnectionAudit>[0], {
       classroomId: membership.classroom_id,
       childId: membership.child_id,
+      teacherId: 'teacher-user-abc',
       action: 'revoked',
       actorId: parentUserId,
       actorRole: 'parent',
-      reason: 'Parent requested access revocation',
+      metadata: { reason: 'Parent requested access revocation' },
     });
 
     assert.equal(auditEntries.length, 1);

@@ -33,7 +33,7 @@ async function runLiveCheck() {
   console.log(`[API] /api/teacher/students/lookup -> HTTP ${lookupRes.status}`);
   // Unauthenticated teacher must be rejected with 401
   assert.equal(lookupRes.status, 401);
-  const lookupJson = await lookupRes.json();
+  const lookupJson = (await lookupRes.json()) as { error?: string };
   assert.equal(lookupJson.error, 'Please sign in as a teacher first.');
 
   // 3. Check Teacher Students API (Enforces Teacher Auth)

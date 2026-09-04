@@ -82,6 +82,8 @@ export interface ClassActivityResponse {
     studentsActiveCount: number;
     studentCount: number;
     storiesCompletedCount: number;
+    gamesPlayedCount: number;
+    assignmentsCompletedCount: number;
   };
   assignments: ClassActivityAssignmentRow[];
   activity: ClassActivityItem[];

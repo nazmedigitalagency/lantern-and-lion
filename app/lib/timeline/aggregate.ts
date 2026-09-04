@@ -154,7 +154,14 @@ export async function computeClassActivity(admin: SupabaseClient, teacherId: str
   const { startKey, endKey } = resolveRangeBounds(range, tz, customStart, customEnd);
 
   if (childIds.length === 0) {
-    return { range, startDate: startKey, endDate: endKey, summary: { studentsActiveCount: 0, studentCount: 0, storiesCompletedCount: 0 }, assignments: [], activity: [] };
+    return {
+      range,
+      startDate: startKey,
+      endDate: endKey,
+      summary: { studentsActiveCount: 0, studentCount: 0, storiesCompletedCount: 0, gamesPlayedCount: 0, assignmentsCompletedCount: 0 },
+      assignments: [],
+      activity: [],
+    };
   }
 
   const [storyRes, dailyRes, assignmentRes] = await Promise.all([
@@ -173,14 +180,25 @@ export async function computeClassActivity(admin: SupabaseClient, teacherId: str
   const assignmentRows = assignmentRes.data || [];
   const assignmentIds = assignmentRows.map((a) => a.id);
   let submissionsByAssignment = new Map<string, { child_id: string; status: string }[]>();
+  let completedInRangeCount = 0;
   if (assignmentIds.length > 0) {
-    const { data: subRows } = await admin.from('assignment_submissions').select('assignment_id, child_id, status').in('assignment_id', assignmentIds);
+    const { data: subRows } = await admin
+      .from('assignment_submissions')
+      .select('assignment_id, child_id, status, submitted_at, graded_at')
+      .in('assignment_id', assignmentIds);
     submissionsByAssignment = new Map();
     for (const s of subRows || []) {
       if (!childIds.includes(s.child_id)) continue;
       const list = submissionsByAssignment.get(s.assignment_id) || [];
       list.push({ child_id: s.child_id, status: s.status });
       submissionsByAssignment.set(s.assignment_id, list);
+
+      const isCompleted = s.status === 'submitted' || s.status === 'graded' || s.status === 'returned';
+      const completedAt = s.graded_at || s.submitted_at;
+      if (isCompleted && completedAt) {
+        const key = activityDateKey(tz, new Date(completedAt));
+        if (key >= startKey && key <= endKey) completedInRangeCount += 1;
+      }
     }
   }
 
@@ -208,11 +226,20 @@ export async function computeClassActivity(admin: SupabaseClient, teacherId: str
     .slice(0, 8)
     .map((s) => ({ id: `story:${s.storyId}`, occurredAt: s.latest, label: `${s.count} student${s.count === 1 ? '' : 's'} completed “${s.title}”.` }));
 
+  const gamesPlayedCount = (dailyRes.data || []).reduce((sum, r) => sum + (r.games_completed || 0), 0);
+  const assignmentsCompletedCount = completedInRangeCount;
+
   return {
     range,
     startDate: startKey,
     endDate: endKey,
-    summary: { studentsActiveCount: activeChildIds.size, studentCount: childIds.length, storiesCompletedCount: storiesInRange.length },
+    summary: {
+      studentsActiveCount: activeChildIds.size,
+      studentCount: childIds.length,
+      storiesCompletedCount: storiesInRange.length,
+      gamesPlayedCount,
+      assignmentsCompletedCount,
+    },
     assignments,
     activity,
   };

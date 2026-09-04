@@ -475,8 +475,10 @@ function ClassroomDetail({ classroomId, onBack }: { classroomId: string; onBack:
         ) : (
           <>
             <div className="student-activity-summary">
-              <div><b>{classActivity.summary.studentsActiveCount}/{classActivity.summary.studentCount}</b><span>Active students</span></div>
-              <div><b>{classActivity.summary.storiesCompletedCount}</b><span>Bible stories completed</span></div>
+              <div><b>🔥 {classActivity.summary.studentsActiveCount}/{classActivity.summary.studentCount}</b><span>Active students</span></div>
+              <div><b>📖 {classActivity.summary.storiesCompletedCount}</b><span>Bible stories completed</span></div>
+              <div><b>🎮 {classActivity.summary.gamesPlayedCount}</b><span>Games played</span></div>
+              <div><b>📝 {classActivity.summary.assignmentsCompletedCount}</b><span>Assignments completed</span></div>
             </div>
 
             {classActivity.assignments.length > 0 && (
