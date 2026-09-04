@@ -109,6 +109,7 @@ export type TeacherNotificationType =
   | 'TEACHER_AWAITING_GRADING'
   | 'TEACHER_CHALLENGE_PROGRESS'
   | 'TEACHER_CHALLENGE_COMPLETED'
+  | 'TEACHER_CHALLENGE_ENDING_SOON'
   | 'TEACHER_STUDENT_ATTENTION'
   | 'TEACHER_DEADLINE_APPROACHING'
   | 'TEACHER_EVENT_APPROACHING'
@@ -141,6 +142,7 @@ export const TEACHER_NOTIFICATION_ICON: Record<string, string> = {
   TEACHER_GRADING_REMINDER: '📋',
   TEACHER_CHALLENGE_PROGRESS: '🎯',
   TEACHER_CHALLENGE_COMPLETED: '🏆',
+  TEACHER_CHALLENGE_ENDING_SOON: '🏆',
   TEACHER_STUDENT_ATTENTION: '⚠️',
   TEACHER_DEADLINE_APPROACHING: '⏰',
   TEACHER_EVENT_APPROACHING: '📅',
@@ -175,6 +177,7 @@ export const TEACHER_NOTIFICATION_DEFAULT_PRIORITY: Record<string, 'high' | 'nor
   TEACHER_GRADING_REMINDER: 'normal',
   TEACHER_CHALLENGE_PROGRESS: 'normal',
   TEACHER_CHALLENGE_COMPLETED: 'normal',
+  TEACHER_CHALLENGE_ENDING_SOON: 'normal',
   TEACHER_CLASS_XP_MILESTONE: 'normal',
   TEACHER_CLASS_ACTIVITIES_MILESTONE: 'normal',
   TEACHER_CLASS_ACHIEVEMENT: 'normal',
@@ -223,6 +226,7 @@ export function teacherNotificationDestination(n: Pick<TeacherNotification, 'typ
       return { page: 'students', filter: 'revoked', actionLabel: 'View Student Roster' };
     case 'TEACHER_CHALLENGE_PROGRESS':
     case 'TEACHER_CHALLENGE_COMPLETED':
+    case 'TEACHER_CHALLENGE_ENDING_SOON':
     case 'TEACHER_CLASS_ACHIEVEMENT':
       return { page: 'challenges', challengeId, classroomId, actionLabel: 'View Challenge' };
     case 'TEACHER_CLASS_XP_MILESTONE':

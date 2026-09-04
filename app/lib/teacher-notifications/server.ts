@@ -416,6 +416,41 @@ export async function syncTeacherNotifications(admin: SupabaseClient, teacherId:
     }
   }
 
+  // 8b. Class challenges ending soon (today or tomorrow)
+  if (prefs.challenge_updates) {
+    const tomorrow = new Date(now.getTime() + 86_400_000);
+    const tomorrowKey = activityDateKey('UTC', tomorrow);
+
+    const { data: endingChallenges } = await admin
+      .from('class_challenges')
+      .select('id, name, end_date, classroom_id, goal_target, goal_type')
+      .in('classroom_id', classroomIds)
+      .eq('status', 'active')
+      .in('end_date', [todayKey, tomorrowKey]);
+
+    for (const ch of endingChallenges || []) {
+      const isToday = ch.end_date === todayKey;
+      const dayStr = isToday ? 'today' : 'tomorrow';
+      const className = classroomMap.get(ch.classroom_id) || 'Class';
+
+      await notifyOnce(admin, {
+        recipientId: teacherId,
+        type: 'TEACHER_CHALLENGE_ENDING_SOON',
+        title: 'Class challenge ending soon',
+        body: `"${ch.name}" for ${className} ends ${dayStr}.`,
+        priority: 'normal',
+        payload: {
+          challengeId: ch.id,
+          classroomId: ch.classroom_id,
+          className,
+          endDate: ch.end_date,
+          tab: 'challenges',
+        },
+        dedupeKey: `teacher_challenge_ending:${ch.id}:${ch.end_date}`,
+      });
+    }
+  }
+
   // 9. Learning insights
   if (prefs.learning_insights) {
     for (const classroom of classroomList) {

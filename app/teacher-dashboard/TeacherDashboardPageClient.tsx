@@ -17,6 +17,7 @@ import NeedsAttentionPreview from './NeedsAttentionPreview';
 import GradebookPanel from './GradebookPanel';
 import ChallengesPanel from './ChallengesPanel';
 import CalendarPanel from './CalendarPanel';
+import UpcomingCalendarWidget from './UpcomingCalendarWidget';
 import TeacherNotificationBell from './TeacherNotificationBell';
 import NotificationPreferencesModal from './NotificationPreferencesModal';
 import type { TeacherDeepLink } from '../lib/notifications/types';
@@ -482,6 +483,18 @@ export default function TeacherDashboardPage() {
                 </div>
 
                 <NeedsAttentionPreview onViewAll={() => setPage('insights')} />
+
+                <UpcomingCalendarWidget
+                  onViewCalendar={() => setPage('calendar')}
+                  onNavigateToAssignments={(assignmentId) => {
+                    if (assignmentId) setDeepLinkTarget({ page: 'assignments', assignmentId });
+                    setPage('assignments');
+                  }}
+                  onNavigateToChallenges={(challengeId) => {
+                    if (challengeId) setDeepLinkTarget({ page: 'challenges', challengeId });
+                    setPage('challenges');
+                  }}
+                />
 
                 <section className="teacher-panel teacher-class-overview-panel">
                   <div className="teacher-panel-head">
