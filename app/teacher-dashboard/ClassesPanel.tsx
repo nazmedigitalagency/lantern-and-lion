@@ -42,7 +42,7 @@ function formatMeeting(day: string | null, time: string | null): string | null {
   return day || time;
 }
 
-export default function ClassesPanel() {
+export default function ClassesPanel({ focusClassroomId }: { focusClassroomId?: string } = {}) {
   const [classrooms, setClassrooms] = useState<ClassroomCard[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -56,7 +56,12 @@ export default function ClassesPanel() {
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState('');
 
-  const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
+  const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(focusClassroomId || null);
+  const [prevFocusClassroomId, setPrevFocusClassroomId] = useState(focusClassroomId);
+  if (focusClassroomId !== prevFocusClassroomId) {
+    setPrevFocusClassroomId(focusClassroomId);
+    if (focusClassroomId) setSelectedClassroomId(focusClassroomId);
+  }
 
   function refreshList() {
     fetch('/api/classrooms/list')

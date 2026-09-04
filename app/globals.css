@@ -8062,6 +8062,41 @@ footer a:hover{color:var(--gold)}
   background: var(--sky);
 }
 
+.teacher-notif-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--border);
+}
+
+.teacher-notif-tab {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--slate);
+  font: 800 11.5px var(--font-nunito);
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 120ms ease;
+}
+
+.teacher-notif-tab:hover {
+  color: var(--navy);
+  background: white;
+}
+
+.teacher-notif-tab.active {
+  background: white;
+  color: var(--blue-dark);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
 .teacher-notif-panel-body {
   overflow-y: auto;
   flex: 1;
@@ -8111,13 +8146,14 @@ footer a:hover{color:var(--gold)}
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border: none;
   background: transparent;
   text-align: left;
   cursor: pointer;
   position: relative;
   transition: background 120ms ease;
+  border-bottom: 1px solid #F1F5F9;
 }
 
 .teacher-notif-item:hover {
@@ -8128,39 +8164,121 @@ footer a:hover{color:var(--gold)}
   background: #F8FAFC;
 }
 
+.teacher-notif-item.priority-high {
+  border-left: 3px solid #DC2626;
+}
+
 .teacher-notif-item-icon {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.2;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .teacher-notif-item-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   flex: 1;
   min-width: 0;
 }
 
+.teacher-notif-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
 .teacher-notif-item-title {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--navy);
+  line-height: 1.3;
+}
+
+.teacher-notif-priority-pill {
+  font: 900 9px var(--font-nunito);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.teacher-notif-priority-pill.high {
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
+}
+
+.teacher-notif-priority-pill.low {
+  background: #F1F5F9;
+  color: #64748B;
+  border: 1px solid #E2E8F0;
 }
 
 .teacher-notif-item-text {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--slate);
   line-height: 1.4;
   white-space: normal;
   word-break: break-word;
 }
 
+.teacher-notif-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
 .teacher-notif-item-time {
   font-size: 11px;
   color: #94A3B8;
   font-weight: 700;
-  margin-top: 2px;
+}
+
+.teacher-notif-class-tag {
+  display: inline-block;
+  font: 800 10.5px var(--font-nunito);
+  color: #1D4ED8;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.teacher-notif-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 800 11.5px var(--font-nunito);
+  color: #1D4ED8;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-top: 5px;
+  align-self: flex-start;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.teacher-notif-item:hover .teacher-notif-action-btn {
+  background: #3B82F6;
+  color: #FFFFFF;
+  border-color: #2563EB;
+}
+
+.teacher-notif-item-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 
 .teacher-notif-item-dot {
@@ -8169,7 +8287,28 @@ footer a:hover{color:var(--gold)}
   border-radius: 999px;
   background: var(--blue);
   flex-shrink: 0;
-  margin-top: 6px;
+}
+
+.teacher-notif-toggle-btn {
+  background: transparent;
+  border: 1px solid #E2E8F0;
+  color: #94A3B8;
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 120ms ease;
+}
+
+.teacher-notif-toggle-btn:hover {
+  background: white;
+  color: var(--navy);
+  border-color: var(--blue);
 }
 
 /* ── Calendar Panel ────────────────────────────────────────────── */
@@ -8819,6 +8958,46 @@ footer a:hover{color:var(--gold)}
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.teacher-pref-category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 2px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.teacher-pref-category-header span {
+  font-size: 16px;
+}
+
+.teacher-pref-category-header strong {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.teacher-pref-loading,
+.teacher-pref-error {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font: 700 12.5px var(--font-nunito);
+}
+
+.teacher-pref-loading {
+  background: var(--sky);
+  color: var(--slate);
+  text-align: center;
+}
+
+.teacher-pref-error {
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
 }
 
 .teacher-pref-item {

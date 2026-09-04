@@ -41,7 +41,15 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'performance_low', label: 'Lowest performance' },
 ];
 
-export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => void }) {
+export default function StudentsPanel({
+  onGoToClasses,
+  focusChildId,
+  focusFilter,
+}: {
+  onGoToClasses: () => void;
+  focusChildId?: string;
+  focusFilter?: string;
+}) {
   const [roster, setRoster] = useState<StudentsRosterResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -60,9 +68,22 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   const [activityFilter, setActivityFilter] = useState<'all' | ActivityStatus>('all');
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>('name');
-  const [statusFilter, setStatusFilter] = useState<ConnectionTab>('all');
+  const [statusFilter, setStatusFilter] = useState<ConnectionTab>((focusFilter as ConnectionTab) || 'all');
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(focusChildId || null);
+  const [prevFocusChildId, setPrevFocusChildId] = useState(focusChildId);
+  if (focusChildId !== prevFocusChildId) {
+    setPrevFocusChildId(focusChildId);
+    if (focusChildId) setSelectedId(focusChildId);
+  }
+
+  const [prevFocusFilter, setPrevFocusFilter] = useState(focusFilter);
+  if (focusFilter !== prevFocusFilter) {
+    setPrevFocusFilter(focusFilter);
+    if (focusFilter && ['all', 'approved', 'pending', 'declined', 'revoked'].includes(focusFilter)) {
+      setStatusFilter(focusFilter as ConnectionTab);
+    }
+  }
 
   useEffect(() => {
     let alive = true;

@@ -149,7 +149,36 @@ export type NotificationType =
   | 'TEACHER_CONNECTION_DECLINED'
   | 'TEACHER_CONNECTION_REVOKED'
   | 'TEACHER_STUDENT_REMOVED'
-  | 'TEACHER_CONNECTED';
+  | 'TEACHER_CONNECTED'
+  | 'TEACHER_ASSIGNMENT_UNCOMPLETED_ALERT'
+  | 'TEACHER_STUDENT_MISSING_WORK'
+  | 'TEACHER_STUDENT_PERFORMANCE_ALERT'
+  | 'TEACHER_CLASS_XP_MILESTONE'
+  | 'TEACHER_CLASS_ACTIVITIES_MILESTONE'
+  | 'TEACHER_CLASS_ACHIEVEMENT'
+  | 'TEACHER_LEARNING_INSIGHT';
+
+export function defaultPriorityForType(type: NotificationType): 'high' | 'normal' | 'low' {
+  switch (type) {
+    case 'TEACHER_CONNECTION_APPROVED':
+    case 'TEACHER_CONNECTION_DECLINED':
+    case 'TEACHER_CONNECTION_REVOKED':
+    case 'TEACHER_STUDENT_REMOVED':
+    case 'TEACHER_REQUEST':
+    case 'TEACHER_ASSIGNMENT_UNCOMPLETED_ALERT':
+    case 'TEACHER_STUDENT_MISSING_WORK':
+    case 'TEACHER_STUDENT_PERFORMANCE_ALERT':
+    case 'TEACHER_STUDENT_ATTENTION':
+    case 'ASSIGNMENT_OVERDUE':
+      return 'high';
+    case 'TEACHER_LEARNING_INSIGHT':
+    case 'TEACHER_EVENT_APPROACHING':
+    case 'DAILY_SUMMARY':
+      return 'low';
+    default:
+      return 'normal';
+  }
+}
 
 /** Inserts a notification at most once per (recipient, dedupeKey) — the anti-spam guarantee. For a parent/teacher's own auth.users inbox. */
 export async function notifyOnce(
@@ -160,10 +189,17 @@ export async function notifyOnce(
     type: NotificationType;
     title: string;
     body: string;
+    priority?: 'high' | 'normal' | 'low';
     payload?: Record<string, unknown>;
     dedupeKey: string;
   }
 ) {
+  const priority = params.priority || defaultPriorityForType(params.type);
+  const payload = {
+    ...(params.payload ?? {}),
+    priority,
+  };
+
   await admin.from('notifications').upsert(
     {
       recipient_id: params.recipientId,
@@ -171,7 +207,8 @@ export async function notifyOnce(
       type: params.type,
       title: params.title,
       body: params.body,
-      payload: params.payload ?? {},
+      priority,
+      payload,
       dedupe_key: params.dedupeKey,
     },
     { onConflict: 'recipient_id,dedupe_key', ignoreDuplicates: true }

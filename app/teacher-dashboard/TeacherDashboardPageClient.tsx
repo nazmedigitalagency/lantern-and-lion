@@ -690,7 +690,11 @@ export default function TeacherDashboardPage() {
                   <h1>Every learner, at a glance.</h1>
                   <p>See who&apos;s active, who&apos;s progressing, and who could use a check-in — across every class you teach.</p>
                 </div>
-                <StudentsPanel onGoToClasses={() => setPage('classes')} />
+                <StudentsPanel
+                  onGoToClasses={() => setPage('classes')}
+                  focusChildId={deepLinkTarget?.childId}
+                  focusFilter={deepLinkTarget?.filter}
+                />
               </div>
             )}
 
@@ -701,7 +705,7 @@ export default function TeacherDashboardPage() {
                   <h1>Organize your students into classrooms.</h1>
                   <p>Create a classroom for each group you teach, assign Bible stories and lessons, and see how each class is progressing.</p>
                 </div>
-                <ClassesPanel />
+                <ClassesPanel focusClassroomId={deepLinkTarget?.classroomId} />
               </div>
             )}
 
@@ -716,7 +720,11 @@ export default function TeacherDashboardPage() {
                   <button type="button" className={assignmentsSubTab === 'assignments' ? 'active' : ''} onClick={() => setAssignmentsSubTab('assignments')}>Assignments</button>
                   <button type="button" className={assignmentsSubTab === 'templates' ? 'active' : ''} onClick={() => setAssignmentsSubTab('templates')}>Templates</button>
                 </div>
-                {assignmentsSubTab === 'assignments' ? <AssignmentsPanel /> : <TemplatesPanel />}
+                {assignmentsSubTab === 'assignments' ? (
+                  <AssignmentsPanel focusAssignmentId={deepLinkTarget?.assignmentId} />
+                ) : (
+                  <TemplatesPanel />
+                )}
               </div>
             )}
 
@@ -744,7 +752,7 @@ export default function TeacherDashboardPage() {
                   <h1 className="teacher-title-oneline">Work toward a goal together.</h1>
                   <p>Optional class-wide challenges — real progress from real activity, with positive recognition when the class comes through.</p>
                 </div>
-                <ChallengesPanel />
+                <ChallengesPanel focusChallengeId={deepLinkTarget?.challengeId} />
               </div>
             )}
 

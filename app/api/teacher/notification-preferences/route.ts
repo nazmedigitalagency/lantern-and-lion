@@ -25,6 +25,11 @@ const UpdatePreferencesSchema = z.object({
   student_inactivity_alerts: z.boolean().optional(),
   upcoming_deadlines: z.boolean().optional(),
   upcoming_events: z.boolean().optional(),
+  class_achievements: z.boolean().optional(),
+  learning_insights: z.boolean().optional(),
+  connection_alerts: z.boolean().optional(),
+  missing_work_alerts: z.boolean().optional(),
+  student_performance_alerts: z.boolean().optional(),
 });
 
 export async function PATCH(req: NextRequest) {

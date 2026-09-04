@@ -16,7 +16,7 @@ function fmtDate(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString();
 }
 
-export default function ChallengesPanel() {
+export default function ChallengesPanel({ focusChallengeId }: { focusChallengeId?: string } = {}) {
   const [classrooms, setClassrooms] = useState<ClassroomCard[]>([]);
   const [classroomId, setClassroomId] = useState('');
   const [challenges, setChallenges] = useState<ClassChallengeSummary[] | null>(null);
@@ -24,7 +24,12 @@ export default function ChallengesPanel() {
   const [reloadToken, setReloadToken] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [cancelBusyId, setCancelBusyId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(focusChallengeId || null);
+  const [prevFocusChallengeId, setPrevFocusChallengeId] = useState(focusChallengeId);
+  if (focusChallengeId !== prevFocusChallengeId) {
+    setPrevFocusChallengeId(focusChallengeId);
+    if (focusChallengeId) setExpandedId(focusChallengeId);
+  }
 
   useEffect(() => {
     fetch('/api/classrooms/list')

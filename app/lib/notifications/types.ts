@@ -111,13 +111,25 @@ export type TeacherNotificationType =
   | 'TEACHER_CHALLENGE_COMPLETED'
   | 'TEACHER_STUDENT_ATTENTION'
   | 'TEACHER_DEADLINE_APPROACHING'
-  | 'TEACHER_EVENT_APPROACHING';
+  | 'TEACHER_EVENT_APPROACHING'
+  | 'TEACHER_ASSIGNMENT_UNCOMPLETED_ALERT'
+  | 'TEACHER_STUDENT_MISSING_WORK'
+  | 'TEACHER_STUDENT_PERFORMANCE_ALERT'
+  | 'TEACHER_CLASS_XP_MILESTONE'
+  | 'TEACHER_CLASS_ACTIVITIES_MILESTONE'
+  | 'TEACHER_CLASS_ACHIEVEMENT'
+  | 'TEACHER_LEARNING_INSIGHT'
+  | 'TEACHER_CONNECTION_APPROVED'
+  | 'TEACHER_CONNECTION_DECLINED'
+  | 'TEACHER_CONNECTION_REVOKED'
+  | 'TEACHER_STUDENT_REMOVED';
 
 export type TeacherNotification = {
   id: string;
   type: TeacherNotificationType | string;
   title: string;
   body: string;
+  priority?: 'high' | 'normal' | 'low';
   payload: Record<string, unknown>;
   createdAt: string;
   readAt: string | null;
@@ -126,22 +138,60 @@ export type TeacherNotification = {
 export const TEACHER_NOTIFICATION_ICON: Record<string, string> = {
   TEACHER_ASSIGNMENT_SUBMITTED: '📝',
   TEACHER_AWAITING_GRADING: '📋',
+  TEACHER_GRADING_REMINDER: '📋',
   TEACHER_CHALLENGE_PROGRESS: '🎯',
   TEACHER_CHALLENGE_COMPLETED: '🏆',
   TEACHER_STUDENT_ATTENTION: '⚠️',
   TEACHER_DEADLINE_APPROACHING: '⏰',
   TEACHER_EVENT_APPROACHING: '📅',
+  TEACHER_CLASSROOM_EVENT: '📅',
+  TEACHER_ASSIGNMENT_UNCOMPLETED_ALERT: '⏰',
+  TEACHER_STUDENT_MISSING_WORK: '⚠️',
+  TEACHER_STUDENT_PERFORMANCE_ALERT: '📉',
+  TEACHER_CLASS_XP_MILESTONE: '🌟',
+  TEACHER_CLASS_ACTIVITIES_MILESTONE: '📖',
+  TEACHER_CLASS_ACHIEVEMENT: '🏆',
+  TEACHER_LEARNING_INSIGHT: '💡',
+  TEACHER_CONNECTION_APPROVED: '🤝',
+  TEACHER_CONNECTION_DECLINED: '❌',
+  TEACHER_CONNECTION_REVOKED: '🔒',
+  TEACHER_STUDENT_REMOVED: '👤',
   ASSIGNMENT: '📝',
   ACHIEVEMENT: '🏆',
 };
 
+export const TEACHER_NOTIFICATION_DEFAULT_PRIORITY: Record<string, 'high' | 'normal' | 'low'> = {
+  TEACHER_CONNECTION_APPROVED: 'high',
+  TEACHER_CONNECTION_DECLINED: 'high',
+  TEACHER_CONNECTION_REVOKED: 'high',
+  TEACHER_STUDENT_REMOVED: 'high',
+  TEACHER_DEADLINE_APPROACHING: 'high',
+  TEACHER_ASSIGNMENT_UNCOMPLETED_ALERT: 'high',
+  TEACHER_STUDENT_MISSING_WORK: 'high',
+  TEACHER_STUDENT_PERFORMANCE_ALERT: 'high',
+  TEACHER_STUDENT_ATTENTION: 'high',
+  TEACHER_ASSIGNMENT_SUBMITTED: 'normal',
+  TEACHER_AWAITING_GRADING: 'normal',
+  TEACHER_GRADING_REMINDER: 'normal',
+  TEACHER_CHALLENGE_PROGRESS: 'normal',
+  TEACHER_CHALLENGE_COMPLETED: 'normal',
+  TEACHER_CLASS_XP_MILESTONE: 'normal',
+  TEACHER_CLASS_ACTIVITIES_MILESTONE: 'normal',
+  TEACHER_CLASS_ACHIEVEMENT: 'normal',
+  TEACHER_LEARNING_INSIGHT: 'low',
+  TEACHER_EVENT_APPROACHING: 'low',
+  TEACHER_CLASSROOM_EVENT: 'low',
+};
+
 export type TeacherDeepLink = {
-  page: 'gradebook' | 'challenges' | 'students' | 'assignments' | 'calendar';
+  page: 'gradebook' | 'challenges' | 'students' | 'assignments' | 'calendar' | 'classes' | 'insights';
   submissionId?: string;
   childId?: string;
   assignmentId?: string;
   challengeId?: string;
+  classroomId?: string;
   filter?: string;
+  actionLabel?: string;
 };
 
 export function teacherNotificationDestination(n: Pick<TeacherNotification, 'type' | 'payload'>): TeacherDeepLink | null {
@@ -150,27 +200,75 @@ export function teacherNotificationDestination(n: Pick<TeacherNotification, 'typ
   const childId = typeof payload.childId === 'string' ? payload.childId : undefined;
   const assignmentId = typeof payload.assignmentId === 'string' ? payload.assignmentId : undefined;
   const challengeId = typeof payload.challengeId === 'string' ? payload.challengeId : undefined;
+  const classroomId = typeof payload.classroomId === 'string' ? payload.classroomId : undefined;
 
   switch (n.type) {
     case 'TEACHER_ASSIGNMENT_SUBMITTED':
-      return { page: 'gradebook', submissionId, childId, assignmentId, filter: 'submitted' };
+      return { page: 'gradebook', submissionId, childId, assignmentId, filter: 'submitted', actionLabel: 'Review Submission' };
     case 'TEACHER_AWAITING_GRADING':
-      return { page: 'gradebook', assignmentId, filter: 'submitted' };
+      return { page: 'gradebook', assignmentId, filter: 'submitted', actionLabel: 'Grade Submissions' };
+    case 'TEACHER_ASSIGNMENT_UNCOMPLETED_ALERT':
+    case 'TEACHER_DEADLINE_APPROACHING':
+      return { page: 'assignments', assignmentId, actionLabel: 'View Assignment' };
+    case 'TEACHER_STUDENT_MISSING_WORK':
+    case 'TEACHER_STUDENT_PERFORMANCE_ALERT':
+    case 'TEACHER_STUDENT_ATTENTION':
+      return { page: 'students', childId, actionLabel: 'View Student' };
+    case 'TEACHER_CONNECTION_APPROVED':
+      return { page: 'students', childId, filter: 'approved', actionLabel: 'View Connected Student' };
+    case 'TEACHER_CONNECTION_DECLINED':
+      return { page: 'students', filter: 'declined', actionLabel: 'View Connection Requests' };
+    case 'TEACHER_CONNECTION_REVOKED':
+    case 'TEACHER_STUDENT_REMOVED':
+      return { page: 'students', filter: 'revoked', actionLabel: 'View Student Roster' };
     case 'TEACHER_CHALLENGE_PROGRESS':
     case 'TEACHER_CHALLENGE_COMPLETED':
-      return { page: 'challenges', challengeId };
-    case 'TEACHER_STUDENT_ATTENTION':
-      return { page: 'students', childId };
-    case 'TEACHER_DEADLINE_APPROACHING':
-      return { page: 'assignments', assignmentId };
+    case 'TEACHER_CLASS_ACHIEVEMENT':
+      return { page: 'challenges', challengeId, classroomId, actionLabel: 'View Challenge' };
+    case 'TEACHER_CLASS_XP_MILESTONE':
+    case 'TEACHER_CLASS_ACTIVITIES_MILESTONE':
+      return { page: 'classes', classroomId, actionLabel: 'View Classroom' };
+    case 'TEACHER_LEARNING_INSIGHT':
+      return { page: 'insights', classroomId, actionLabel: 'View Insights' };
     case 'TEACHER_EVENT_APPROACHING':
-      return { page: 'calendar' };
+      return { page: 'calendar', actionLabel: 'View Calendar' };
     default:
-      if (payload.tab === 'gradebook') return { page: 'gradebook', submissionId, childId, assignmentId };
-      if (payload.tab === 'challenges') return { page: 'challenges', challengeId };
-      if (payload.tab === 'students') return { page: 'students', childId };
-      if (payload.tab === 'assignments') return { page: 'assignments', assignmentId };
-      if (payload.tab === 'calendar') return { page: 'calendar' };
+      if (payload.tab === 'gradebook') return { page: 'gradebook', submissionId, childId, assignmentId, actionLabel: 'Open Gradebook' };
+      if (payload.tab === 'challenges') return { page: 'challenges', challengeId, classroomId, actionLabel: 'Open Challenges' };
+      if (payload.tab === 'students') return { page: 'students', childId, actionLabel: 'Open Students' };
+      if (payload.tab === 'assignments') return { page: 'assignments', assignmentId, actionLabel: 'Open Assignments' };
+      if (payload.tab === 'classes') return { page: 'classes', classroomId, actionLabel: 'Open Classes' };
+      if (payload.tab === 'insights') return { page: 'insights', classroomId, actionLabel: 'Open Insights' };
+      if (payload.tab === 'calendar') return { page: 'calendar', actionLabel: 'Open Calendar' };
       return null;
   }
 }
+
+export type TeacherNotificationPreferences = {
+  assignment_submissions: boolean;
+  grading_reminders: boolean;
+  challenge_updates: boolean;
+  student_inactivity_alerts: boolean;
+  upcoming_deadlines: boolean;
+  upcoming_events: boolean;
+  class_achievements: boolean;
+  learning_insights: boolean;
+  connection_alerts: boolean;
+  missing_work_alerts: boolean;
+  student_performance_alerts: boolean;
+};
+
+export const DEFAULT_TEACHER_PREFERENCES: TeacherNotificationPreferences = {
+  assignment_submissions: true,
+  grading_reminders: true,
+  challenge_updates: true,
+  student_inactivity_alerts: true,
+  upcoming_deadlines: true,
+  upcoming_events: true,
+  class_achievements: true,
+  learning_insights: true,
+  connection_alerts: true,
+  missing_work_alerts: true,
+  student_performance_alerts: true,
+};
+

@@ -5,6 +5,7 @@ import {
   groupByDay,
   relativeTime,
   TEACHER_NOTIFICATION_ICON,
+  TEACHER_NOTIFICATION_DEFAULT_PRIORITY,
   teacherNotificationDestination,
   type TeacherDeepLink,
   type TeacherNotification,
@@ -21,12 +22,13 @@ export default function TeacherNotificationBell({
   const [notifications, setNotifications] = useState<TeacherNotification[] | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'high'>('all');
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const load = useCallback(() => {
     fetch('/api/teacher/notifications')
-      .then((res) => (res.ok ? (res.json() as Promise<{ notifications: TeacherNotification[]; unreadCount: number }>) : null))
+      .then((res) => (res.ok ? (res.json() as Promise<{ notifications: TeacherNotification[]; unreadCount: number; highPriorityCount?: number }>) : null))
       .then((data) => {
         if (!data) return;
         setNotifications(data.notifications);
@@ -71,6 +73,20 @@ export default function TeacherNotificationBell({
     await fetch('/api/teacher/notifications/mark-all-read', { method: 'POST' }).catch(() => {});
   }
 
+  async function toggleReadItem(e: React.MouseEvent, n: TeacherNotification) {
+    e.stopPropagation();
+    const willBeRead = !n.readAt;
+    setNotifications((current) =>
+      current?.map((x) => (x.id === n.id ? { ...x, readAt: willBeRead ? new Date().toISOString() : null } : x)) || current
+    );
+    setUnreadCount((c) => (willBeRead ? Math.max(0, c - 1) : c + 1));
+    await fetch('/api/teacher/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: n.id, read: willBeRead }),
+    }).catch(() => {});
+  }
+
   async function handleClick(n: TeacherNotification) {
     if (!n.readAt) {
       setNotifications((current) => current?.map((x) => (x.id === n.id ? { ...x, readAt: new Date().toISOString() } : x)) || current);
@@ -88,8 +104,21 @@ export default function TeacherNotificationBell({
     }
   }
 
+  const items = notifications || [];
+  const highPriorityCount = items.filter((n) => {
+    const p = n.priority || (n.payload?.priority as string) || TEACHER_NOTIFICATION_DEFAULT_PRIORITY[n.type] || 'normal';
+    return p === 'high' && !n.readAt;
+  }).length;
+
+  const filteredItems = items.filter((n) => {
+    const p = n.priority || (n.payload?.priority as string) || TEACHER_NOTIFICATION_DEFAULT_PRIORITY[n.type] || 'normal';
+    if (activeFilter === 'unread') return !n.readAt;
+    if (activeFilter === 'high') return p === 'high';
+    return true;
+  });
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const groups = notifications ? groupByDay(notifications as any) : [];
+  const groups = groupByDay(filteredItems as any);
 
   return (
     <div className="teacher-notif-bell-wrap" ref={wrapRef}>
@@ -137,12 +166,47 @@ export default function TeacherNotificationBell({
             </div>
           </div>
 
+          {/* Filter Tabs */}
+          <div className="teacher-notif-tabs" role="tablist" aria-label="Filter notifications">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeFilter === 'all'}
+              className={`teacher-notif-tab ${activeFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('all')}
+            >
+              All {items.length > 0 && `(${items.length})`}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeFilter === 'unread'}
+              className={`teacher-notif-tab ${activeFilter === 'unread' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('unread')}
+            >
+              Unread {unreadCount > 0 && `(${unreadCount})`}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeFilter === 'high'}
+              className={`teacher-notif-tab ${activeFilter === 'high' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('high')}
+            >
+              High Priority {highPriorityCount > 0 && `(${highPriorityCount})`}
+            </button>
+          </div>
+
           <div className="teacher-notif-panel-body">
             {!notifications || groups.length === 0 ? (
               <div className="teacher-notif-empty">
                 <span aria-hidden="true">📋</span>
-                <strong>No notifications yet</strong>
-                <p>You’ll see student submissions, grading reminders, upcoming deadlines, and classroom events here.</p>
+                <strong>{activeFilter === 'all' ? 'No notifications yet' : 'No notifications in this filter'}</strong>
+                <p>
+                  {activeFilter === 'all'
+                    ? 'You’ll see student submissions, grading reminders, upcoming deadlines, and classroom events here.'
+                    : 'Switch back to "All" to view your historical alerts.'}
+                </p>
               </div>
             ) : (
               groups.map((group) => (
@@ -150,23 +214,57 @@ export default function TeacherNotificationBell({
                   <p className="teacher-notif-group-label">{group.label}</p>
                   {group.items.map((n: TeacherNotification) => {
                     const icon = TEACHER_NOTIFICATION_ICON[n.type] || '🔵';
+                    const priority = n.priority || (n.payload?.priority as string) || TEACHER_NOTIFICATION_DEFAULT_PRIORITY[n.type] || 'normal';
+                    const dest = teacherNotificationDestination(n);
+                    const className = (n.payload?.className as string) || null;
+
                     return (
-                      <button
+                      <div
                         key={n.id}
-                        type="button"
-                        className={`teacher-notif-item ${n.readAt ? '' : 'unread'}`}
+                        role="button"
+                        tabIndex={0}
+                        className={`teacher-notif-item ${n.readAt ? 'read' : 'unread'} priority-${priority}`}
                         onClick={() => handleClick(n)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleClick(n);
+                          }
+                        }}
                       >
                         <span className="teacher-notif-item-icon" aria-hidden="true">
                           {icon}
                         </span>
                         <span className="teacher-notif-item-body">
-                          <span className="teacher-notif-item-title">{n.title}</span>
+                          <span className="teacher-notif-item-top">
+                            <span className="teacher-notif-item-title">{n.title}</span>
+                            {priority === 'high' && <span className="teacher-notif-priority-pill high">HIGH</span>}
+                            {priority === 'low' && <span className="teacher-notif-priority-pill low">INFO</span>}
+                          </span>
                           <span className="teacher-notif-item-text">{n.body}</span>
-                          <span className="teacher-notif-item-time">{relativeTime(n.createdAt)}</span>
+                          <span className="teacher-notif-item-meta">
+                            <span className="teacher-notif-item-time">{relativeTime(n.createdAt)}</span>
+                            {className && <span className="teacher-notif-class-tag">{className}</span>}
+                          </span>
+                          {dest?.actionLabel && (
+                            <span className="teacher-notif-action-btn">
+                              {dest.actionLabel} →
+                            </span>
+                          )}
                         </span>
-                        {!n.readAt && <span className="teacher-notif-item-dot" aria-hidden="true" />}
-                      </button>
+                        <div className="teacher-notif-item-controls">
+                          {!n.readAt && <span className="teacher-notif-item-dot" aria-label="Unread notification" />}
+                          <button
+                            type="button"
+                            className="teacher-notif-toggle-btn"
+                            title={n.readAt ? 'Mark as unread' : 'Mark as read'}
+                            aria-label={n.readAt ? 'Mark as unread' : 'Mark as read'}
+                            onClick={(e) => toggleReadItem(e, n)}
+                          >
+                            {n.readAt ? '○' : '✓'}
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>

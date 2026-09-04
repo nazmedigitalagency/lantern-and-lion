@@ -10,27 +10,44 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Please sign in as a teacher first.' }, { status: 401 });
   }
 
-  const limit = Math.min(50, Math.max(1, Number(req.nextUrl.searchParams.get('limit')) || 25));
+  const limit = Math.min(50, Math.max(1, Number(req.nextUrl.searchParams.get('limit')) || 30));
+  const filter = req.nextUrl.searchParams.get('filter') || 'all';
   const admin = createServerAdminClient();
 
   // Run smart sync before returning list
   await syncTeacherNotifications(admin, user.id).catch(() => {});
 
-  const { data, error } = await admin
+  let query = admin
     .from('notifications')
-    .select('id, type, title, body, payload, created_at, read_at')
+    .select('id, type, title, body, priority, payload, created_at, read_at')
     .eq('recipient_id', user.id)
     .order('created_at', { ascending: false })
     .limit(limit);
+
+  if (filter === 'unread') {
+    query = query.is('read_at', null);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: 'Could not fetch notifications.' }, { status: 500 });
   }
 
-  const notifications = data || [];
-  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  const notifications = (data || []).map((n) => {
+    const payload = (n.payload || {}) as Record<string, unknown>;
+    const priority = n.priority || payload.priority || 'normal';
+    return {
+      ...n,
+      priority,
+    };
+  });
 
-  return NextResponse.json({ notifications, unreadCount });
+  const filtered = filter === 'high' ? notifications.filter((n) => n.priority === 'high') : notifications;
+  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  const highPriorityCount = notifications.filter((n) => n.priority === 'high' && !n.read_at).length;
+
+  return NextResponse.json({ notifications: filtered, unreadCount, highPriorityCount });
 }
 
 const PatchSchema = z.object({ id: z.string().uuid(), read: z.boolean() });

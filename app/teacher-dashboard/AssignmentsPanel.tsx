@@ -28,13 +28,20 @@ function formatDate(iso: string | null): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString();
 }
 
-export default function AssignmentsPanel() {
+export default function AssignmentsPanel({ focusAssignmentId }: { focusAssignmentId?: string } = {}) {
   const [assignments, setAssignments] = useState<AssignmentListItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<AssignmentBucket>('active');
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(focusAssignmentId || null);
+  const [prevFocusAssignmentId, setPrevFocusAssignmentId] = useState(focusAssignmentId);
+  if (focusAssignmentId !== prevFocusAssignmentId) {
+    setPrevFocusAssignmentId(focusAssignmentId);
+    if (focusAssignmentId) {
+      setSelectedId(focusAssignmentId);
+    }
+  }
 
   function refresh() {
     fetch('/api/assignments')
