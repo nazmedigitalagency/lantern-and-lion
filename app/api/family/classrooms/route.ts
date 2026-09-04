@@ -10,11 +10,13 @@ export type ParentChildClassroomInfo = {
   classroomCode: string | null;
   ageBand: string | null;
   teacherName: string | null;
-  status: 'connected' | 'pending' | 'not_connected';
+  churchOrOrg: string | null;
+  status: 'connected' | 'pending' | 'declined' | 'revoked' | 'not_connected';
   approved: boolean;
   needsHelp: boolean;
   joinedAt: string | null;
   requestedBy: 'child' | 'teacher';
+  requestedScopes: string[];
   assignments: {
     completedCount: number;
     pendingCount: number;
@@ -35,6 +37,14 @@ export type ParentChildClassroomInfo = {
   }>;
 };
 
+const DEFAULT_REQUESTED_SCOPES = [
+  'Classroom participation',
+  'Assignment progress',
+  'Quiz/activity performance',
+  'Scripture learning progress',
+  'Relevant educational activity',
+];
+
 /** Lists this parent's children's classroom memberships, teachers, assignment progress, and announcements. */
 export async function GET() {
   const user = await getAuthenticatedUser();
@@ -50,7 +60,7 @@ export async function GET() {
 
   const { data: memberships } = await admin
     .from('classroom_students')
-    .select('classroom_id, child_id, approved, needs_help, joined_at, requested_by, classrooms(id, name, age_band, code, teacher_id)')
+    .select('classroom_id, child_id, approved, needs_help, joined_at, requested_by, status, classrooms(id, name, age_band, code, teacher_id, church_or_org)')
     .in('child_id', childIds);
 
   const rawMemberships = memberships || [];
@@ -59,7 +69,7 @@ export async function GET() {
   const teacherIds = new Set<string>();
   const classroomIds = new Set<string>();
   for (const m of rawMemberships) {
-    const c = m.classrooms as unknown as { id: string; name: string; age_band: string | null; code: string; teacher_id: string } | null;
+    const c = m.classrooms as unknown as { id: string; name: string; age_band: string | null; code: string; teacher_id: string; church_or_org?: string | null } | null;
     if (c) {
       classroomIds.add(c.id);
       if (c.teacher_id) teacherIds.add(c.teacher_id);
@@ -108,11 +118,13 @@ export async function GET() {
     announcementsList = annData || [];
   }
 
-  // Build per-child educational classroom summaries
-  const childClassrooms: ParentChildClassroomInfo[] = (children || []).map((child) => {
-    const membership = rawMemberships.find((m) => m.child_id === child.id);
-    if (!membership) {
-      return {
+  // Build per-child educational classroom summaries supporting multiple classrooms per child
+  const childClassrooms: ParentChildClassroomInfo[] = [];
+
+  for (const child of children || []) {
+    const childMemberships = rawMemberships.filter((m) => m.child_id === child.id);
+    if (childMemberships.length === 0) {
+      childClassrooms.push({
         childId: child.id,
         childName: child.name,
         classroomId: null,
@@ -120,69 +132,84 @@ export async function GET() {
         classroomCode: null,
         ageBand: null,
         teacherName: null,
-        status: 'not_connected' as const,
+        churchOrOrg: null,
+        status: 'not_connected',
         approved: false,
         needsHelp: false,
         joinedAt: null,
-        requestedBy: 'child' as const,
+        requestedBy: 'child',
+        requestedScopes: DEFAULT_REQUESTED_SCOPES,
         assignments: { completedCount: 0, pendingCount: 0, latest: null },
         announcements: [],
-      };
+      });
+      continue;
     }
 
-    const c = membership.classrooms as unknown as { id: string; name: string; age_band: string | null; code: string; teacher_id: string } | null;
-    const teacherName = c?.teacher_id ? (teacherNames.get(c.teacher_id) || 'Teacher') : 'Teacher';
-    const status: 'connected' | 'pending' | 'not_connected' = membership.approved ? 'connected' : 'pending';
+    for (const membership of childMemberships) {
+      const c = membership.classrooms as unknown as { id: string; name: string; age_band: string | null; code: string; teacher_id: string; church_or_org?: string | null } | null;
+      const teacherName = c?.teacher_id ? (teacherNames.get(c.teacher_id) || 'Teacher') : 'Teacher';
+      const churchOrOrg = c?.church_or_org || 'Grace Community Church';
 
-    // Filter assignments for this child and classroom
-    const childSubs = rawSubmissions.filter((s) => s.child_id === child.id && (!c || s.assignments?.classroom_id === c.id));
-    const completedSubs = childSubs.filter((s) => s.status === 'completed' || s.status === 'graded' || s.status === 'returned');
-    const pendingSubs = childSubs.filter((s) => s.status === 'assigned' || s.status === 'in_progress');
+      let status: 'connected' | 'pending' | 'declined' | 'revoked' | 'not_connected' = 'pending';
+      const rawStatus = (membership as unknown as { status?: string }).status;
+      if (rawStatus === 'declined') status = 'declined';
+      else if (rawStatus === 'revoked') status = 'revoked';
+      else if (rawStatus === 'removed') status = 'not_connected';
+      else if (membership.approved || rawStatus === 'approved') status = 'connected';
+      else status = 'pending';
 
-    // Find latest graded or submitted assignment
-    const sortedGraded = [...childSubs]
-      .filter((s) => s.assignments && (s.score !== null || s.feedback !== null || s.graded_at !== null || s.submitted_at !== null))
-      .sort((a, b) => new Date(b.graded_at || b.submitted_at || 0).getTime() - new Date(a.graded_at || a.submitted_at || 0).getTime());
-    const latestSub = sortedGraded[0];
-    const latest = latestSub && latestSub.assignments ? {
-      title: latestSub.assignments.title,
-      assignmentType: latestSub.assignments.assignment_type,
-      score: latestSub.score,
-      feedback: latestSub.feedback,
-      gradedAt: latestSub.graded_at,
-    } : null;
+      // Filter assignments for this child and classroom
+      const childSubs = rawSubmissions.filter((s) => s.child_id === child.id && (!c || s.assignments?.classroom_id === c.id));
+      const completedSubs = childSubs.filter((s) => s.status === 'completed' || s.status === 'graded' || s.status === 'returned');
+      const pendingSubs = childSubs.filter((s) => s.status === 'assigned' || s.status === 'in_progress');
 
-    const childAnnouncements = announcementsList
-      .filter((a) => c && a.classroom_id === c.id)
-      .map((a) => ({
-        id: a.id,
-        title: a.title,
-        message: a.message,
-        eventDate: a.event_date,
-        createdAt: a.created_at,
-      }));
+      // Find latest graded or submitted assignment
+      const sortedGraded = [...childSubs]
+        .filter((s) => s.assignments && (s.score !== null || s.feedback !== null || s.graded_at !== null || s.submitted_at !== null))
+        .sort((a, b) => new Date(b.graded_at || b.submitted_at || 0).getTime() - new Date(a.graded_at || a.submitted_at || 0).getTime());
+      const latestSub = sortedGraded[0];
+      const latest = latestSub && latestSub.assignments ? {
+        title: latestSub.assignments.title,
+        assignmentType: latestSub.assignments.assignment_type,
+        score: latestSub.score,
+        feedback: latestSub.feedback,
+        gradedAt: latestSub.graded_at,
+      } : null;
 
-    return {
-      childId: child.id,
-      childName: child.name,
-      classroomId: c?.id || membership.classroom_id,
-      classroomName: c?.name || 'Class',
-      classroomCode: c?.code || null,
-      ageBand: c?.age_band || null,
-      teacherName,
-      status,
-      approved: membership.approved,
-      needsHelp: membership.needs_help,
-      joinedAt: membership.joined_at,
-      requestedBy: (membership.requested_by as 'child' | 'teacher' | undefined) || 'child',
-      assignments: {
-        completedCount: completedSubs.length,
-        pendingCount: pendingSubs.length,
-        latest,
-      },
-      announcements: childAnnouncements,
-    };
-  });
+      const childAnnouncements = announcementsList
+        .filter((a) => c && a.classroom_id === c.id)
+        .map((a) => ({
+          id: a.id,
+          title: a.title,
+          message: a.message,
+          eventDate: a.event_date,
+          createdAt: a.created_at,
+        }));
+
+      childClassrooms.push({
+        childId: child.id,
+        childName: child.name,
+        classroomId: c?.id || membership.classroom_id,
+        classroomName: c?.name || 'Class',
+        classroomCode: c?.code || null,
+        ageBand: c?.age_band || null,
+        teacherName,
+        churchOrOrg,
+        status,
+        approved: membership.approved || rawStatus === 'approved',
+        needsHelp: membership.needs_help,
+        joinedAt: membership.joined_at,
+        requestedBy: (membership.requested_by as 'child' | 'teacher' | undefined) || 'child',
+        requestedScopes: DEFAULT_REQUESTED_SCOPES,
+        assignments: {
+          completedCount: completedSubs.length,
+          pendingCount: pendingSubs.length,
+          latest,
+        },
+        announcements: childAnnouncements,
+      });
+    }
+  }
 
   // Backwards compatibility for existing UI
   const membershipsResult = rawMemberships.map((m) => {

@@ -15,6 +15,7 @@ import StudentDetailModal from './StudentDetailModal';
 
 type SortKey = 'name' | 'most_active' | 'least_active' | 'xp_high' | 'xp_low' | 'performance_high' | 'performance_low' | 'recent_activity';
 type AddStep = 'form' | 'confirm' | 'success';
+type ConnectionTab = 'all' | 'approved' | 'pending' | 'declined' | 'revoked';
 
 // Purely cosmetic mapping for the "student avatar" shown during Add Student
 // confirmation — same four badge ids a family already picks from during
@@ -59,6 +60,7 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   const [activityFilter, setActivityFilter] = useState<'all' | ActivityStatus>('all');
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>('name');
+  const [statusFilter, setStatusFilter] = useState<ConnectionTab>('all');
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -261,7 +263,7 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
 
           {addStep === 'confirm' && addLookup && badge && (
             <>
-              {addLookup.connection === 'none' && (
+              {(addLookup.connection === 'none' || addLookup.connection === 'declined' || addLookup.connection === 'revoked' || addLookup.connection === 'removed') && (
                 <>
                   <h2 id="add-student-title">Is this the student you&apos;re trying to add?</h2>
                   <div className="add-student-preview">
@@ -269,7 +271,13 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
                     <strong>{addLookup.student.name}</strong>
                     <small>{addLookup.student.ageGroup === 'teen' ? 'Teen' : 'Child'}</small>
                   </div>
-                  <p className="add-student-note">Adding to <strong>{addLookup.classroom.name}</strong>. Their parent must approve before you can see any learning data.</p>
+                  <p className="add-student-note">
+                    Adding to <strong>{addLookup.classroom.name}</strong>.
+                    {addLookup.connection === 'declined' && ' (Previously declined by parent).'}
+                    {addLookup.connection === 'revoked' && ' (Previously revoked by parent).'}
+                    {addLookup.connection === 'removed' && ' (Previously removed from class).'}
+                    {' '}Their parent must approve before you can see any learning data.
+                  </p>
                   {addError && <p className="add-student-error" role="alert">{addError}</p>}
                   <div className="add-student-actions">
                     <button type="button" className="add-student-secondary" onClick={backToCode}>Back</button>
@@ -372,85 +380,181 @@ export default function StudentsPanel({ onGoToClasses }: { onGoToClasses: () => 
   return (
     <>
       {renderAddButton(roster.classrooms)}
-      <div className="teacher-students-toolbar">
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search students by name…"
-          aria-label="Search students"
-        />
-        <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} aria-label="Filter by class">
-          <option value="all">All classes</option>
-          {roster.classrooms.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value as 'all' | AgeGroup)} aria-label="Filter by age group">
-          <option value="all">Child &amp; Teen</option>
-          <option value="child">Child</option>
-          <option value="teen">Teen</option>
-        </select>
-        <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value as 'all' | ActivityStatus)} aria-label="Filter by activity status">
-          <option value="all">Any activity</option>
-          <option value="active">Active</option>
-          <option value="recently_active">Recently active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+      <div className="teacher-connection-tabs" role="tablist" aria-label="Filter students by connection status">
         <button
           type="button"
-          className={attentionOnly ? 'teacher-students-attention-toggle active' : 'teacher-students-attention-toggle'}
-          aria-pressed={attentionOnly}
-          onClick={() => setAttentionOnly((v) => !v)}
+          className={`teacher-conn-tab ${statusFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('all')}
         >
-          Needs attention{attentionCount > 0 ? ` (${attentionCount})` : ''}
+          All ({roster.students.length + roster.pending.length + (roster.declined?.length || 0) + (roster.revoked?.length || 0)})
         </button>
-        <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort students">
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>Sort: {o.label}</option>
-          ))}
-        </select>
+        <button
+          type="button"
+          className={`teacher-conn-tab ${statusFilter === 'approved' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('approved')}
+        >
+          Connected ({roster.students.length})
+        </button>
+        <button
+          type="button"
+          className={`teacher-conn-tab ${statusFilter === 'pending' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('pending')}
+        >
+          Pending Approval ({roster.pending.length})
+        </button>
+        <button
+          type="button"
+          className={`teacher-conn-tab ${statusFilter === 'declined' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('declined')}
+        >
+          Declined ({roster.declined?.length || 0})
+        </button>
+        <button
+          type="button"
+          className={`teacher-conn-tab ${statusFilter === 'revoked' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('revoked')}
+        >
+          Revoked ({roster.revoked?.length || 0})
+        </button>
       </div>
 
-      <p className="teacher-students-count">
-        {filtered.length} of {roster.students.length} student{roster.students.length === 1 ? '' : 's'}
-        {hasActiveFilters && (
-          <button type="button" onClick={clearFilters}>Clear filters</button>
-        )}
-      </p>
-
-      {filtered.length === 0 ? (
-        <div className="teacher-empty teacher-empty-students">
-          <span>{attentionOnly ? '✓' : '🔍'}</span>
-          <div>
-            <strong>{attentionOnly ? 'No one needs attention right now — nice work!' : 'No students match your search or filters.'}</strong>
-            {!attentionOnly && <p>Try a different name, or clear your filters to see everyone.</p>}
-            {hasActiveFilters && <button onClick={clearFilters}>Clear filters</button>}
+      {(statusFilter === 'all' || statusFilter === 'approved') && (
+        <>
+          <div className="teacher-students-toolbar">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search students by name…"
+              aria-label="Search students"
+            />
+            <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} aria-label="Filter by class">
+              <option value="all">All classes</option>
+              {roster.classrooms.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value as 'all' | AgeGroup)} aria-label="Filter by age group">
+              <option value="all">Child &amp; Teen</option>
+              <option value="child">Child</option>
+              <option value="teen">Teen</option>
+            </select>
+            <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value as 'all' | ActivityStatus)} aria-label="Filter by activity status">
+              <option value="all">Any activity</option>
+              <option value="active">Active</option>
+              <option value="recently_active">Recently active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <button
+              type="button"
+              className={attentionOnly ? 'teacher-students-attention-toggle active' : 'teacher-students-attention-toggle'}
+              aria-pressed={attentionOnly}
+              onClick={() => setAttentionOnly((v) => !v)}
+            >
+              Needs attention{attentionCount > 0 ? ` (${attentionCount})` : ''}
+            </button>
+            <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort students">
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>Sort: {o.label}</option>
+              ))}
+            </select>
           </div>
-        </div>
-      ) : (
-        <div className="teacher-students-grid">
-          {filtered.map((s) => (
-            <StudentCard key={s.id} student={s} onClick={() => setSelectedId(s.id)} />
-          ))}
-        </div>
+
+          <p className="teacher-students-count">
+            {filtered.length} of {roster.students.length} connected student{roster.students.length === 1 ? '' : 's'}
+            {hasActiveFilters && (
+              <button type="button" onClick={clearFilters}>Clear filters</button>
+            )}
+          </p>
+
+          {filtered.length === 0 ? (
+            <div className="teacher-empty teacher-empty-students">
+              <span>{attentionOnly ? '✓' : '🔍'}</span>
+              <div>
+                <strong>{attentionOnly ? 'No one needs attention right now — nice work!' : 'No connected students match your search or filters.'}</strong>
+                {!attentionOnly && <p>Try a different name, or clear your filters to see everyone.</p>}
+                {hasActiveFilters && <button onClick={clearFilters}>Clear filters</button>}
+              </div>
+            </div>
+          ) : (
+            <div className="teacher-students-grid">
+              {filtered.map((s) => (
+                <StudentCard key={s.id} student={s} onClick={() => setSelectedId(s.id)} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      {roster.pending.length > 0 && (
+      {(statusFilter === 'all' || statusFilter === 'pending') && (
         <section className="teacher-students-pending">
           <p className="teacher-kicker">Waiting on parent approval ({roster.pending.length})</p>
+          {roster.pending.length === 0 ? (
+            <p className="tsp-empty-note">No pending requests waiting on parent approval.</p>
+          ) : (
+            <div className="tsp-list">
+              {roster.pending.map((p) => (
+                <div key={p.id} className="tsp-row">
+                  <span>{p.name[0]}</span>
+                  <div>
+                    <strong>{p.name}</strong>
+                    <small>{p.classrooms.map((c) => c.name).join(', ')}</small>
+                  </div>
+                  <em className="tsp-status-badge pending">Pending</em>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {(statusFilter === 'all' || statusFilter === 'declined') && (roster.declined?.length || 0) > 0 && (
+        <section className="teacher-students-pending teacher-students-declined">
+          <p className="teacher-kicker">Declined by parent ({roster.declined?.length || 0})</p>
           <div className="tsp-list">
-            {roster.pending.map((p) => (
+            {(roster.declined || []).map((p) => (
               <div key={p.id} className="tsp-row">
                 <span>{p.name[0]}</span>
                 <div>
                   <strong>{p.name}</strong>
                   <small>{p.classrooms.map((c) => c.name).join(', ')}</small>
                 </div>
-                <em>Pending</em>
+                <em className="tsp-status-badge declined">Declined</em>
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {statusFilter === 'declined' && (!roster.declined || roster.declined.length === 0) && (
+        <section className="teacher-students-pending">
+          <p className="teacher-kicker">Declined by parent (0)</p>
+          <p className="tsp-empty-note">No requests have been declined.</p>
+        </section>
+      )}
+
+      {(statusFilter === 'all' || statusFilter === 'revoked') && (roster.revoked?.length || 0) > 0 && (
+        <section className="teacher-students-pending teacher-students-revoked">
+          <p className="teacher-kicker">Access revoked by parent ({roster.revoked?.length || 0})</p>
+          <div className="tsp-list">
+            {(roster.revoked || []).map((p) => (
+              <div key={p.id} className="tsp-row">
+                <span>{p.name[0]}</span>
+                <div>
+                  <strong>{p.name}</strong>
+                  <small>{p.classrooms.map((c) => c.name).join(', ')}</small>
+                </div>
+                <em className="tsp-status-badge revoked">Revoked</em>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {statusFilter === 'revoked' && (!roster.revoked || roster.revoked.length === 0) && (
+        <section className="teacher-students-pending">
+          <p className="teacher-kicker">Access revoked by parent (0)</p>
+          <p className="tsp-empty-note">No student connections have been revoked.</p>
         </section>
       )}
 

@@ -50,12 +50,19 @@ export async function POST(req: NextRequest) {
 
   const { data: existing } = await admin
     .from('classroom_students')
-    .select('approved')
+    .select('approved, status')
     .eq('classroom_id', classroom.id)
     .eq('child_id', child.id)
     .maybeSingle();
 
-  const connection: ConnectionState = !existing ? 'none' : existing.approved ? 'approved' : 'pending';
+  let connection: ConnectionState = 'none';
+  if (existing) {
+    if (existing.status && ['pending', 'approved', 'declined', 'revoked', 'removed'].includes(existing.status)) {
+      connection = existing.status as ConnectionState;
+    } else {
+      connection = existing.approved ? 'approved' : 'pending';
+    }
+  }
 
   const response: StudentLookupResponse = {
     student: { id: child.id, name: child.name, ageGroup: ageGroupForAge(child.age), avatar: child.avatar || 'lion' },

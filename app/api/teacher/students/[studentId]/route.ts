@@ -162,15 +162,16 @@ export async function GET(_req: Request, ctx: { params: Promise<{ studentId: str
   });
 }
 
+import { notifyOnce } from '../../../../lib/activity/server';
+import { recordConnectionAudit } from '../../../../lib/classrooms/audit';
+
 const RemoveSchema = z.object({ classroomId: z.string().uuid() });
 
 /**
- * Revokes a teacher/student connection — removes this one classroom_students
- * row only. Never touches `children` or any learning table (daily_activity_
+ * Revokes a teacher/student connection — marks status as 'removed' and approved as false.
+ * Never touches `children` or any learning table (daily_activity_
  * summary, concept_mastery, streak_state, story_progress, activity_events),
- * so the student's account and learning history are untouched; if the same
- * Teacher Code is used again later, a fresh request can be sent since the
- * unique (classroom_id, child_id) row is gone.
+ * so the student's account and learning history are preserved for historical audit.
  */
 export async function DELETE(req: NextRequest, ctx: { params: Promise<{ studentId: string }> }) {
   const user = await getAuthenticatedUser();
@@ -185,7 +186,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ studentI
 
   const { data: classroom } = await admin
     .from('classrooms')
-    .select('id')
+    .select('id, name')
     .eq('id', parsed.data.classroomId)
     .eq('teacher_id', user.id)
     .maybeSingle();
@@ -193,10 +194,44 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ studentI
 
   const { error } = await admin
     .from('classroom_students')
-    .delete()
+    .update({
+      status: 'removed',
+      approved: false,
+      revoked_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .eq('classroom_id', classroom.id)
     .eq('child_id', studentId);
   if (error) return NextResponse.json({ error: 'Could not remove this student.' }, { status: 500 });
+
+  // Audit log
+  await recordConnectionAudit(admin, {
+    classroomId: classroom.id,
+    childId: studentId,
+    teacherId: user.id,
+    actorId: user.id,
+    actorRole: 'teacher',
+    action: 'removed',
+    metadata: { classroomName: classroom.name },
+  });
+
+  // Notify parent
+  const { data: child } = await admin.from('children').select('id, name, family_id').eq('id', studentId).maybeSingle();
+  if (child) {
+    const { data: family } = await admin.from('families').select('owner_id').eq('id', child.family_id).maybeSingle();
+    const teacherName = (user.user_metadata?.name || user.user_metadata?.full_name || 'Teacher') as string;
+    if (family?.owner_id) {
+      await notifyOnce(admin, {
+        recipientId: family.owner_id,
+        childId: child.id,
+        type: 'TEACHER_STUDENT_REMOVED',
+        title: 'Student removed from classroom',
+        body: `${teacherName} removed ${child.name} from "${classroom.name}".`,
+        payload: { classroomId: classroom.id, classroomName: classroom.name, teacherName, childId: child.id },
+        dedupeKey: `teacher_student_removed:${classroom.id}:${child.id}:${Date.now()}`,
+      });
+    }
+  }
 
   return NextResponse.json({ success: true });
 }

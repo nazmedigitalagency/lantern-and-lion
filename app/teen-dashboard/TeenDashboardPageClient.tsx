@@ -604,8 +604,24 @@ export default function TeenDashboardPage() {
   useEffect(() => { if (hydrated) writeTeenMap('lanternLionTeenCases', activeId, casesSolved); }, [casesSolved, activeId, hydrated]);
   useEffect(() => { if (hydrated) writeTeenMap('lanternLionTeenDecisions', activeId, decisionsMade); }, [decisionsMade, activeId, hydrated]);
   useEffect(() => { if (hydrated) writeTeenMap('lanternLionTeenNotesByTeen', activeId, notes); }, [notes, activeId, hydrated]);
-  useEffect(() => { if (hydrated) writeTeenMap('lanternLionTeenJourney', activeId, { done: journeyDone, awarded: journeyAwarded, draft: journeyDraft, live: journeyLive, submitted: journeySubmitted }); }, [journeyDone, journeyAwarded, journeyDraft, journeyLive, journeySubmitted, activeId, hydrated]);
   useEffect(() => { if (hydrated) writeTeenMap('lanternLionTeenClass', activeId, connectedClass); }, [connectedClass, activeId, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    fetch('/api/child/classroom')
+      .then((res) => (res.ok ? (res.json() as Promise<{ connected: boolean; classroom: { name: string; code: string } | null; teacherName: string | null; approved: boolean } | null>) : null))
+      .then((data) => {
+        if (data && data.connected && data.classroom) {
+          setConnectedClass({
+            name: data.classroom.name,
+            code: data.classroom.code,
+            teacherName: data.teacherName || 'Sarah',
+            approved: data.approved,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [hydrated, activeId]);
 
   // Ask the Word timer
   const [timeLeft, setTimeLeft] = useState(20);
@@ -1574,15 +1590,20 @@ export default function TeenDashboardPage() {
               <section className="teen-panel teen-class-panel">
                 <div className="teen-panel-head">
                   <div>
-                    <p className="teen-kicker">MY CLASS &amp; TEACHER</p>
-                    <h2>{connectedClass ? `${connectedClass.name} · Teacher ${connectedClass.teacherName || 'Sarah'}` : 'Not Connected Yet'}</h2>
+                    <p className="teen-kicker">MY TEACHER</p>
+                    <h2>{connectedClass ? `${connectedClass.teacherName || 'Sarah'} · ${connectedClass.name}` : 'Not Connected Yet'}</h2>
                   </div>
+                  {connectedClass && (
+                    <span className={`kid-class-status-pill ${connectedClass.approved !== false ? 'connected' : 'pending'}`}>
+                      {connectedClass.approved !== false ? 'Connected' : 'Pending Approval'}
+                    </span>
+                  )}
                 </div>
                 {connectedClass ? (
                   <p className="teen-panel-copy">
                     {connectedClass.approved !== false ? (
                       <>
-                        Connected with code <b>{connectedClass.code}</b>. Check the <b>Assignments</b> tab for anything your teacher has assigned.
+                        Connected to <b>{connectedClass.name}</b> (Teacher {connectedClass.teacherName || 'Sarah'}). Check the <b>Assignments</b> tab for anything your teacher has assigned.
                       </>
                     ) : (
                       <>

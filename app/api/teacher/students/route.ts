@@ -3,12 +3,22 @@ import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import { computeStudentCards, type ChildRow } from '../../../lib/classrooms/roster';
-import type { PendingStudent, StudentCard, StudentClassroomRef } from '../../../lib/classrooms/types';
+import type { ConnectionStatus, PendingStudent, StudentCard, StudentClassroomRef } from '../../../lib/classrooms/types';
 import { normalizeTeacherCode } from '../../../lib/codes/server';
 import { checkRateLimit, getClientIp } from '../../../lib/rate-limit';
 import { notifyOnce } from '../../../lib/activity/server';
+import { recordConnectionAudit } from '../../../lib/classrooms/audit';
 
-type RosterRow = { classroom_id: string; child_id: string; approved: boolean; needs_help: boolean; joined_at: string; children: ChildRow | null };
+type RosterRow = {
+  classroom_id: string;
+  child_id: string;
+  approved: boolean;
+  needs_help: boolean;
+  joined_at: string;
+  status?: string | null;
+  updated_at?: string | null;
+  children: ChildRow | null;
+};
 
 /**
  * Every classroom this teacher owns, rolled up into one "My Students"
@@ -17,9 +27,8 @@ type RosterRow = { classroom_id: string; child_id: string; approved: boolean; ne
  * system, just a different aggregation of the same source data.
  *
  * Only children a parent has approved into one of this teacher's classrooms
- * get full learning data; anyone still pending approval is listed
- * separately, by name only, matching the privacy stance already used by the
- * class summary endpoint.
+ * get full learning data; anyone still pending approval, declined, or revoked
+ * is listed separately, by name only, matching the privacy stance.
  */
 export async function GET() {
   const user = await getAuthenticatedUser();
@@ -30,7 +39,7 @@ export async function GET() {
   const { data: classrooms } = await admin.from('classrooms').select('id, name, age_band').eq('teacher_id', user.id);
   const classroomList = classrooms || [];
   if (classroomList.length === 0) {
-    return NextResponse.json({ classrooms: [], students: [], pending: [] });
+    return NextResponse.json({ classrooms: [], students: [], pending: [], declined: [], revoked: [] });
   }
   const classroomIds = classroomList.map((c) => c.id);
   const classroomRef = (id: string): StudentClassroomRef => {
@@ -40,12 +49,18 @@ export async function GET() {
 
   const { data: rosterRaw } = await admin
     .from('classroom_students')
-    .select('classroom_id, child_id, approved, needs_help, joined_at, children(id, name, age, family_id, last_login_at)')
+    .select('classroom_id, child_id, approved, needs_help, joined_at, status, updated_at, children(id, name, age, family_id, last_login_at)')
     .in('classroom_id', classroomIds);
 
   const roster = ((rosterRaw || []) as unknown as RosterRow[]).filter((r) => r.children);
   if (roster.length === 0) {
-    return NextResponse.json({ classrooms: classroomList.map((c) => ({ id: c.id, name: c.name, ageBand: c.age_band })), students: [], pending: [] });
+    return NextResponse.json({
+      classrooms: classroomList.map((c) => ({ id: c.id, name: c.name, ageBand: c.age_band })),
+      students: [],
+      pending: [],
+      declined: [],
+      revoked: [],
+    });
   }
 
   const byChild = new Map<string, RosterRow[]>();
@@ -55,8 +70,21 @@ export async function GET() {
     byChild.set(r.child_id, list);
   }
 
-  const approvedChildIds = Array.from(byChild.entries()).filter(([, rows]) => rows.some((r) => r.approved)).map(([id]) => id);
-  const pendingChildIds = Array.from(byChild.entries()).filter(([, rows]) => !rows.some((r) => r.approved)).map(([id]) => id);
+  const approvedChildIds = Array.from(byChild.entries())
+    .filter(([, rows]) => rows.some((r) => r.approved || r.status === 'approved'))
+    .map(([id]) => id);
+
+  const pendingChildIds = Array.from(byChild.entries())
+    .filter(([id, rows]) => !approvedChildIds.includes(id) && rows.some((r) => r.status === 'pending' || (!r.status && !r.approved)))
+    .map(([id]) => id);
+
+  const declinedChildIds = Array.from(byChild.entries())
+    .filter(([id, rows]) => !approvedChildIds.includes(id) && !pendingChildIds.includes(id) && rows.some((r) => r.status === 'declined'))
+    .map(([id]) => id);
+
+  const revokedChildIds = Array.from(byChild.entries())
+    .filter(([id, rows]) => !approvedChildIds.includes(id) && !pendingChildIds.includes(id) && !declinedChildIds.includes(id) && rows.some((r) => r.status === 'revoked'))
+    .map(([id]) => id);
 
   const needsHelpByChild = new Map<string, boolean>();
   for (const [childId, rows] of byChild) needsHelpByChild.set(childId, rows.some((r) => r.needs_help));
@@ -67,26 +95,36 @@ export async function GET() {
   const students: StudentCard[] = approvedChildIds.map((childId) => {
     const memberships = byChild.get(childId)!;
     const base = cardsByChild.get(childId)!;
-    return { ...base, classrooms: memberships.filter((m) => m.approved).map((m) => classroomRef(m.classroom_id)) };
+    return { ...base, classrooms: memberships.filter((m) => m.approved || m.status === 'approved').map((m) => classroomRef(m.classroom_id)) };
   });
 
   students.sort((a, b) => a.name.localeCompare(b.name));
 
-  const pending: PendingStudent[] = pendingChildIds.map((childId) => {
-    const memberships = byChild.get(childId)!;
-    const child = memberships[0].children as ChildRow;
-    return {
-      id: child.id,
-      name: child.name,
-      classrooms: memberships.map((m) => classroomRef(m.classroom_id)),
-      joinedAt: memberships[0].joined_at || null,
-    };
-  }).sort((a, b) => a.name.localeCompare(b.name));
+  const mapStudentGroup = (childIds: string[], targetStatus: ConnectionStatus): PendingStudent[] =>
+    childIds.map((childId) => {
+      const memberships = byChild.get(childId)!;
+      const child = memberships[0].children as ChildRow;
+      const match = memberships.find((m) => m.status === targetStatus) || memberships[0];
+      return {
+        id: child.id,
+        name: child.name,
+        classrooms: memberships.map((m) => classroomRef(m.classroom_id)),
+        joinedAt: match.joined_at || null,
+        status: (match.status as ConnectionStatus) || targetStatus,
+        updatedAt: match.updated_at || null,
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+
+  const pending: PendingStudent[] = mapStudentGroup(pendingChildIds, 'pending');
+  const declined: PendingStudent[] = mapStudentGroup(declinedChildIds, 'declined');
+  const revoked: PendingStudent[] = mapStudentGroup(revokedChildIds, 'revoked');
 
   return NextResponse.json({
     classrooms: classroomList.map((c) => ({ id: c.id, name: c.name, ageBand: c.age_band })),
     students,
     pending,
+    declined,
+    revoked,
   });
 }
 
@@ -97,11 +135,8 @@ const AddStudentSchema = z.object({
 
 /**
  * "Students → Add Student → Enter Teacher Code": the teacher-initiated half
- * of the connection flow (a child sharing their Teacher Code from "My
- * Lantern & Lion Codes"). Creates the exact same kind of pending
- * classroom_students row a child's own self-join with a classroom code
- * would — reusing the existing parent-approval endpoint and UI rather than
- * a parallel relationship system, just tagged requested_by: 'teacher'.
+ * of the connection flow. Creates a pending connection state.
+ * Prevents duplicate active requests.
  */
 export async function POST(req: NextRequest) {
   const user = await getAuthenticatedUser();
@@ -134,35 +169,76 @@ export async function POST(req: NextRequest) {
 
   const { data: existing } = await admin
     .from('classroom_students')
-    .select('id, approved')
+    .select('id, approved, status')
     .eq('classroom_id', classroom.id)
     .eq('child_id', child.id)
     .maybeSingle();
 
   if (existing) {
-    return NextResponse.json(
-      existing.approved
-        ? { error: 'This student is already connected to your classroom.', status: 'already_connected' }
-        : { error: 'Connection request pending.', status: 'pending' },
-      { status: 409 }
-    );
+    const isApproved = existing.approved || existing.status === 'approved';
+    const isPending = existing.status === 'pending' || (!existing.status && !existing.approved);
+    if (isApproved) {
+      return NextResponse.json(
+        { error: 'This student is already connected to your classroom.', status: 'already_connected' },
+        { status: 409 }
+      );
+    }
+    if (isPending) {
+      return NextResponse.json(
+        { error: 'Connection request pending.', status: 'pending' },
+        { status: 409 }
+      );
+    }
+
+    // If previously declined, revoked, or removed: transition back to pending
+    const { error: updateError } = await admin
+      .from('classroom_students')
+      .update({
+        approved: false,
+        status: 'pending',
+        requested_by: 'teacher',
+        revoked_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id);
+
+    if (updateError) return NextResponse.json({ error: 'Could not send the connection request.' }, { status: 500 });
+  } else {
+    const { error: insertError } = await admin
+      .from('classroom_students')
+      .insert({
+        classroom_id: classroom.id,
+        child_id: child.id,
+        approved: false,
+        status: 'pending',
+        requested_by: 'teacher',
+      });
+    if (insertError) return NextResponse.json({ error: 'Could not send the connection request.' }, { status: 500 });
   }
 
-  const { error: insertError } = await admin
-    .from('classroom_students')
-    .insert({ classroom_id: classroom.id, child_id: child.id, approved: false, requested_by: 'teacher' });
-  if (insertError) return NextResponse.json({ error: 'Could not send the connection request.' }, { status: 500 });
+  // Immutable audit log
+  await recordConnectionAudit(admin, {
+    classroomId: classroom.id,
+    childId: child.id,
+    teacherId: user.id,
+    actorId: user.id,
+    actorRole: 'teacher',
+    action: 'requested',
+    metadata: { classroomName: classroom.name, teacherCodeUsed: true },
+  });
 
+  // Notify parent
+  const teacherName = (user.user_metadata?.name || user.user_metadata?.full_name || 'Teacher') as string;
   const { data: family } = await admin.from('families').select('owner_id').eq('id', child.family_id).maybeSingle();
   if (family?.owner_id) {
     await notifyOnce(admin, {
       recipientId: family.owner_id,
       childId: child.id,
       type: 'TEACHER_REQUEST',
-      title: 'New classroom connection request',
-      body: `A teacher wants to add ${child.name} to "${classroom.name}". Review and approve it from your Family dashboard.`,
-      payload: { classroomId: classroom.id, classroomName: classroom.name, childId: child.id },
-      dedupeKey: `teacher_request:${classroom.id}:${child.id}`,
+      title: `${teacherName} wants to connect with ${child.name} as a teacher.`,
+      body: `${teacherName} wants to connect with ${child.name} in "${classroom.name}". Review and approve classroom access from your dashboard.`,
+      payload: { classroomId: classroom.id, classroomName: classroom.name, teacherName, childId: child.id },
+      dedupeKey: `teacher_request:${classroom.id}:${child.id}:${Date.now()}`,
     });
   }
 

@@ -7,7 +7,10 @@ import type { StudentInsightsResponse } from '../insights/types';
 export type AgeGroup = 'child' | 'teen';
 export type ActivityStatus = 'active' | 'recently_active' | 'inactive';
 
-export type StudentClassroomRef = { id: string; name: string };
+export type ConnectionStatus = 'pending' | 'approved' | 'declined' | 'revoked' | 'removed';
+export type ConnectionState = 'none' | ConnectionStatus;
+
+export type StudentClassroomRef = { id: string; name: string; churchOrOrg?: string | null };
 export type StudentConceptRef = { conceptId: string; label: string; masteryScore: number };
 
 export type StudentCard = {
@@ -35,12 +38,16 @@ export type PendingStudent = {
   name: string;
   classrooms: StudentClassroomRef[];
   joinedAt: string | null;
+  status?: ConnectionStatus;
+  updatedAt?: string | null;
 };
 
 export type StudentsRosterResponse = {
   classrooms: { id: string; name: string; ageBand: string | null }[];
   students: StudentCard[];
   pending: PendingStudent[];
+  declined: PendingStudent[];
+  revoked: PendingStudent[];
 };
 
 export type StudentActivityKind = 'daily' | 'story' | 'achievement' | 'streak';
@@ -70,8 +77,6 @@ export type StudentDetailResponse = {
 };
 
 // "Add Student with Teacher Code" — the two-step lookup-then-request flow.
-
-export type ConnectionState = 'none' | 'pending' | 'approved';
 
 /** Deliberately thin — no age, username, or family info before a request exists. */
 export type StudentLookupPreview = { id: string; name: string; ageGroup: AgeGroup; avatar: string };
@@ -104,6 +109,7 @@ export type ClassroomRef = {
   ageBand: string | null;
   meetingDay: string | null;
   meetingTime: string | null;
+  churchOrOrg?: string | null;
   code: string;
   createdAt: string;
 };

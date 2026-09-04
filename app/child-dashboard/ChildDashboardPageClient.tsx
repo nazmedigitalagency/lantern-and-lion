@@ -151,11 +151,22 @@ export default function ChildDashboardPage() {
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
   const [progressSubTab, setProgressSubTab] = useState<'achievements' | 'feedback'>('achievements');
 
+  type ChildClassroomItem = {
+    id: string;
+    name: string;
+    code: string;
+    ageBand?: string | null;
+    teacherName: string;
+    churchOrOrg?: string | null;
+    approved: boolean;
+    status: string;
+  };
   type ChildClassroomConnection = {
     connected: boolean;
     approved: boolean;
     classroom: { id: string; name: string; code: string; ageBand?: string | null } | null;
     teacherName: string | null;
+    classrooms?: ChildClassroomItem[];
   };
   const [childClassroom, setChildClassroom] = useState<ChildClassroomConnection | null>(null);
 
@@ -815,27 +826,33 @@ export default function ChildDashboardPage() {
               <AssignmentsWidget tone="child" onViewAll={() => setActiveTab('assignments')} />
               <ClassChallengeWidget tone="child" />
 
-              {childClassroom?.connected && childClassroom.approved && (
-                <section className="kid-class-capsule" aria-label="My Teacher and Classroom">
-                  <div className="kid-class-capsule-icon">🏫</div>
+              {childClassroom?.classrooms && childClassroom.classrooms.length > 0 ? (
+                childClassroom.classrooms.map((cls) => (
+                  <section key={cls.id} className={`kid-class-capsule ${!cls.approved ? 'kid-class-pending' : ''}`} aria-label="My Teacher and Classroom">
+                    <div className="kid-class-capsule-icon">{cls.approved ? '🏫' : '⏳'}</div>
+                    <div className="kid-class-capsule-info">
+                      <span className="kid-class-kicker">MY TEACHER</span>
+                      <strong>{cls.teacherName || 'Teacher'} · {cls.name}</strong>
+                      <p>{cls.approved ? 'Connected to your Sunday School class!' : 'Waiting for parent approval on your parent’s dashboard'}</p>
+                    </div>
+                    <span className={`kid-class-status-pill ${cls.approved ? 'connected' : 'pending'}`}>
+                      {cls.approved ? 'Connected' : 'Pending'}
+                    </span>
+                  </section>
+                ))
+              ) : childClassroom?.connected ? (
+                <section className={`kid-class-capsule ${!childClassroom.approved ? 'kid-class-pending' : ''}`} aria-label="My Teacher and Classroom">
+                  <div className="kid-class-capsule-icon">{childClassroom.approved ? '🏫' : '⏳'}</div>
                   <div className="kid-class-capsule-info">
-                    <span className="kid-class-kicker">MY CLASS &amp; TEACHER</span>
-                    <strong>{childClassroom.classroom?.name} · Teacher {childClassroom.teacherName}</strong>
-                    <p>Connected to your Sunday School class!</p>
+                    <span className="kid-class-kicker">MY TEACHER</span>
+                    <strong>{childClassroom.teacherName || 'Teacher'} · {childClassroom.classroom?.name}</strong>
+                    <p>{childClassroom.approved ? 'Connected to your Sunday School class!' : 'Waiting for parent approval on your parent’s dashboard'}</p>
                   </div>
+                  <span className={`kid-class-status-pill ${childClassroom.approved ? 'connected' : 'pending'}`}>
+                    {childClassroom.approved ? 'Connected' : 'Pending'}
+                  </span>
                 </section>
-              )}
-
-              {childClassroom?.connected && !childClassroom.approved && (
-                <section className="kid-class-capsule kid-class-pending" aria-label="Classroom Pending Approval">
-                  <div className="kid-class-capsule-icon">⏳</div>
-                  <div className="kid-class-capsule-info">
-                    <span className="kid-class-kicker">MY CLASS &amp; TEACHER</span>
-                    <strong>{childClassroom.classroom?.name} · Teacher {childClassroom.teacherName}</strong>
-                    <p>Waiting for parent approval on your parent&rsquo;s dashboard</p>
-                  </div>
-                </section>
-              )}
+              ) : null}
 
               {/* 2. THREE QUICK-ACTION STATUS CARDS ROW */}
               <section className="kid-three-cards-row">

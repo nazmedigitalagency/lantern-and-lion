@@ -155,6 +155,7 @@ export default function ParentDashboardPage() {
   const [selectedAssignmentChildId, setSelectedAssignmentChildId] = useState<string | null>(null);
   const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<'all' | ParentAssignmentStatus>('all');
   const [loadingAssignments, setLoadingAssignments] = useState(true);
+  const [revokeTarget, setRevokeTarget] = useState<{ classroomId: string; childId: string; childName: string; teacherName: string; classroomName: string } | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -272,11 +273,13 @@ export default function ParentDashboardPage() {
             classroomCode: null,
             ageBand: null,
             teacherName: null,
+            churchOrOrg: null,
             status: 'not_connected' as const,
             approved: false,
             needsHelp: false,
             joinedAt: null,
             requestedBy: 'child' as const,
+            requestedScopes: [],
             assignments: { completedCount: 0, pendingCount: 0, latest: null },
             announcements: [],
           };
@@ -294,11 +297,19 @@ export default function ParentDashboardPage() {
           classroomCode: matchedClass.code,
           ageBand: matchedClass.ageBand || null,
           teacherName: matchedClass.teacherName || 'Sarah',
+          churchOrOrg: 'Grace Community Church',
           status: isApproved ? 'connected' : 'pending',
           approved: isApproved,
           needsHelp: false,
           joinedAt: 'This week',
           requestedBy: 'teacher' as const,
+          requestedScopes: [
+            'Classroom participation',
+            'Assignment progress',
+            'Quiz/activity performance',
+            'Scripture learning progress',
+            'Relevant educational activity',
+          ],
           assignments: isAmara ? {
             completedCount: 3,
             pendingCount: 1,
@@ -785,28 +796,25 @@ export default function ParentDashboardPage() {
   }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  function approveClassroom(classroomId: string, childId: string, approved: boolean) {
-    setClassMemberships((current) => current.map((m) => (m.classroomId === classroomId && m.childId === childId ? { ...m, approved } : m)));
+  function handleConnectionAction(classroomId: string, childId: string, action: 'approve' | 'decline' | 'revoke') {
+    const isApproved = action === 'approve';
+    setClassMemberships((current) => current.map((m) => (m.classroomId === classroomId && m.childId === childId ? { ...m, approved: isApproved } : m)));
     setChildClassrooms((current) => current.map((c) => {
-      if (String(c.childId) === String(childId)) {
-        return approved
-          ? { ...c, approved: true, status: 'connected' }
-          : { ...c, approved: false, status: 'not_connected', classroomId: null, classroomName: null };
+      if (String(c.childId) === String(childId) && (!c.classroomId || String(c.classroomId) === String(classroomId))) {
+        return {
+          ...c,
+          approved: isApproved,
+          status: isApproved ? 'connected' : action === 'decline' ? 'declined' : 'revoked',
+        };
       }
       return c;
     }));
 
-    if (approved) {
-      fetch(`/api/classrooms/${classroomId}/students/${childId}/approve`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved: true }),
-      }).catch(() => {});
-    } else {
-      fetch(`/api/classrooms/${classroomId}/students/${childId}/approve`, {
-        method: 'DELETE',
-      }).catch(() => {});
-    }
+    fetch(`/api/classrooms/${classroomId}/students/${childId}/approve`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    }).catch(() => {});
 
     try {
       const saved = JSON.parse(localStorage.getItem('lanternLionTeacherClasses') || '[]');
@@ -816,8 +824,8 @@ export default function ParentDashboardPage() {
             return {
               ...cls,
               students: (cls.students || []).map((st: { id: number | string; approved?: boolean }) =>
-                String(st.id) === String(childId) ? { ...st, approved } : st
-              ).filter((st: { id: number | string; approved?: boolean }) => approved || String(st.id) !== String(childId)),
+                String(st.id) === String(childId) ? { ...st, approved: isApproved } : st
+              ).filter((st: { id: number | string; approved?: boolean }) => isApproved || String(st.id) !== String(childId)),
             };
           }
           return cls;
@@ -826,7 +834,17 @@ export default function ParentDashboardPage() {
       }
     } catch { /* Storage unavailable. */ }
 
-    setSavedNotice(approved ? 'Class connection approved!' : 'Class connection declined.');
+    setSavedNotice(
+      action === 'approve'
+        ? 'Class connection approved!'
+        : action === 'decline'
+        ? 'Connection request declined.'
+        : 'Classroom access revoked.'
+    );
+  }
+
+  function approveClassroom(classroomId: string, childId: string, approved: boolean) {
+    handleConnectionAction(classroomId, childId, approved ? 'approve' : 'decline');
   }
 
   function markNotificationRead(id: string) {
@@ -1814,8 +1832,9 @@ export default function ParentDashboardPage() {
             </div>
 
             <div className="parent-class-grid">
-              {children.map((child) => {
-                const info = childClassrooms.find((c) => String(c.childId) === String(child.id)) || {
+              {children.flatMap((child) => {
+                const childClasses = childClassrooms.filter((c) => String(c.childId) === String(child.id));
+                const list = childClasses.length > 0 ? childClasses : [{
                   childId: String(child.id),
                   childName: child.name,
                   classroomId: null,
@@ -1823,17 +1842,25 @@ export default function ParentDashboardPage() {
                   classroomCode: null,
                   ageBand: null,
                   teacherName: null,
+                  churchOrOrg: null,
                   status: 'not_connected' as const,
                   approved: false,
                   needsHelp: false,
                   joinedAt: null,
                   requestedBy: 'child' as const,
+                  requestedScopes: [
+                    'Classroom participation',
+                    'Assignment progress',
+                    'Quiz/activity performance',
+                    'Scripture learning progress',
+                    'Relevant educational activity',
+                  ],
                   assignments: { completedCount: 0, pendingCount: 0, latest: null },
                   announcements: [],
-                };
+                }];
 
-                return (
-                  <article key={child.id} className="parent-class-card">
+                return list.map((info, idx) => (
+                  <article key={`${child.id}-${info.classroomId || idx}`} className="parent-class-card">
                     <div className="parent-class-header">
                       <div className="parent-class-child-badge">
                         <span className="parent-class-avatar">{child.name[0]}</span>
@@ -1843,9 +1870,69 @@ export default function ParentDashboardPage() {
                         </div>
                       </div>
                       <div className={`parent-conn-badge conn-${info.status}`}>
-                        {info.status === 'connected' ? '✓ Connected' : info.status === 'pending' ? '⏳ Pending Approval' : '○ Not Connected'}
+                        {info.status === 'connected'
+                          ? '✓ Connected'
+                          : info.status === 'pending'
+                          ? '⏳ Pending Approval'
+                          : info.status === 'declined'
+                          ? 'Declined'
+                          : info.status === 'revoked'
+                          ? 'Access Revoked'
+                          : '○ Not Connected'}
                       </div>
                     </div>
+
+                    {info.status === 'pending' && (
+                      <div className="parent-class-pending-card">
+                        <div className="parent-consent-notice">
+                          <p className="parent-consent-headline">
+                            <strong>{info.teacherName || 'Teacher'}</strong> wants to connect with <strong>{child.name}</strong> as a teacher.
+                          </p>
+                          <div className="parent-consent-details">
+                            <div className="parent-consent-row">
+                              <span>Teacher:</span>
+                              <strong>{info.teacherName || 'Teacher'}</strong>
+                            </div>
+                            <div className="parent-consent-row">
+                              <span>Class:</span>
+                              <strong>{info.classroomName || 'Classroom'}</strong>
+                            </div>
+                            <div className="parent-consent-row">
+                              <span>Church / Organization:</span>
+                              <strong>{info.churchOrOrg || 'Grace Community Church'}</strong>
+                            </div>
+                          </div>
+
+                          <div className="parent-consent-scopes">
+                            <span className="parent-consent-scopes-title">Requested access:</span>
+                            <ul className="parent-consent-scopes-list">
+                              <li><span className="scope-check">✓</span> Classroom participation</li>
+                              <li><span className="scope-check">✓</span> Assignment progress</li>
+                              <li><span className="scope-check">✓</span> Quiz/activity performance</li>
+                              <li><span className="scope-check">✓</span> Scripture learning progress</li>
+                              <li><span className="scope-check">✓</span> Relevant educational activity</li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div className="parent-class-pending-actions">
+                          <button
+                            type="button"
+                            className="button button-primary"
+                            onClick={() => handleConnectionAction(info.classroomId || '', String(child.id), 'approve')}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            onClick={() => handleConnectionAction(info.classroomId || '', String(child.id), 'decline')}
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {info.status === 'connected' && (
                       <div className="parent-class-body">
@@ -1858,7 +1945,7 @@ export default function ParentDashboardPage() {
                           <div className="parent-class-meta-item">
                             <span>Teacher</span>
                             <strong>{info.teacherName}</strong>
-                            <small>Verified Teacher</small>
+                            <small>{info.churchOrOrg || 'Verified Teacher'}</small>
                           </div>
                           <div className="parent-class-meta-item">
                             <span>Assignments</span>
@@ -1903,30 +1990,37 @@ export default function ParentDashboardPage() {
                             </div>
                           </div>
                         )}
+
+                        <div className="parent-class-footer-actions">
+                          <button
+                            type="button"
+                            className="parent-revoke-btn"
+                            onClick={() => setRevokeTarget({
+                              classroomId: info.classroomId || '',
+                              childId: String(child.id),
+                              childName: child.name,
+                              teacherName: info.teacherName || 'Teacher',
+                              classroomName: info.classroomName || 'Classroom',
+                            })}
+                          >
+                            Revoke Access
+                          </button>
+                        </div>
                       </div>
                     )}
 
-                    {info.status === 'pending' && (
-                      <div className="parent-class-pending-card">
+                    {(info.status === 'declined' || info.status === 'revoked') && (
+                      <div className="parent-class-revoked-card">
                         <p>
-                          A teacher wants to connect <strong>{child.name}</strong> to <strong>{info.classroomName}</strong> (Teacher: {info.teacherName}).
+                          Connection with <strong>{info.teacherName}</strong> in <strong>{info.classroomName}</strong> is currently {info.status}.
                         </p>
-                        <div className="parent-class-pending-actions">
-                          <button
-                            type="button"
-                            className="button button-primary"
-                            onClick={() => approveClassroom(info.classroomId || '', String(child.id), true)}
-                          >
-                            Approve Connection
-                          </button>
-                          <button
-                            type="button"
-                            className="button button-secondary"
-                            onClick={() => approveClassroom(info.classroomId || '', String(child.id), false)}
-                          >
-                            Decline
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          onClick={() => handleConnectionAction(info.classroomId || '', String(child.id), 'approve')}
+                        >
+                          Re-approve Connection
+                        </button>
                       </div>
                     )}
 
@@ -1941,9 +2035,48 @@ export default function ParentDashboardPage() {
                       </div>
                     )}
                   </article>
-                );
+                ));
               })}
             </div>
+
+            {revokeTarget && (
+              <div className="parent-modal-overlay" role="presentation" onClick={() => setRevokeTarget(null)}>
+                <div
+                  className="parent-modal-dialog"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="revoke-modal-title"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h2 id="revoke-modal-title">Revoke Teacher Access</h2>
+                  <p>
+                    Are you sure you want to revoke Teacher <strong>{revokeTarget.teacherName}</strong>&apos;s access to <strong>{revokeTarget.childName}</strong> in <strong>{revokeTarget.classroomName}</strong>?
+                  </p>
+                  <p className="parent-modal-warning">
+                    The teacher will immediately lose classroom access to {revokeTarget.childName}&apos;s learning progress.
+                  </p>
+                  <div className="parent-modal-actions">
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => setRevokeTarget(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-danger"
+                      onClick={() => {
+                        handleConnectionAction(revokeTarget.classroomId, revokeTarget.childId, 'revoke');
+                        setRevokeTarget(null);
+                      }}
+                    >
+                      Confirm Revoke
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

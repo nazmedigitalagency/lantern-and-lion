@@ -144,7 +144,12 @@ export type NotificationType =
   | 'TEACHER_CHALLENGE_COMPLETED'
   | 'TEACHER_STUDENT_ATTENTION'
   | 'TEACHER_DEADLINE_APPROACHING'
-  | 'TEACHER_EVENT_APPROACHING';
+  | 'TEACHER_EVENT_APPROACHING'
+  | 'TEACHER_CONNECTION_APPROVED'
+  | 'TEACHER_CONNECTION_DECLINED'
+  | 'TEACHER_CONNECTION_REVOKED'
+  | 'TEACHER_STUDENT_REMOVED'
+  | 'TEACHER_CONNECTED';
 
 /** Inserts a notification at most once per (recipient, dedupeKey) — the anti-spam guarantee. For a parent/teacher's own auth.users inbox. */
 export async function notifyOnce(
