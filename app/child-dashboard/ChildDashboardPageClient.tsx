@@ -17,6 +17,7 @@ import { StreakCard } from '../lib/streak/StreakCard';
 import { AssignmentsWidget } from '../lib/assignments/AssignmentsWidget';
 import { ClassChallengeWidget } from '../lib/challenges/ClassChallengeWidget';
 import { AssignmentsPage } from '../lib/assignments/AssignmentsPage';
+import { TeacherFeedbackHistory } from '../lib/assignments/TeacherFeedbackHistory';
 import { NotificationBell } from '../lib/notifications/NotificationBell';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
@@ -148,6 +149,7 @@ export default function ChildDashboardPage() {
   );
   type TodaySummaryData = { active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number };
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
+  const [progressSubTab, setProgressSubTab] = useState<'achievements' | 'feedback'>('achievements');
 
   type ChildClassroomConnection = {
     connected: boolean;
@@ -306,6 +308,12 @@ export default function ChildDashboardPage() {
       const requestedTab = searchParams.get('tab') as DashboardTab | null;
       const validTabs: DashboardTab[] = ['today', 'assignments', 'adventure', 'stories', 'arcade', 'leagues', 'explore', 'progress', 'character'];
       if (requestedTab && validTabs.includes(requestedTab)) setActiveTab(requestedTab);
+      if (searchParams.get('sub') === 'feedback' || searchParams.get('feedback') === '1' || requestedTab === 'progress') {
+        if (searchParams.get('sub') === 'feedback' || searchParams.get('feedback') === '1') {
+          setActiveTab('progress');
+          setProgressSubTab('feedback');
+        }
+      }
       const requestedAssignmentId = searchParams.get('assignmentId');
       if (requestedAssignmentId) setFocusAssignmentId(requestedAssignmentId);
       const savedChildSession = localStorage.getItem('lanternLionActiveChild') || localStorage.getItem('lanternLionActiveChildId');
@@ -1109,65 +1117,96 @@ export default function ChildDashboardPage() {
           {activeTab === 'progress' && (
             <div className="kid-tab-view">
               <div className="kid-tab-header">
-                <h2>📊 Hall of Achievements</h2>
-                <p>Track your biblical knowledge milestones and badges!</p>
+                <h2>{progressSubTab === 'achievements' ? '📊 Hall of Achievements' : '💬 Teacher Feedback'}</h2>
+                <p>
+                  {progressSubTab === 'achievements'
+                    ? 'Track your biblical knowledge milestones and badges!'
+                    : 'Encouraging notes and tips from your teachers on your assignments!'}
+                </p>
               </div>
 
-              <div className="progress-overview">
-                <article>
-                  <span>🗺️</span>
-                  <strong>{canonicalRegions.length}</strong>
-                  <small>Regions Discovered</small>
-                </article>
-                <article>
-                  <span>⭐</span>
-                  <strong>{starsEarned}</strong>
-                  <small>Total Stars Earned</small>
-                </article>
-                <article>
-                  <span>🔥</span>
-                  <strong>{dailySummary.streak}</strong>
-                  <small>Days in a Row</small>
-                </article>
-                <article>
-                  <span>🏆</span>
-                  <strong>Level {currentLevelNum}</strong>
-                  <small>{currentLevelTitle}</small>
-                </article>
+              <div className="progress-subnav" role="tablist" aria-label="Progress sections">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={progressSubTab === 'achievements'}
+                  className={`progress-subnav-btn ${progressSubTab === 'achievements' ? 'active' : ''}`}
+                  onClick={() => setProgressSubTab('achievements')}
+                >
+                  🏆 Achievements
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={progressSubTab === 'feedback'}
+                  className={`progress-subnav-btn ${progressSubTab === 'feedback' ? 'active' : ''}`}
+                  onClick={() => setProgressSubTab('feedback')}
+                >
+                  💬 Teacher Feedback
+                </button>
               </div>
 
-              <div className="child-progress-achievements">
-                <div className="achievements-card-grid">
-                  <div className={`achievement-badge-card ${totalSubLessonsCompleted >= 1 ? 'unlocked' : 'locked'}`}>
-                    <span className="badge-icon">🌱</span>
-                    <strong>First Steps</strong>
-                    <small>Completed your first Bible lesson.</small>
-                    <span className="badge-status">{totalSubLessonsCompleted >= 1 ? 'Unlocked' : 'In Progress'}</span>
+              {progressSubTab === 'achievements' ? (
+                <>
+                  <div className="progress-overview">
+                    <article>
+                      <span>🗺️</span>
+                      <strong>{canonicalRegions.length}</strong>
+                      <small>Regions Discovered</small>
+                    </article>
+                    <article>
+                      <span>⭐</span>
+                      <strong>{starsEarned}</strong>
+                      <small>Total Stars Earned</small>
+                    </article>
+                    <article>
+                      <span>🔥</span>
+                      <strong>{dailySummary.streak}</strong>
+                      <small>Days in a Row</small>
+                    </article>
+                    <article>
+                      <span>🏆</span>
+                      <strong>Level {currentLevelNum}</strong>
+                      <small>{currentLevelTitle}</small>
+                    </article>
                   </div>
 
-                  <div className={`achievement-badge-card ${dailySummary.streak >= 3 ? 'unlocked' : 'locked'}`}>
-                    <span className="badge-icon">🔥</span>
-                    <strong>Faithful Habit</strong>
-                    <small>Maintained a 3-day learning streak.</small>
-                    <span className="badge-status">{dailySummary.streak >= 3 ? 'Unlocked' : 'In Progress'}</span>
+                  <div className="child-progress-achievements">
+                    <div className="achievements-card-grid">
+                      <div className={`achievement-badge-card ${totalSubLessonsCompleted >= 1 ? 'unlocked' : 'locked'}`}>
+                        <span className="badge-icon">🌱</span>
+                        <strong>First Steps</strong>
+                        <small>Completed your first Bible lesson.</small>
+                        <span className="badge-status">{totalSubLessonsCompleted >= 1 ? 'Unlocked' : 'In Progress'}</span>
+                      </div>
+
+                      <div className={`achievement-badge-card ${dailySummary.streak >= 3 ? 'unlocked' : 'locked'}`}>
+                        <span className="badge-icon">🔥</span>
+                        <strong>Faithful Habit</strong>
+                        <small>Maintained a 3-day learning streak.</small>
+                        <span className="badge-status">{dailySummary.streak >= 3 ? 'Unlocked' : 'In Progress'}</span>
+                      </div>
+
+                      <div className={`achievement-badge-card ${totalSubLessonsCompleted >= 10 ? 'unlocked' : 'locked'}`}>
+                        <span className="badge-icon">⚔️</span>
+                        <strong>Word Warrior</strong>
+                        <small>Completed 10 interactive lessons.</small>
+                        <span className="badge-status">{totalSubLessonsCompleted >= 10 ? 'Unlocked' : 'In Progress'}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className={`achievement-badge-card ${totalSubLessonsCompleted >= 10 ? 'unlocked' : 'locked'}`}>
-                    <span className="badge-icon">⚔️</span>
-                    <strong>Word Warrior</strong>
-                    <small>Completed 10 interactive lessons.</small>
-                    <span className="badge-status">{totalSubLessonsCompleted >= 10 ? 'Unlocked' : 'In Progress'}</span>
+                  <div style={{ marginTop: '28px' }}>
+                    <StreakCard
+                      streak={learningStreak || { currentStreak: dailySummary.streak, longestStreak: dailySummary.streak, graceDays: 2, todayQualified: false, nextMilestone: null, streakEndedRecently: false }}
+                      tone={teen ? 'teen' : 'child'}
+                      onFetchCalendar={fetchStreakCalendar}
+                    />
                   </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '28px' }}>
-                <StreakCard
-                  streak={learningStreak || { currentStreak: dailySummary.streak, longestStreak: dailySummary.streak, graceDays: 2, todayQualified: false, nextMilestone: null, streakEndedRecently: false }}
-                  tone={teen ? 'teen' : 'child'}
-                  onFetchCalendar={fetchStreakCalendar}
-                />
-              </div>
+                </>
+              ) : (
+                <TeacherFeedbackHistory tone="child" />
+              )}
             </div>
           )}
         </main>

@@ -107,14 +107,33 @@ export function AssignmentDetailModal({
           </div>
         )}
 
-        {!justSubmitted && isGraded && (
+        {!justSubmitted && (isGraded || a.feedback) && (
           <div className="assignment-detail-result">
             {a.score !== null && <p className="assignment-detail-score">Score: {a.score}%</p>}
             {a.feedback ? (
-              <div className="assignment-detail-feedback">
-                <p className="assignment-detail-feedback-kicker">Your teacher&rsquo;s feedback:</p>
-                <p>&ldquo;{a.feedback}&rdquo;</p>
-              </div>
+              tone === 'child' ? (
+                <div className="assignment-detail-feedback child-speech-feedback" role="region" aria-label="Teacher Feedback">
+                  <div className="child-speech-kicker">
+                    <span className="child-speech-avatar" aria-hidden="true">👩‍🏫</span>
+                    <span className="child-speech-title">{a.teacherName || 'Ms. Sarah'} says...</span>
+                    <span className="child-feedback-tag">Teacher Feedback</span>
+                  </div>
+                  <div className="child-speech-bubble">
+                    <p>&ldquo;{a.feedback}&rdquo;</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="assignment-detail-feedback teen-card-feedback" role="region" aria-label="Teacher Feedback">
+                  <div className="teen-card-kicker">
+                    <span className="teen-feedback-icon" aria-hidden="true">💬</span>
+                    <span className="teen-card-title">Teacher feedback</span>
+                    {a.teacherName && <span className="teen-teacher-sub">• {a.teacherName}</span>}
+                  </div>
+                  <div className="teen-card-body">
+                    <p>&ldquo;{a.feedback}&rdquo;</p>
+                  </div>
+                </div>
+              )
             ) : (
               <p className="assignment-detail-nofeedback">Nice work — this one&rsquo;s complete.</p>
             )}

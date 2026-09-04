@@ -168,6 +168,11 @@ export function NotificationBell({
                           <span className="notif-item-body">
                             <span className="notif-item-title">{n.title}</span>
                             <span className="notif-item-text">{n.body}</span>
+                            {n.type === 'ASSIGNMENT_FEEDBACK' && (
+                              <span className="notif-action-btn-row">
+                                <span className="notif-view-feedback-btn">[View Feedback]</span>
+                              </span>
+                            )}
                             <span className="notif-item-time">{relativeTime(n.createdAt)}</span>
                           </span>
                           {!n.readAt && <span className="notif-item-dot" aria-hidden="true" />}

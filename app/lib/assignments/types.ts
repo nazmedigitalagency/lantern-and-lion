@@ -71,6 +71,7 @@ export type StudentAssignment = {
   status: SubmissionStatus;
   score: number | null;
   feedback: string | null;
+  teacherName?: string | null;
   submittedAt: string | null;
   gradedAt: string | null;
   dueBucket: 'upcoming' | 'due_today' | 'due_soon' | 'overdue' | 'completed';

@@ -232,9 +232,9 @@ export async function sendGradeNotifications(admin: SupabaseClient, params: { as
     await notifyChildOnce(admin, {
       childId: params.childId,
       type: 'ASSIGNMENT_FEEDBACK',
-      title: 'Your teacher left feedback',
+      title: 'Your teacher left feedback on your assignment.',
       body: `On “${params.assignmentTitle}”: “${params.feedback.trim()}”`,
-      payload: { assignmentId: params.assignmentId },
+      payload: { assignmentId: params.assignmentId, feedback: params.feedback.trim() },
       dedupeKey: `assignment_feedback_child:${params.assignmentId}:${params.childId}:${nowIso}`,
     }).catch(() => {});
 

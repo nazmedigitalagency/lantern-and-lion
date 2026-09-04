@@ -18,6 +18,7 @@ import { StreakCard } from '../lib/streak/StreakCard';
 import { AssignmentsWidget } from '../lib/assignments/AssignmentsWidget';
 import { ClassChallengeWidget } from '../lib/challenges/ClassChallengeWidget';
 import { AssignmentsPage } from '../lib/assignments/AssignmentsPage';
+import { TeacherFeedbackHistory } from '../lib/assignments/TeacherFeedbackHistory';
 import { NotificationBell } from '../lib/notifications/NotificationBell';
 import { claimStreakMilestoneIfNew } from '../lib/streak/client';
 import type { StreakStatus } from '../lib/streak/server';
@@ -37,7 +38,7 @@ import { playRewardSound } from '../lib/sound/sound-effects';
 import TeenSidebar from './TeenSidebar';
 
 type Teen = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
-type Tab = 'home' | 'assignments' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
+type Tab = 'home' | 'assignments' | 'progress' | 'decision' | 'cases' | 'askword' | 'learn' | 'journey' | 'profile';
 
 function trackForAge(age: number): CurriculumModule['track'] {
   if (age <= 5) return 'early';
@@ -398,6 +399,7 @@ export default function TeenDashboardPage() {
   const [hydrated, setHydrated] = useState(false);
   const [todaySummary, setTodaySummary] = useState<{ active_seconds: number; games_played: number; quests_completed: number; xp_earned: number; achievements_earned: number } | null>(null);
   const [learningStreak, setLearningStreak] = useState<StreakStatus | null>(null);
+  const [progressSubTab, setProgressSubTab] = useState<'milestones' | 'feedback'>('milestones');
   const [milestoneToast, setMilestoneToast] = useState<{ label: string; coins: number; gems: number } | null>(null);
   const [learningPlan, setLearningPlan] = useState<LearningPlanResponse | null>(null);
 
@@ -555,8 +557,12 @@ export default function TeenDashboardPage() {
         // notification center via ?tab=assignments&assignmentId=...
         const dashboardSearchParams = new URLSearchParams(window.location.search);
         const requestedTab = dashboardSearchParams.get('tab') as Tab | null;
-        const validTabs: Tab[] = ['home', 'assignments', 'decision', 'cases', 'askword', 'learn', 'journey', 'profile'];
+        const validTabs: Tab[] = ['home', 'assignments', 'progress', 'decision', 'cases', 'askword', 'learn', 'journey', 'profile'];
         if (requestedTab && validTabs.includes(requestedTab)) setActiveTab(requestedTab);
+        if (dashboardSearchParams.get('sub') === 'feedback' || dashboardSearchParams.get('feedback') === '1') {
+          setActiveTab('progress');
+          setProgressSubTab('feedback');
+        }
         const requestedAssignmentId = dashboardSearchParams.get('assignmentId');
         if (requestedAssignmentId) setFocusAssignmentId(requestedAssignmentId);
       } catch { /* keep demo defaults */ }
@@ -1239,6 +1245,77 @@ export default function TeenDashboardPage() {
           {activeTab === 'assignments' && (
             <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
               <AssignmentsPage tone="teen" initialOpenId={focusAssignmentId} onInitialOpenHandled={() => setFocusAssignmentId(null)} />
+            </div>
+          )}
+
+          {/* ── PROGRESS & TEACHER FEEDBACK ── */}
+          {activeTab === 'progress' && (
+            <div className="teen-body" style={{ width: '100%', padding: '0 0 60px' }}>
+              <div className="teen-title">
+                <p className="teen-kicker">PROGRESS &amp; GUIDANCE</p>
+                <h1>{progressSubTab === 'milestones' ? 'Milestones & Habit Streaks' : 'Teacher Feedback'}</h1>
+                <p>
+                  {progressSubTab === 'milestones'
+                    ? 'Track your biblical milestones, learning streaks, and spiritual growth progress.'
+                    : 'Instructor evaluations, encouragement, and study recommendations attached to your completed coursework.'}
+                </p>
+              </div>
+
+              <div className="progress-subnav progress-subnav-teen" role="tablist" aria-label="Progress sections">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={progressSubTab === 'milestones'}
+                  className={`progress-subnav-btn ${progressSubTab === 'milestones' ? 'active' : ''}`}
+                  onClick={() => setProgressSubTab('milestones')}
+                >
+                  📊 Milestones & Streaks
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={progressSubTab === 'feedback'}
+                  className={`progress-subnav-btn ${progressSubTab === 'feedback' ? 'active' : ''}`}
+                  onClick={() => setProgressSubTab('feedback')}
+                >
+                  💬 Teacher Feedback
+                </button>
+              </div>
+
+              {progressSubTab === 'milestones' ? (
+                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <StreakCard
+                    streak={learningStreak || { currentStreak: 3, longestStreak: 7, graceDays: 2, todayQualified: false, nextMilestone: null, streakEndedRecently: false }}
+                    tone="teen"
+                    onFetchCalendar={fetchStreakCalendar}
+                  />
+
+                  <div className="teen-progress-overview-grid">
+                    <div className="teen-overview-stat-card">
+                      <span className="teen-stat-icon">⭐</span>
+                      <strong>{points}</strong>
+                      <small>Total Light Points</small>
+                    </div>
+                    <div className="teen-overview-stat-card">
+                      <span className="teen-stat-icon">🔥</span>
+                      <strong>{learningStreak?.currentStreak || 3} Days</strong>
+                      <small>Current Habit Streak</small>
+                    </div>
+                    <div className="teen-overview-stat-card">
+                      <span className="teen-stat-icon">🏆</span>
+                      <strong>{level.name}</strong>
+                      <small>{level.tag}</small>
+                    </div>
+                    <div className="teen-overview-stat-card">
+                      <span className="teen-stat-icon">🛡️</span>
+                      <strong>Rank {level.name}</strong>
+                      <small>Disciple Expedition</small>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <TeacherFeedbackHistory tone="teen" />
+              )}
             </div>
           )}
 

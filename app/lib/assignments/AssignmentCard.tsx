@@ -28,7 +28,14 @@ export function AssignmentCard({
       <strong className="assignment-card-title">{a.title}</strong>
       <span className="assignment-card-type">{ASSIGNMENT_TYPE_LABEL[a.assignmentType]}</span>
       {a.classroomName && <span className="assignment-card-from">From {a.classroomName}</span>}
-      <span className={`assignment-card-status status-${a.status}`}>{statusLabel(a)}</span>
+      <div className="assignment-card-footer">
+        <span className={`assignment-card-status status-${a.status}`}>{statusLabel(a)}</span>
+        {a.feedback && (
+          <span className="assignment-card-feedback-chip">
+            💬 Teacher Feedback
+          </span>
+        )}
+      </div>
     </button>
   );
 }

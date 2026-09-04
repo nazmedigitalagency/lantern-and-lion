@@ -20,7 +20,7 @@ export async function GET() {
   const admin = createServerAdminClient();
   const { data: rows } = await admin
     .from('assignment_submissions')
-    .select('id, child_id, status, score, feedback, submitted_at, graded_at, assignments(id, title, instructions, assignment_type, reference_id, due_date, time_limit_minutes, required_score, xp_reward, status, assigned_at, classrooms(name))')
+    .select('id, child_id, status, score, feedback, submitted_at, graded_at, assignments(id, title, instructions, assignment_type, reference_id, due_date, time_limit_minutes, required_score, xp_reward, status, assigned_at, classrooms(name, teacher_id))')
     .eq('child_id', session.childId);
 
   type Row = {
@@ -28,7 +28,7 @@ export async function GET() {
     assignments: {
       id: string; title: string; instructions: string | null; assignment_type: AssignmentType; reference_id: string | null;
       due_date: string | null; time_limit_minutes: number | null; required_score: number | null; xp_reward: number | null;
-      status: 'draft' | 'assigned'; assigned_at: string | null; classrooms: { name: string } | null;
+      status: 'draft' | 'assigned'; assigned_at: string | null; classrooms: { name: string; teacher_id?: string | null } | null;
     } | null;
   };
 
@@ -47,10 +47,29 @@ export async function GET() {
     await syncAssignmentSubmissions(admin, assignment as never, group as never);
   }
 
+  // Resolve teacher names
+  const teacherIds = new Set<string>();
+  for (const r of submissions) {
+    const tId = r.assignments?.classrooms?.teacher_id;
+    if (tId) teacherIds.add(tId);
+  }
+  const teacherNames = new Map<string, string>();
+  for (const tId of teacherIds) {
+    try {
+      const { data: teacherUser } = await admin.auth.admin.getUserById(tId);
+      const name = (teacherUser?.user?.user_metadata?.name || teacherUser?.user?.user_metadata?.full_name || 'Ms. Sarah') as string;
+      teacherNames.set(tId, name);
+    } catch {
+      teacherNames.set(tId, 'Ms. Sarah');
+    }
+  }
+
   const result: StudentAssignment[] = submissions
     .filter((r) => r.assignments)
     .map((r) => {
       const a = r.assignments!;
+      const tId = a.classrooms?.teacher_id;
+      const teacherName = tId ? teacherNames.get(tId) || 'Ms. Sarah' : 'Ms. Sarah';
       return {
         id: a.id,
         title: a.title,
@@ -59,6 +78,7 @@ export async function GET() {
         referenceLabel: referenceLabel(a.assignment_type, a.reference_id),
         contentLink: contentLink(a.assignment_type, a.reference_id),
         classroomName: a.classrooms?.name || null,
+        teacherName,
         dueDate: a.due_date,
         timeLimitMinutes: a.time_limit_minutes,
         requiredScore: a.required_score,
