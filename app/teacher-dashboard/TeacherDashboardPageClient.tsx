@@ -182,9 +182,33 @@ export default function TeacherDashboardPage() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    let cancelled = false;
+    async function initSession() {
       try {
-        const session = JSON.parse(localStorage.getItem('lanternLionTeacherSession') || 'null');
+        let session = JSON.parse(localStorage.getItem('lanternLionTeacherSession') || 'null');
+
+        // If not in localStorage, check if Supabase has an active session
+        // (e.g. redirected from Google OAuth or active SSR session cookies)
+        if (!session?.email) {
+          try {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user && user.email) {
+              const teacherName =
+                user.user_metadata?.full_name ||
+                user.user_metadata?.name ||
+                user.email.split('@')[0] ||
+                'Teacher';
+              session = { name: teacherName, email: user.email };
+              localStorage.setItem('lanternLionTeacherSession', JSON.stringify(session));
+            }
+          } catch {
+            /* continue checking */
+          }
+        }
+
+        if (cancelled) return;
+
         if (!session?.email) {
           try {
             sessionStorage.setItem('lanternLionPendingModuleRedirect', '/teacher-dashboard');
@@ -192,6 +216,7 @@ export default function TeacherDashboardPage() {
           router.replace('/teacher-access');
           return;
         }
+
         const email = session.email;
         const name = session.name || 'Teacher';
         setTeacherEmail(email);
@@ -225,9 +250,11 @@ export default function TeacherDashboardPage() {
         setAllClasses(starters);
         setActiveClass(starters[0].id);
       }
-      setHydrated(true);
-    }, 0);
-    return () => clearTimeout(timer);
+      if (!cancelled) setHydrated(true);
+    }
+
+    initSession();
+    return () => { cancelled = true; };
   }, [router]);
 
   // A localStorage session with no matching real Supabase Auth user (stale, or

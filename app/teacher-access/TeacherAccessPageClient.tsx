@@ -2,20 +2,39 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { createClient } from '../lib/supabase/client';
 
+type Mode = 'signin' | 'signup';
+
 export default function TeacherAccessPage() {
+  const [mode, setMode] = useState<Mode>('signin');
+  const [name, setName] = useState('');
+  const [church, setChurch] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [show, setShow] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const googleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Check URL parameters for errors or initial mode
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error') === 'auth_callback_failed') {
+        setError('Google sign-in could not be completed. Please try again or use email sign-in.');
+      }
+      if (params.get('mode') === 'signup') {
+        setMode('signup');
+      }
+    }
+
     try {
       const supabase = createClient();
+      // Check if user is already authenticated
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (user) {
           const teacherName =
@@ -27,26 +46,94 @@ export default function TeacherAccessPage() {
             'lanternLionTeacherSession',
             JSON.stringify({ name: teacherName, email: user.email })
           );
+          let pending: string | null = null;
+          try {
+            pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
+            if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
+          } catch { /* Storage unavailable */ }
+          window.location.href = pending || '/teacher-dashboard';
         }
       });
+
+      // Subscribe to auth state changes (e.g. when OAuth completes)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+          const teacherName =
+            session.user.user_metadata?.full_name ||
+            session.user.user_metadata?.name ||
+            session.user.email?.split('@')[0] ||
+            'Teacher';
+          localStorage.setItem(
+            'lanternLionTeacherSession',
+            JSON.stringify({ name: teacherName, email: session.user.email })
+          );
+          let pending: string | null = null;
+          try {
+            pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
+            if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
+          } catch { /* Storage unavailable */ }
+          window.location.href = pending || '/teacher-dashboard';
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     } catch {
       /* fallback */
     }
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
+    };
+  }, []);
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError('');
+    setNotice('');
+    setPassword('');
+  }
+
   async function handleGoogleSignIn() {
     setError('');
+    setNotice('');
     setIsGoogleLoading(true);
+
+    if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
+    // Safety timeout: if navigation is blocked or takes too long, restore the button state
+    googleTimeoutRef.current = setTimeout(() => {
+      setIsGoogleLoading(false);
+    }, 8000);
+
     try {
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithOAuth({
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/teacher-dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/teacher-dashboard`,
         },
       });
       if (authError) throw authError;
+
+      // Ensure redirect happens if the browser client didn't do it automatically
+      if (data?.url) {
+        let isEmbedded = false;
+        try {
+          isEmbedded = window.self !== window.top;
+        } catch {
+          isEmbedded = true;
+        }
+        if (isEmbedded) {
+          window.open(data.url, '_blank');
+        } else {
+          window.location.assign(data.url);
+        }
+      }
     } catch (err: unknown) {
+      if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
       setIsGoogleLoading(false);
       const msg = err instanceof Error ? err.message : 'Google sign-in error';
       setError(msg);
@@ -56,6 +143,7 @@ export default function TeacherAccessPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
+    setNotice('');
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
@@ -68,20 +156,75 @@ export default function TeacherAccessPage() {
     }
 
     setIsSubmitting(true);
+
+    if (mode === 'signup') {
+      if (!name.trim()) {
+        setError('Please enter your full name.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      try {
+        const supabase = createClient();
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: {
+            data: {
+              full_name: name.trim(),
+              church_name: church.trim() || undefined,
+              role: 'teacher',
+            },
+          },
+        });
+
+        if (signUpError) {
+          if (signUpError.code === 'user_already_exists' || signUpError.message?.toLowerCase().includes('already registered')) {
+            setError('An account with this email already exists. Please switch to Sign in.');
+          } else {
+            setError(signUpError.message || 'Could not create your account. Please try again.');
+          }
+          setIsSubmitting(false);
+          return;
+        }
+
+        const teacherName =
+          data.user?.user_metadata?.full_name ||
+          data.user?.user_metadata?.name ||
+          name.trim() ||
+          'Teacher';
+
+        localStorage.setItem(
+          'lanternLionTeacherSession',
+          JSON.stringify({ name: teacherName, email: cleanEmail })
+        );
+
+        let pending: string | null = null;
+        try {
+          pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
+          if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
+        } catch { /* No-op */ }
+
+        window.location.href = pending || '/teacher-dashboard';
+      } catch {
+        setError('Could not complete signup. Please check your connection and try again.');
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // Sign in mode
     try {
       const supabase = createClient();
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password,
       });
+
       if (signInError || !data.user) {
-        // A local-only fallback session used to be created here whenever real sign-in
-        // failed, silently landing the teacher on a dashboard where every real feature
-        // (My Students, Classes, Assignments) fails with a generic connection error and
-        // no indication their password was wrong. Show the real reason instead.
         setError(
           signInError?.message?.toLowerCase().includes('invalid')
-            ? 'That email and password combination isn’t recognized. Check your details, or use Google sign-in.'
+            ? 'That email and password combination isn’t recognized. Check your details, or switch to Create account if you’re new.'
             : signInError?.message || 'Could not sign in. Please try again.'
         );
         setIsSubmitting(false);
@@ -93,15 +236,18 @@ export default function TeacherAccessPage() {
         data.user.user_metadata?.name ||
         data.user.email?.split('@')[0] ||
         'Teacher';
+
       localStorage.setItem(
         'lanternLionTeacherSession',
         JSON.stringify({ name: teacherName, email: cleanEmail })
       );
+
       let pending: string | null = null;
       try {
         pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
         if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
       } catch { /* No-op */ }
+
       window.location.href = pending || '/teacher-dashboard';
     } catch {
       setError('Could not sign in. Check your connection and try again.');
@@ -135,9 +281,30 @@ export default function TeacherAccessPage() {
 
       <section className="teacher-access-form">
         <div>
+          <div className="access-tabs" aria-label="Teacher account access">
+            <button
+              type="button"
+              aria-pressed={mode === 'signin'}
+              onClick={() => switchMode('signin')}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              aria-pressed={mode === 'signup'}
+              onClick={() => switchMode('signup')}
+            >
+              Create account
+            </button>
+          </div>
+
           <p className="teacher-kicker">Teacher &amp; Leader Access</p>
-          <h2>Welcome back.</h2>
-          <p>Sign in to manage your Sunday School or church classroom.</p>
+          <h2>{mode === 'signin' ? 'Welcome back.' : 'Join as a teacher.'}</h2>
+          <p>
+            {mode === 'signin'
+              ? 'Sign in to manage your Sunday School or church classroom.'
+              : 'Create your teacher account to start managing classes and assignments.'}
+          </p>
 
           <button
             type="button"
@@ -151,14 +318,46 @@ export default function TeacherAccessPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
             </svg>
-            <span>{isGoogleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
+            <span>
+              {isGoogleLoading
+                ? 'Connecting to Google...'
+                : mode === 'signin'
+                ? 'Continue with Google'
+                : 'Sign up with Google'}
+            </span>
           </button>
 
           <div className="auth-divider">
-            <span>or sign in with email</span>
+            <span>{mode === 'signin' ? 'or sign in with email' : 'or sign up with email'}</span>
           </div>
 
           <form onSubmit={submit} noValidate>
+            {mode === 'signup' && (
+              <>
+                <label>
+                  Full name
+                  <input
+                    type="text"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); setError(''); }}
+                    placeholder="e.g. Pastor Grace or David Okon"
+                    required
+                  />
+                </label>
+                <label>
+                  Church or organization <small style={{ fontWeight: 400, color: 'var(--muted)' }}>(optional)</small>
+                  <input
+                    type="text"
+                    autoComplete="organization"
+                    value={church}
+                    onChange={(e) => { setChurch(e.target.value); setError(''); }}
+                    placeholder="e.g. St. Mark's Sunday School"
+                  />
+                </label>
+              </>
+            )}
+
             <label>
               Email address
               <input
@@ -167,28 +366,49 @@ export default function TeacherAccessPage() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 placeholder="teacher@church.org"
+                required
               />
             </label>
+
             <label>
               Password
               <div>
                 <input
                   type={show ? 'text' : 'password'}
-                  autoComplete="current-password"
+                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  placeholder="Enter your password"
+                  placeholder={mode === 'signup' ? 'At least 8 characters' : 'Enter your password'}
+                  required
                 />
                 <button type="button" onClick={() => setShow(!show)}>
                   {show ? 'Hide' : 'Show'}
                 </button>
               </div>
             </label>
+
             {error && <p className="teacher-access-error" role="alert">{error}</p>}
+            {notice && <p className="access-notice" role="status">{notice}</p>}
+
             <button className="button button-primary" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Signing in...' : 'Open teacher dashboard'}
+              {isSubmitting
+                ? 'Please wait...'
+                : mode === 'signin'
+                ? 'Open teacher dashboard'
+                : 'Create teacher account'}
             </button>
           </form>
+
+          <p className="access-switch">
+            {mode === 'signin' ? 'New to the teacher space?' : 'Already have an account?'}{' '}
+            <button
+              type="button"
+              onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
+            >
+              {mode === 'signin' ? 'Create an account' : 'Sign in'}
+            </button>
+          </p>
+
           <Link className="access-home-link" href="/" style={{ marginTop: 18, display: 'inline-block' }}>
             Back to the home page
           </Link>

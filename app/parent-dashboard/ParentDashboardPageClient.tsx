@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { createClient } from '../lib/supabase/client';
 import { getSkillProfile } from '../lib/skill-profile';
 import { CharacterAvatar } from '../character/components';
 import { readAppearance, readEquipment } from '../character/storage';
@@ -158,12 +159,31 @@ export default function ParentDashboardPage() {
   const [revokeTarget, setRevokeTarget] = useState<{ classroomId: string; childId: string; childName: string; teacherName: string; classroomName: string } | null>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      // Parsed and checked outside the main try/catch below: if this throws
-      // (e.g. corrupted localStorage) it must still redirect, not be
-      // swallowed into rendering the page as if a session were present.
-      let session: { name?: string } | null = null;
-      try { session = JSON.parse(localStorage.getItem('lanternLionDemoSession') || 'null'); } catch { /* Treat as no session. */ }
+    let cancelled = false;
+    async function initSession() {
+      let session: { name?: string; email?: string } | null = null;
+      try {
+        session = JSON.parse(localStorage.getItem('lanternLionDemoSession') || 'null');
+      } catch { /* Treat as no session. */ }
+
+      if (!session) {
+        try {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const parentName =
+              user.user_metadata?.full_name ||
+              user.user_metadata?.name ||
+              user.email?.split('@')[0] ||
+              'Parent';
+            session = { name: parentName, email: user.email };
+            localStorage.setItem('lanternLionDemoSession', JSON.stringify(session));
+          }
+        } catch { /* Supabase client fallback */ }
+      }
+
+      if (cancelled) return;
+
       if (!session) {
         try { sessionStorage.setItem('lanternLionPendingModuleRedirect', '/parent-dashboard'); } catch { /* Storage unavailable. */ }
         router.replace('/parent-access');
@@ -225,9 +245,11 @@ export default function ParentDashboardPage() {
           setHelpRequest(storedHelp);
         }
       } catch { /* Keep the demo family available. */ }
-      setHydrated(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
+      if (!cancelled) setHydrated(true);
+    }
+
+    initSession();
+    return () => { cancelled = true; };
   }, [router]);
 
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { createClient } from '../lib/supabase/client';
 
 type Mode = 'signin' | 'signup';
@@ -21,6 +21,7 @@ export default function ParentAccessPage() {
   const [tourStep, setTourStep] = useState(1);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const googleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const tourSteps = [
     {
@@ -57,6 +58,13 @@ export default function ParentAccessPage() {
   const [pendingModuleRedirect, setPendingModuleRedirect] = useState('');
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error') === 'auth_callback_failed') {
+        setError('Google sign-in could not be completed. Please try again or sign in with email.');
+      }
+    }
+
     const timer = window.setTimeout(() => {
       try {
         setPendingModuleRedirect(sessionStorage.getItem('lanternLionPendingModuleRedirect') || '');
@@ -79,6 +87,23 @@ export default function ParentAccessPage() {
             setSignedInName(parentName);
           }
         });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+            const parentName =
+              session.user.user_metadata?.full_name ||
+              session.user.user_metadata?.name ||
+              session.user.email?.split('@')[0] ||
+              'Parent';
+            localStorage.setItem(
+              'lanternLionDemoSession',
+              JSON.stringify({ name: parentName, email: session.user.email })
+            );
+            setSignedInName(parentName);
+          }
+        });
+
+        return () => subscription.unsubscribe();
       } catch {
         /* Supabase client fallback */
       }
@@ -86,19 +111,46 @@ export default function ParentAccessPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
+    };
+  }, []);
+
   async function handleGoogleSignIn() {
     setError('');
     setIsGoogleLoading(true);
+
+    if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
+    googleTimeoutRef.current = setTimeout(() => {
+      setIsGoogleLoading(false);
+    }, 8000);
+
     try {
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithOAuth({
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/parent-access`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/parent-access`,
         },
       });
       if (authError) throw authError;
+
+      if (data?.url) {
+        let isEmbedded = false;
+        try {
+          isEmbedded = window.self !== window.top;
+        } catch {
+          isEmbedded = true;
+        }
+        if (isEmbedded) {
+          window.open(data.url, '_blank');
+        } else {
+          window.location.assign(data.url);
+        }
+      }
     } catch (err: unknown) {
+      if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
       setIsGoogleLoading(false);
       const msg = err instanceof Error ? err.message : 'Google sign-in error';
       setError(msg);
@@ -150,9 +202,19 @@ export default function ParentAccessPage() {
             data: { full_name: name.trim(), country },
           },
         });
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+          if (signUpError.code === 'user_already_exists' || signUpError.message?.toLowerCase().includes('already registered')) {
+            setError('An account with this email already exists. Please switch to Sign in.');
+          } else {
+            setError(signUpError.message || 'Could not create parent account. Please try again.');
+          }
+          setIsSubmitting(false);
+          return;
+        }
       } catch {
-        // Fallback for offline / demo session
+        setError('Could not complete signup. Check your connection and try again.');
+        setIsSubmitting(false);
+        return;
       }
 
       localStorage.setItem('lanternLionDemoParent', JSON.stringify({ name: name.trim(), email: normalizedEmail, country }));
