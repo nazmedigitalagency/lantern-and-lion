@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
-import { notifyChildOnce } from '../../../lib/activity/server';
+import { notifyChildOnce, notifyOnce } from '../../../lib/activity/server';
 
 const CreateAnnouncementSchema = z.object({
   classroomId: z.string().uuid(),
@@ -112,6 +112,41 @@ export async function POST(req: NextRequest) {
       },
       dedupeKey: `announcement_child:${announcement.id}:${childId}`,
     }).catch(() => {});
+  }
+
+  // Fan out notification to parents of students in this classroom (Feature 12)
+  if (studentIds.length > 0) {
+    try {
+      const { data: childrenWithFamily } = await admin
+        .from('children')
+        .select('id, name, family_id, families(owner_id)')
+        .in('id', studentIds);
+
+      const notifiedOwners = new Set<string>();
+      for (const ch of childrenWithFamily || []) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ownerId = (ch.families as any)?.owner_id;
+        if (ownerId && !notifiedOwners.has(ownerId)) {
+          notifiedOwners.add(ownerId);
+          await notifyOnce(admin, {
+            recipientId: ownerId,
+            childId: ch.id,
+            type: 'TEACHER_ANNOUNCEMENT',
+            title: `${classroom.name}: ${parsed.data.title}`,
+            body: `${teacherName}: “${parsed.data.message.slice(0, 120)}${parsed.data.message.length > 120 ? '…' : ''}”`,
+            payload: {
+              announcementId: announcement.id,
+              classroomId: classroom.id,
+              classroomName: classroom.name,
+              teacherName,
+            },
+            dedupeKey: `announcement_parent:${announcement.id}:${ownerId}`,
+          }).catch(() => {});
+        }
+      }
+    } catch {
+      /* Best effort notification delivery */
+    }
   }
 
   return NextResponse.json({

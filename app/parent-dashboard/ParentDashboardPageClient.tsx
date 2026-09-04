@@ -17,6 +17,13 @@ import { getRegionCompletionPercent, getCurrentRegionId } from '../adventure/pro
 import { loadWorldContext } from '../adventure/storage';
 import { signOutOfPersona } from '../lib/session';
 import type { ParentChildClassroomInfo } from '../api/family/classrooms/route';
+import type {
+  ParentAssignmentItem,
+  ParentAssignmentStatus,
+  ParentChildAssignmentsPayload,
+  ParentTimelineEvent,
+  ParentWeeklyProgress,
+} from '../lib/assignments/types';
 
 type Child = { id: number; name: string; username?: string; age: number; avatar: string; pin: string };
 type Family = { familyName: string; country: string; children: Child[]; privateArtwork: boolean; teacherMessages: boolean; progressEmails: boolean };
@@ -119,7 +126,6 @@ const fallbackFamily: Family = {
   teacherMessages: true,
   progressEmails: false,
 };
-const lessonOptions = ['David chooses courage', 'In the beginning', 'Noah trusts and builds', 'Build Psalm 119:105', 'A kind choice at lunch', 'Daniel in the lions’ den', 'Build John 3:16', 'Make a courage card'];
 
 export default function ParentDashboardPage() {
   const router = useRouter();
@@ -134,8 +140,6 @@ export default function ParentDashboardPage() {
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [helpRequest, setHelpRequest] = useState<HelpRequest | null>(null);
   const [showHelpDetail, setShowHelpDetail] = useState(false);
-  const [lesson, setLesson] = useState(lessonOptions[0]);
-  const [due, setDue] = useState('Friday');
   const [savedNotice, setSavedNotice] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([{ from: 'Mrs Grace', body: 'Amara asked a thoughtful question about courage today.', time: 'Today, 10:24' }]);
@@ -146,6 +150,11 @@ export default function ParentDashboardPage() {
   const [selectedActivityChild, setSelectedActivityChild] = useState<string | null>(null);
   const [classMemberships, setClassMemberships] = useState<{ classroomId: string; classroomName: string; childId: string; childName: string; approved: boolean; requestedBy?: 'child' | 'teacher' }[]>([]);
   const [childClassrooms, setChildClassrooms] = useState<ParentChildClassroomInfo[]>([]);
+  const [parentAssignments, setParentAssignments] = useState<ParentChildAssignmentsPayload[]>([]);
+  const [overallWeeklyProgress, setOverallWeeklyProgress] = useState<ParentWeeklyProgress | null>(null);
+  const [selectedAssignmentChildId, setSelectedAssignmentChildId] = useState<string | null>(null);
+  const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<'all' | ParentAssignmentStatus>('all');
+  const [loadingAssignments, setLoadingAssignments] = useState(true);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -337,6 +346,394 @@ export default function ParentDashboardPage() {
     }
   }
 
+  function loadDemoAssignments() {
+    try {
+      const teacherWork = JSON.parse(localStorage.getItem('lanternLionTeacherAssignments') || 'null');
+      const childrenList = family.children && family.children.length > 0 ? family.children : fallbackFamily.children;
+
+      const payloads: ParentChildAssignmentsPayload[] = childrenList.map((ch, idx) => {
+        const isAmara = ch.name.toLowerCase().includes('amara') || idx === 0;
+
+        const baseItems: ParentAssignmentItem[] = isAmara
+          ? [
+              {
+                id: 'asgn-amara-1',
+                assignmentId: 'a-1',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'Weekly Bible Quiz',
+                instructions: 'Test your understanding of the Parables of Jesus in Luke 15.',
+                assignmentType: 'quiz',
+                referenceLabel: 'Parables of Jesus',
+                classroomName: 'Wednesday Explorers',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-05',
+                status: 'graded',
+                rawStatus: 'graded',
+                score: 92,
+                requiredScore: 80,
+                feedback: 'Great work! Excellent grasp of the scriptures.',
+                xpReward: 120,
+                submittedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+                gradedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+                assignedAt: new Date(Date.now() - 86400000).toISOString(),
+              },
+              {
+                id: 'asgn-amara-2',
+                assignmentId: 'a-2',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'David and Goliath: Courage Under Fire',
+                instructions: 'Read Chapter 3 and answer the reflection questions on faith.',
+                assignmentType: 'story',
+                referenceLabel: 'David & Goliath Story',
+                classroomName: 'Wednesday Explorers',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-07',
+                status: 'submitted',
+                rawStatus: 'submitted',
+                score: null,
+                requiredScore: null,
+                feedback: null,
+                xpReward: 100,
+                submittedAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+                gradedAt: null,
+                assignedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+              },
+              {
+                id: 'asgn-amara-3',
+                assignmentId: 'a-3',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'Build Psalm 119:105 Scripture Memory',
+                instructions: 'Practice reciting and ordering the words of Psalm 119:105.',
+                assignmentType: 'memory',
+                referenceLabel: 'Psalm 119:105',
+                classroomName: 'Wednesday Explorers',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-03',
+                status: 'graded',
+                rawStatus: 'graded',
+                score: 85,
+                requiredScore: 80,
+                feedback: 'Well memorized and clear recitation.',
+                xpReward: 90,
+                submittedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+                gradedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+                assignedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+              },
+              {
+                id: 'asgn-amara-4',
+                assignmentId: 'a-4',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'Creation Story Interactive Journey',
+                instructions: 'Follow the 7 days of Creation with Lumen and complete the checkpoints.',
+                assignmentType: 'reading',
+                referenceLabel: 'Genesis 1-2',
+                classroomName: 'Wednesday Explorers',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-01',
+                status: 'graded',
+                rawStatus: 'graded',
+                score: 84,
+                requiredScore: 75,
+                feedback: null,
+                xpReward: 80,
+                submittedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+                gradedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+                assignedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+              },
+              {
+                id: 'asgn-amara-5',
+                assignmentId: 'a-5',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'The Armor of God Reflection',
+                instructions: 'Write two sentences about which piece of armor helps you stand strong today.',
+                assignmentType: 'written',
+                referenceLabel: 'Ephesians 6:10-18',
+                classroomName: 'Wednesday Explorers',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-10',
+                status: 'in_progress',
+                rawStatus: 'in_progress',
+                score: null,
+                requiredScore: null,
+                feedback: null,
+                xpReward: 150,
+                submittedAt: null,
+                gradedAt: null,
+                assignedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+              },
+            ]
+          : [
+              {
+                id: 'asgn-tobi-1',
+                assignmentId: 'a-t1',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'Youth Outreach Scripture Study',
+                instructions: 'Read 1 Timothy 4:12 and prepare for Friday fellowship discussion.',
+                assignmentType: 'reading',
+                referenceLabel: '1 Timothy 4:12',
+                classroomName: 'Friday Teen Circle',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-05',
+                status: 'graded',
+                rawStatus: 'graded',
+                score: 94,
+                requiredScore: 85,
+                feedback: 'Thoughtful reflection on serving the community and setting an example.',
+                xpReward: 140,
+                submittedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+                gradedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+                assignedAt: new Date(Date.now() - 86400000).toISOString(),
+              },
+              {
+                id: 'asgn-tobi-2',
+                assignmentId: 'a-t2',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'Proverbs Wisdom Challenge',
+                instructions: 'Identify key themes of discernment and integrity across Proverbs 3.',
+                assignmentType: 'quiz',
+                referenceLabel: 'Proverbs 3',
+                classroomName: 'Friday Teen Circle',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-03',
+                status: 'graded',
+                rawStatus: 'graded',
+                score: 90,
+                requiredScore: 80,
+                feedback: 'Great analytical breakdown.',
+                xpReward: 110,
+                submittedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+                gradedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+                assignedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+              },
+              {
+                id: 'asgn-tobi-3',
+                assignmentId: 'a-t3',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: "Paul's Missionary Journey Arcade Game",
+                instructions: 'Navigate through ancient Mediterranean cities and test your knowledge.',
+                assignmentType: 'game',
+                referenceLabel: 'Acts 13-14',
+                classroomName: 'Friday Teen Circle',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-02',
+                status: 'graded',
+                rawStatus: 'graded',
+                score: 92,
+                requiredScore: 70,
+                feedback: null,
+                xpReward: 100,
+                submittedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+                gradedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+                assignedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+              },
+              {
+                id: 'asgn-tobi-4',
+                assignmentId: 'a-t4',
+                childId: String(ch.id),
+                childName: ch.name,
+                title: 'Ephesians Memory Verse',
+                instructions: 'Memorize Ephesians 2:8-10 for the class recitation.',
+                assignmentType: 'memory',
+                referenceLabel: 'Ephesians 2:8-10',
+                classroomName: 'Friday Teen Circle',
+                teacherName: 'Sarah',
+                dueDate: '2026-09-02',
+                status: 'overdue',
+                rawStatus: 'assigned',
+                score: null,
+                requiredScore: null,
+                feedback: null,
+                xpReward: 90,
+                submittedAt: null,
+                gradedAt: null,
+                assignedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+              },
+            ];
+
+        if (Array.isArray(teacherWork)) {
+          teacherWork.forEach((tw: { id: string | number; title: string; due?: string }) => {
+            if (!baseItems.some((bi) => bi.title.toLowerCase() === tw.title.toLowerCase())) {
+              baseItems.unshift({
+                id: `custom-tw-${tw.id}`,
+                assignmentId: `tw-${tw.id}`,
+                childId: String(ch.id),
+                childName: ch.name,
+                title: tw.title,
+                instructions: 'Class assignment from your teacher.',
+                assignmentType: 'custom',
+                referenceLabel: 'Teacher Assignment',
+                classroomName: isAmara ? 'Wednesday Explorers' : 'Friday Teen Circle',
+                teacherName: 'Sarah',
+                dueDate: tw.due || 'Friday',
+                status: 'assigned',
+                rawStatus: 'assigned',
+                score: null,
+                requiredScore: null,
+                feedback: null,
+                xpReward: 100,
+                submittedAt: null,
+                gradedAt: null,
+                assignedAt: new Date().toISOString(),
+              });
+            }
+          });
+        }
+
+        const totalCount = baseItems.length;
+        const completedCount = baseItems.filter((i) => i.status === 'graded' || i.status === 'submitted' || i.rawStatus === 'returned').length;
+        const scoredItems = baseItems.filter((i) => i.score !== null && typeof i.score === 'number');
+        const averageScore = scoredItems.length > 0
+          ? Math.round(scoredItems.reduce((acc, curr) => acc + (curr.score || 0), 0) / scoredItems.length)
+          : null;
+        const sessionCount = isAmara ? 5 : 6;
+
+        const weeklyProgress: ParentWeeklyProgress = {
+          completedCount,
+          totalCount,
+          completedFraction: `${completedCount}/${totalCount} completed`,
+          averageScore,
+          sessionCount,
+          sessionLabel: `${sessionCount} sessions`,
+        };
+
+        const timeline: ParentTimelineEvent[] = isAmara
+          ? [
+              {
+                id: 't-am-1',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'graded',
+                title: 'Assignment graded',
+                description: 'Teacher graded Weekly Bible Quiz — 92%.',
+                timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+                score: 92,
+              },
+              {
+                id: 't-am-2',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'feedback',
+                title: 'Teacher feedback',
+                description: 'Teacher left feedback on Weekly Bible Quiz: “Great work! Excellent grasp of the scriptures.”',
+                timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+                feedback: 'Great work! Excellent grasp of the scriptures.',
+              },
+              {
+                id: 't-am-3',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'completed',
+                title: 'Assignment completed',
+                description: `${ch.name} completed Weekly Bible Quiz.`,
+                timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
+              },
+              {
+                id: 't-am-4',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'assigned',
+                title: 'Assignment assigned',
+                description: 'Teacher Sarah assigned Weekly Bible Quiz.',
+                timestamp: new Date(Date.now() - 86400000).toISOString(),
+              },
+              {
+                id: 't-am-5',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'completed',
+                title: 'Assignment completed',
+                description: `${ch.name} completed Build Psalm 119:105 Scripture Memory.`,
+                timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
+              },
+              {
+                id: 't-am-6',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'assigned',
+                title: 'Assignment assigned',
+                description: 'Teacher Sarah assigned Build Psalm 119:105 Scripture Memory.',
+                timestamp: new Date(Date.now() - 86400000 * 3).toISOString(),
+              },
+            ]
+          : [
+              {
+                id: 't-tb-1',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'graded',
+                title: 'Assignment graded',
+                description: 'Teacher graded Youth Outreach Scripture Study — 94%.',
+                timestamp: new Date(Date.now() - 3600000 * 3).toISOString(),
+                score: 94,
+              },
+              {
+                id: 't-tb-2',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'completed',
+                title: 'Assignment completed',
+                description: `${ch.name} completed Youth Outreach Scripture Study.`,
+                timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
+              },
+              {
+                id: 't-tb-3',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'assigned',
+                title: 'Assignment assigned',
+                description: 'Teacher Sarah assigned Youth Outreach Scripture Study.',
+                timestamp: new Date(Date.now() - 86400000).toISOString(),
+              },
+              {
+                id: 't-tb-4',
+                childId: String(ch.id),
+                childName: ch.name,
+                eventType: 'assigned',
+                title: 'Assignment assigned',
+                description: 'Teacher Sarah assigned Ephesians Memory Verse.',
+                timestamp: new Date(Date.now() - 86400000 * 4).toISOString(),
+              },
+            ];
+
+        return {
+          childId: String(ch.id),
+          childName: ch.name,
+          weeklyProgress,
+          assignments: baseItems,
+          timeline,
+        };
+      });
+
+      setParentAssignments(payloads);
+      if (payloads.length > 0) {
+        if (!selectedAssignmentChildId) setSelectedAssignmentChildId(payloads[0].childId);
+        const allItems = payloads.flatMap((p) => p.assignments);
+        const overallTotal = allItems.length;
+        const overallCompleted = allItems.filter((i) => i.status === 'graded' || i.status === 'submitted' || i.rawStatus === 'returned').length;
+        const allScored = allItems.filter((i) => i.score !== null && typeof i.score === 'number');
+        const avg = allScored.length ? Math.round(allScored.reduce((s, c) => s + (c.score || 0), 0) / allScored.length) : null;
+        setOverallWeeklyProgress({
+          completedCount: overallCompleted,
+          totalCount: overallTotal,
+          completedFraction: `${overallCompleted}/${overallTotal} completed`,
+          averageScore: avg,
+          sessionCount: 11,
+          sessionLabel: '11 sessions',
+        });
+      }
+    } catch {
+      /* Safe fallback */
+    }
+  }
+
   useEffect(() => {
     if (!hydrated) return;
     fetch('/api/family/today')
@@ -367,6 +764,23 @@ export default function ParentDashboardPage() {
       })
       .catch(() => {
         loadDemoClassrooms();
+      });
+
+    fetch('/api/family/assignments')
+      .then((res) => (res.ok ? (res.json() as Promise<{ children: ParentChildAssignmentsPayload[]; overallWeekly: ParentWeeklyProgress }>) : null))
+      .then((data) => {
+        if (data?.children && data.children.length > 0) {
+          setParentAssignments(data.children);
+          setOverallWeeklyProgress(data.overallWeekly);
+          if (!selectedAssignmentChildId) setSelectedAssignmentChildId(data.children[0].childId);
+        } else {
+          loadDemoAssignments();
+        }
+        setLoadingAssignments(false);
+      })
+      .catch(() => {
+        loadDemoAssignments();
+        setLoadingAssignments(false);
       });
   }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -434,14 +848,6 @@ export default function ParentDashboardPage() {
   const activeChildCompleted = childProgressMap[activeChild.id] || [];
   const activeChildPoints = activeChildCompleted.length * 8;
   const versesLearnedCount = activeChildCompleted.filter((t) => t.includes('Psalm') || t.includes('John') || t.includes('Proverbs') || t.includes('Philippians') || t.includes('Genesis') || t.includes('Matthew')).length;
-
-  function addAssignment() {
-    const existing = assignments.find((item) => item.childId === selectedChild && item.title === lesson);
-    const next = existing ? assignments.map((item) => item.id === existing.id ? { ...item, due } : item) : [...assignments, { id: Date.now(), childId: selectedChild, title: lesson, due }];
-    setAssignments(next);
-    localStorage.setItem('lanternLionDemoAssignments', JSON.stringify(next));
-    setSavedNotice(existing ? `${lesson} was already assigned. The due date is now ${due}.` : `${lesson} was assigned to ${activeChild.name}.`);
-  }
 
   function saveSettings(next: Family) {
     setFamily(next);
@@ -1036,6 +1442,42 @@ export default function ParentDashboardPage() {
                   </section>
                 );
               })()}
+              {(() => {
+                const childAsgn = parentAssignments.find((p) => String(p.childId) === String(activeChild.id));
+                if (!childAsgn) return null;
+                const wp = childAsgn.weeklyProgress;
+                return (
+                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem' }}>
+                    <div className="panel-heading">
+                      <div>
+                        <p className="parent-dash-kicker">Assignments &amp; Learning Progress</p>
+                        <h2>This Week: {wp.completedFraction} · {wp.sessionLabel}</h2>
+                      </div>
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        onClick={() => {
+                          setSelectedAssignmentChildId(String(activeChild.id));
+                          setPage('assignments');
+                        }}
+                      >
+                        View Assignments →
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '10px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--pd-ink)' }}>
+                        📝 <strong>{wp.completedFraction}</strong>
+                      </span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--pd-ink)' }}>
+                        🎯 Average score: <strong>{wp.averageScore !== null ? `${wp.averageScore}%` : '—'}</strong>
+                      </span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--pd-ink)' }}>
+                        ⚡ Learning activity: <strong>{wp.sessionLabel}</strong>
+                      </span>
+                    </div>
+                  </section>
+                );
+              })()}
             </section>
           </div>
         )}
@@ -1043,63 +1485,323 @@ export default function ParentDashboardPage() {
         {page === 'assignments' && (
           <div className="parent-dashboard-content">
             <div className="parent-page-title">
-              <p className="parent-dash-kicker">Assignments</p>
-              <h1>Direct what they explore next.</h1>
-              <p>Assign specific stories or scripture builders to guide their learning pace.</p>
-            </div>
-            <section className="assignment-builder">
-              <div>
-                <label>
-                  Child
-                  <select value={selectedChild} onChange={(event) => setSelectedChild(Number(event.target.value))}>
-                    {children.map((child) => (
-                      <option key={child.id} value={child.id}>{child.name}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Activity
-                  <select value={lesson} onChange={(event) => setLesson(event.target.value)}>
-                    {lessonOptions.map((item) => (
-                      <option key={item}>{item}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Finish by
-                  <select value={due} onChange={(event) => setDue(event.target.value)}>
-                    <option>Friday</option>
-                    <option>Sunday</option>
-                    <option>Next Wednesday</option>
-                    <option>No due date</option>
-                  </select>
-                </label>
-                <button className="button button-primary" onClick={addAssignment}>Assign activity</button>
-              </div>
-              <aside>
-                <p className="parent-dash-kicker">Current assignments</p>
-                {assignments.length ? (
-                  assignments.map((item) => (
-                    <article key={item.id}>
-                      <span>{children.find((child) => child.id === item.childId)?.name.slice(0, 1) || 'C'}</span>
-                      <div>
-                        <strong>{item.title}</strong>
-                        <small>{children.find((child) => child.id === item.childId)?.name} · Due {item.due}</small>
-                      </div>
-                      <button onClick={() => {
-                        const next = assignments.filter((assignment) => assignment.id !== item.id);
-                        setAssignments(next);
-                        localStorage.setItem('lanternLionDemoAssignments', JSON.stringify(next));
-                      }}>
-                        Remove
-                      </button>
-                    </article>
-                  ))
-                ) : (
-                  <p className="empty-assignment">Nothing is assigned right now.</p>
+              <p className="parent-dash-kicker">School &amp; Church Learning</p>
+              <h1>Assignments &amp; Educational Progress</h1>
+              <p>
+                Connected directly to your children’s classrooms. Track active assignments, completed work, grades, teacher feedback, and milestone timelines.
+                {overallWeeklyProgress && overallWeeklyProgress.totalCount > 0 && (
+                  <> Family summary: <strong>{overallWeeklyProgress.completedFraction}</strong> · <strong>{overallWeeklyProgress.sessionLabel}</strong> this week.</>
                 )}
-              </aside>
-            </section>
+              </p>
+            </div>
+
+            <div className="parent-assignment-hub">
+              {/* Child Selection Tabs */}
+              {parentAssignments.length > 0 && (
+                <div className="parent-child-tabs" role="tablist" aria-label="Children">
+                  {parentAssignments.map((p) => {
+                    const isActive = String(p.childId) === String(selectedAssignmentChildId);
+                    return (
+                      <button
+                        key={p.childId}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={`parent-child-tab-btn ${isActive ? 'active' : ''}`}
+                        onClick={() => setSelectedAssignmentChildId(p.childId)}
+                      >
+                        <span className="parent-tab-avatar">{p.childName.slice(0, 1)}</span>
+                        <span>{p.childName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {(() => {
+                const activePayload = parentAssignments.find((p) => String(p.childId) === String(selectedAssignmentChildId)) || parentAssignments[0];
+                if (!activePayload) {
+                  return (
+                    <div className="parent-class-empty-card" style={{ padding: '36px 20px', borderRadius: '16px' }}>
+                      <p>{loadingAssignments ? 'Loading assignments…' : 'No connected classrooms or assignments yet.'}</p>
+                      <small>When teachers publish assignments to your child’s class, they will appear here automatically.</small>
+                    </div>
+                  );
+                }
+
+                const { weeklyProgress, assignments: childItems, timeline } = activePayload;
+
+                // Status counts for filter chips
+                const countAssigned = childItems.filter((i) => i.status === 'assigned').length;
+                const countInProgress = childItems.filter((i) => i.status === 'in_progress').length;
+                const countSubmitted = childItems.filter((i) => i.status === 'submitted').length;
+                const countGraded = childItems.filter((i) => i.status === 'graded').length;
+                const countCompleted = childItems.filter((i) => i.status === 'graded' || i.status === 'submitted' || i.rawStatus === 'returned').length;
+                const countOverdue = childItems.filter((i) => i.status === 'overdue').length;
+
+                // Filter items
+                const filteredItems = childItems.filter((item) => {
+                  if (assignmentStatusFilter === 'all') return true;
+                  if (assignmentStatusFilter === 'completed') {
+                    return item.status === 'graded' || item.status === 'submitted' || item.rawStatus === 'returned';
+                  }
+                  return item.status === assignmentStatusFilter;
+                });
+
+                const formatDueDate = (dateStr: string | null) => {
+                  if (!dateStr) return 'No due date';
+                  if (dateStr.length <= 10 && dateStr.includes('-')) {
+                    try {
+                      const d = new Date(`${dateStr}T00:00:00`);
+                      return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                    } catch {
+                      return dateStr;
+                    }
+                  }
+                  return dateStr;
+                };
+
+                const typeLabel = (t: string) => {
+                  const map: Record<string, string> = {
+                    story: 'Interactive Story',
+                    reading: 'Bible Reading',
+                    quiz: 'Bible Quiz',
+                    memory: 'Scripture Memory',
+                    game: 'Game Challenge',
+                    written: 'Written Response',
+                    custom: 'Custom Assignment',
+                  };
+                  return map[t] || 'Assignment';
+                };
+
+                return (
+                  <>
+                    {/* This Week Progress Summary */}
+                    <section className="parent-weekly-card" aria-label="This Week Progress Summary">
+                      <div className="parent-weekly-header">
+                        <div className="parent-weekly-title">
+                          <h3>{activePayload.childName}’s Progress</h3>
+                          <span className="parent-week-badge">This Week</span>
+                        </div>
+                        <small style={{ color: 'var(--pd-text-secondary)', fontWeight: 700 }}>
+                          Teacher → Student → Parent synchronized
+                        </small>
+                      </div>
+                      <div className="parent-weekly-grid">
+                        <div className="parent-weekly-stat">
+                          <span>Assignments</span>
+                          <strong>{weeklyProgress.completedFraction}</strong>
+                          <small>Submitted &amp; completed work</small>
+                        </div>
+                        <div className="parent-weekly-stat">
+                          <span>Average score</span>
+                          <strong>{weeklyProgress.averageScore !== null ? `${weeklyProgress.averageScore}%` : '—'}</strong>
+                          <small>Scored quizzes &amp; mastery</small>
+                        </div>
+                        <div className="parent-weekly-stat">
+                          <span>Learning activity</span>
+                          <strong>{weeklyProgress.sessionLabel}</strong>
+                          <small>Active learning sessions</small>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Filter Pills */}
+                    <div className="parent-assignment-filter-bar" role="group" aria-label="Filter assignments by status">
+                      <button
+                        type="button"
+                        className={`parent-filter-chip ${assignmentStatusFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setAssignmentStatusFilter('all')}
+                      >
+                        All <span className="chip-count">{childItems.length}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`parent-filter-chip ${assignmentStatusFilter === 'assigned' ? 'active' : ''}`}
+                        onClick={() => setAssignmentStatusFilter('assigned')}
+                      >
+                        Assigned <span className="chip-count">{countAssigned}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`parent-filter-chip ${assignmentStatusFilter === 'in_progress' ? 'active' : ''}`}
+                        onClick={() => setAssignmentStatusFilter('in_progress')}
+                      >
+                        In Progress <span className="chip-count">{countInProgress}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`parent-filter-chip ${assignmentStatusFilter === 'submitted' ? 'active' : ''}`}
+                        onClick={() => setAssignmentStatusFilter('submitted')}
+                      >
+                        Submitted <span className="chip-count">{countSubmitted}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`parent-filter-chip ${assignmentStatusFilter === 'graded' ? 'active' : ''}`}
+                        onClick={() => setAssignmentStatusFilter('graded')}
+                      >
+                        Graded <span className="chip-count">{countGraded}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`parent-filter-chip ${assignmentStatusFilter === 'completed' ? 'active' : ''}`}
+                        onClick={() => setAssignmentStatusFilter('completed')}
+                      >
+                        Completed <span className="chip-count">{countCompleted}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`parent-filter-chip ${assignmentStatusFilter === 'overdue' ? 'active' : ''}`}
+                        onClick={() => setAssignmentStatusFilter('overdue')}
+                      >
+                        Overdue <span className="chip-count">{countOverdue}</span>
+                      </button>
+                    </div>
+
+                    {/* Main Layout: Assignments List + Timeline Sidebar */}
+                    <div className="parent-assignments-layout">
+                      <div className="parent-assignment-list">
+                        {filteredItems.length === 0 ? (
+                          <div className="parent-class-empty-card" style={{ padding: '36px 20px', borderRadius: '16px' }}>
+                            <p>No assignments in this category.</p>
+                            <small>
+                              {assignmentStatusFilter === 'overdue'
+                                ? 'No overdue assignments — excellent work staying on track!'
+                                : 'Try selecting another status filter above.'}
+                            </small>
+                          </div>
+                        ) : (
+                          filteredItems.map((item) => {
+                            const isOverdue = item.status === 'overdue';
+                            const isGraded = item.status === 'graded';
+                            const isSubmitted = item.status === 'submitted';
+                            const scoreClass = item.score !== null && item.score >= 90 ? 'high' : item.score !== null && item.score >= 75 ? 'mid' : 'low';
+
+                            return (
+                              <article
+                                key={item.id}
+                                className={`parent-assignment-item-card ${isOverdue ? 'is-overdue' : ''} ${isGraded ? 'is-graded' : ''} ${isSubmitted ? 'is-submitted' : ''}`}
+                              >
+                                <div className="parent-asgn-header">
+                                  <div className="parent-asgn-title-group">
+                                    <h4>{item.title}</h4>
+                                    <span className="parent-asgn-type-badge">{typeLabel(item.assignmentType)}</span>
+                                  </div>
+                                  <span className={`parent-status-pill parent-status-${item.status}`}>
+                                    {item.status.replace('_', ' ')}
+                                  </span>
+                                </div>
+
+                                <div className="parent-asgn-meta">
+                                  <span className="parent-asgn-meta-item">
+                                    🏫 {item.classroomName || 'Classroom'}{item.teacherName ? ` · Teacher ${item.teacherName}` : ''}
+                                  </span>
+                                  <span className={`parent-asgn-meta-item ${isOverdue ? 'meta-overdue' : ''}`}>
+                                    📅 {isOverdue ? 'Overdue · Due ' : 'Due '}{formatDueDate(item.dueDate)}
+                                  </span>
+                                  {item.xpReward ? (
+                                    <span className="parent-asgn-meta-item">
+                                      ✨ {item.xpReward} XP
+                                    </span>
+                                  ) : null}
+                                </div>
+
+                                {item.instructions && (
+                                  <p className="parent-asgn-instructions">{item.instructions}</p>
+                                )}
+
+                                {(item.score !== null || isGraded) && (
+                                  <div className="parent-asgn-grade-row">
+                                    <div className="parent-score-capsule">
+                                      <span>Grade / Score:</span>
+                                      {item.score !== null ? (
+                                        <span className={`parent-score-badge ${scoreClass}`}>{item.score}%</span>
+                                      ) : (
+                                        <span style={{ color: 'var(--pd-text-secondary)' }}>Scored</span>
+                                      )}
+                                    </div>
+                                    <small style={{ color: 'var(--pd-text-secondary)', fontWeight: 700 }}>
+                                      {item.gradedAt ? `Graded ${new Date(item.gradedAt).toLocaleDateString()}` : 'Completed'}
+                                    </small>
+                                  </div>
+                                )}
+
+                                {item.feedback && (
+                                  <div className="parent-asgn-feedback-box">
+                                    <span className="parent-feedback-label">
+                                      Teacher Feedback {item.teacherName ? `· ${item.teacherName}` : ''}
+                                    </span>
+                                    <p>“{item.feedback}”</p>
+                                  </div>
+                                )}
+                              </article>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      {/* Right Sidebar: Milestone Timeline & Privacy */}
+                      <aside style={{ display: 'grid', gap: '20px' }}>
+                        <div className="parent-timeline-panel">
+                          <div className="parent-timeline-header">
+                            <h3>Milestone Timeline</h3>
+                            <small>Key events</small>
+                          </div>
+                          {timeline.length === 0 ? (
+                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--pd-text-secondary)' }}>
+                              No milestone events yet.
+                            </p>
+                          ) : (
+                            <div className="parent-timeline-feed">
+                              {timeline.map((evt) => {
+                                const nodeClass = evt.eventType === 'graded'
+                                  ? 'node-graded'
+                                  : evt.eventType === 'completed'
+                                  ? 'node-completed'
+                                  : evt.eventType === 'feedback'
+                                  ? 'node-feedback'
+                                  : 'node-assigned';
+
+                                const timeStr = (() => {
+                                  try {
+                                    const diffMs = Date.now() - new Date(evt.timestamp).getTime();
+                                    const hours = Math.round(diffMs / 3600000);
+                                    if (hours < 1) return 'Just now';
+                                    if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+                                    const days = Math.round(hours / 24);
+                                    return `${days} day${days === 1 ? '' : 's'} ago`;
+                                  } catch {
+                                    return 'Recent';
+                                  }
+                                })();
+
+                                return (
+                                  <div key={evt.id} className="parent-timeline-item">
+                                    <span className={`parent-timeline-node ${nodeClass}`} />
+                                    <div className="parent-timeline-content">
+                                      <strong>{evt.description}</strong>
+                                      <small>{timeStr}</small>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="parent-privacy-card">
+                          <span className="parent-privacy-icon">🛡️</span>
+                          <p>
+                            <strong>Parent Educational Visibility:</strong> You see curriculum, assignments, grades, and teacher feedback. Other children’s scores, private teacher notes, student journals, and peer interactions remain strictly confidential.
+                          </p>
+                        </div>
+                      </aside>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
           </div>
         )}
 

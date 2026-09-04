@@ -56,10 +56,12 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         .eq('id', id)
         .maybeSingle();
 
+      const { data: child } = await admin.from('children').select('name, family_id').eq('id', session.childId).maybeSingle();
+
+      // Notify teacher
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const teacherId = (assignmentInfo?.classrooms as any)?.teacher_id;
       if (teacherId && assignmentInfo) {
-        const { data: child } = await admin.from('children').select('name').eq('id', session.childId).maybeSingle();
         const { notifyTeacherAssignmentSubmitted } = await import('../../../../../lib/teacher-notifications/server');
         await notifyTeacherAssignmentSubmitted(admin, {
           teacherId,
@@ -69,6 +71,23 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
           childId: session.childId,
           submissionId: submission.id,
         }).catch(() => {});
+      }
+
+      // Notify parent (Feature 12)
+      if (child?.family_id && assignmentInfo) {
+        const { data: family } = await admin.from('families').select('owner_id').eq('id', child.family_id).maybeSingle();
+        if (family?.owner_id) {
+          const { notifyOnce } = await import('../../../../../lib/activity/server');
+          await notifyOnce(admin, {
+            recipientId: family.owner_id,
+            childId: session.childId,
+            type: 'ASSIGNMENT_COMPLETED',
+            title: 'Assignment completed',
+            body: `${child.name || 'Your child'} completed “${assignmentInfo.title}”.`,
+            payload: { assignmentId: assignmentInfo.id, childId: session.childId },
+            dedupeKey: `assignment_completed:${assignmentInfo.id}:${session.childId}`,
+          }).catch(() => {});
+        }
       }
     } catch {
       /* Best effort notification delivery */

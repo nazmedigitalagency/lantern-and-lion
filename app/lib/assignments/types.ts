@@ -86,3 +86,83 @@ export const ASSIGNMENT_TYPE_LABEL: Record<AssignmentType, string> = {
   written: 'Written Response',
   custom: 'Custom Assignment',
 };
+
+// ── PARENT-FACING ASSIGNMENT TYPES (FEATURE 12) ───────────────────
+
+export type ParentAssignmentStatus = 'assigned' | 'in_progress' | 'submitted' | 'graded' | 'completed' | 'overdue';
+
+export type ParentAssignmentItem = {
+  id: string;
+  assignmentId: string;
+  childId: string;
+  childName: string;
+  title: string;
+  instructions: string | null;
+  assignmentType: AssignmentType;
+  referenceLabel: string | null;
+  classroomName: string | null;
+  teacherName: string | null;
+  dueDate: string | null;
+  status: ParentAssignmentStatus;
+  rawStatus: SubmissionStatus;
+  score: number | null;
+  requiredScore: number | null;
+  feedback: string | null;
+  xpReward: number | null;
+  submittedAt: string | null;
+  gradedAt: string | null;
+  assignedAt: string | null;
+};
+
+export type ParentWeeklyProgress = {
+  completedCount: number;
+  totalCount: number;
+  completedFraction: string; // e.g. "4/5 completed"
+  averageScore: number | null; // e.g. 87 (percent)
+  sessionCount: number; // e.g. 5 (sessions)
+  sessionLabel: string; // e.g. "5 sessions"
+};
+
+export type ParentTimelineEventType = 'assigned' | 'completed' | 'graded' | 'feedback' | 'announcement';
+
+export type ParentTimelineEvent = {
+  id: string;
+  childId: string;
+  childName: string;
+  eventType: ParentTimelineEventType;
+  title: string;
+  description: string;
+  timestamp: string;
+  score?: number | null;
+  feedback?: string | null;
+  assignmentId?: string;
+};
+
+export type ParentChildAssignmentsPayload = {
+  childId: string;
+  childName: string;
+  weeklyProgress: ParentWeeklyProgress;
+  assignments: ParentAssignmentItem[];
+  timeline: ParentTimelineEvent[];
+};
+
+export function computeParentAssignmentStatus(rawStatus: SubmissionStatus, dueDate: string | null): ParentAssignmentStatus {
+  if (rawStatus === 'graded' || rawStatus === 'returned') return 'graded';
+  if (rawStatus === 'submitted') return 'submitted';
+  if (rawStatus === 'in_progress') {
+    if (dueDate) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const due = new Date(`${dueDate}T00:00:00`);
+      if (due < today) return 'overdue';
+    }
+    return 'in_progress';
+  }
+  // status === 'assigned'
+  if (dueDate) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const due = new Date(`${dueDate}T00:00:00`);
+    if (due < today) return 'overdue';
+  }
+  return 'assigned';
+}
+

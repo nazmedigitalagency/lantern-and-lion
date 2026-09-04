@@ -172,6 +172,27 @@ export async function syncAssignmentSubmissions(admin: SupabaseClient, assignmen
       payload: { assignmentId: assignment.id, score: found.score },
       dedupeKey: `assignment_graded_child:${assignment.id}:${submission.child_id}`,
     }).catch(() => {});
+
+    // Also notify parent of completion (Feature 12)
+    try {
+      const { data: childRow } = await admin.from('children').select('name, family_id').eq('id', submission.child_id).maybeSingle();
+      if (childRow?.family_id) {
+        const { data: fam } = await admin.from('families').select('owner_id').eq('id', childRow.family_id).maybeSingle();
+        if (fam?.owner_id) {
+          await notifyOnce(admin, {
+            recipientId: fam.owner_id,
+            childId: submission.child_id,
+            type: 'ASSIGNMENT_COMPLETED',
+            title: 'Assignment completed',
+            body: `${childRow.name || 'Your child'} completed “${assignment.title}” — ${found.score}%.`,
+            payload: { assignmentId: assignment.id, score: found.score, childId: submission.child_id },
+            dedupeKey: `assignment_completed:${assignment.id}:${submission.child_id}`,
+          }).catch(() => {});
+        }
+      }
+    } catch {
+      /* Best effort */
+    }
   }
 }
 
@@ -183,7 +204,7 @@ export async function syncAssignmentSubmissions(admin: SupabaseClient, assignmen
  */
 export async function sendGradeNotifications(admin: SupabaseClient, params: { assignmentId: string; assignmentTitle: string; childId: string; score: number | null; feedback: string | null }): Promise<void> {
   const nowIso = new Date().toISOString();
-  const { data: child } = await admin.from('children').select('family_id').eq('id', params.childId).maybeSingle();
+  const { data: child } = await admin.from('children').select('name, family_id').eq('id', params.childId).maybeSingle();
   const { data: family } = child ? await admin.from('families').select('owner_id').eq('id', child.family_id).maybeSingle() : { data: null };
 
   if (family?.owner_id) {
@@ -216,5 +237,18 @@ export async function sendGradeNotifications(admin: SupabaseClient, params: { as
       payload: { assignmentId: params.assignmentId },
       dedupeKey: `assignment_feedback_child:${params.assignmentId}:${params.childId}:${nowIso}`,
     }).catch(() => {});
+
+    // Parent notification for teacher feedback (Feature 12)
+    if (family?.owner_id) {
+      await notifyOnce(admin, {
+        recipientId: family.owner_id,
+        childId: params.childId,
+        type: 'ASSIGNMENT_FEEDBACK',
+        title: 'Teacher left feedback',
+        body: `Teacher left feedback for ${child?.name || 'your child'} on “${params.assignmentTitle}”: “${params.feedback.trim()}”`,
+        payload: { assignmentId: params.assignmentId, childId: params.childId },
+        dedupeKey: `assignment_feedback:${params.assignmentId}:${params.childId}:${nowIso}`,
+      }).catch(() => {});
+    }
   }
 }
