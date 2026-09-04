@@ -4,6 +4,7 @@ import type { StudentCard } from '../classrooms/types';
 import type { CurriculumModule } from '../../curriculum-data';
 import type { ConceptMasteryRow } from '../adaptive/server';
 import type { AssignmentType } from '../assignments/types';
+import { ATTENTION_THRESHOLDS, comparePriorityDesc } from '../attention/config';
 import {
   buildAttentionEntry,
   buildClassInsightCards,
@@ -173,7 +174,7 @@ export async function computeClassInsights(admin: SupabaseClient, teacherId: str
     strengths,
     areasToPractice,
     topics,
-    needsAttention: needsAttention.slice(0, 8),
+    needsAttention: needsAttention.sort((a, b) => comparePriorityDesc(a.priority, b.priority)).slice(0, ATTENTION_THRESHOLDS.MAX_ATTENTION_ENTRIES),
     improving: improving.slice(0, 8),
   };
 }

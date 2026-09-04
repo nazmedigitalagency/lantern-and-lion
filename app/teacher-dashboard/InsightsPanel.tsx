@@ -150,7 +150,8 @@ export default function InsightsPanel({ onSelectStudent }: { onSelectStudent?: (
 
       <div className="insights-two-col">
         <section className="insights-section">
-          <h2>Students Needing Attention</h2>
+          <h2>🚨 Needs Attention</h2>
+          <p className="insights-attention-subhead">Students who may benefit from a quick check-in — based on real activity, not a diagnosis.</p>
           {data.needsAttention.length === 0 ? (
             <p className="student-detail-empty">No one needs attention right now — nice work!</p>
           ) : (
@@ -217,13 +218,22 @@ function TopicColumn({ title, emoji, topics, empty }: { title: string; emoji: st
   );
 }
 
+const PRIORITY_LABEL: Record<AttentionEntry['priority'], string> = { high: 'High', medium: 'Medium', low: 'Low' };
+
 function AttentionRow({ entry, onSelect }: { entry: AttentionEntry; onSelect: (id: string) => void }) {
   return (
-    <li className="insights-attention-row" onClick={() => onSelect(entry.studentId)}>
-      <strong>{entry.name}</strong>
+    <li className={`insights-attention-row insights-attention-${entry.priority}`}>
+      <div className="insights-attention-row-head">
+        <span className={`insights-priority-badge insights-priority-${entry.priority}`}>{PRIORITY_LABEL[entry.priority]}</span>
+        <strong>{entry.name}</strong>
+        {entry.lastActiveAt && (
+          <span className="insights-attention-asof">Last active {new Date(entry.lastActiveAt).toLocaleDateString()}</span>
+        )}
+      </div>
       <ul>
         {entry.reasons.map((r, i) => <li key={i}>{r}</li>)}
       </ul>
+      <button type="button" className="insights-attention-view-btn" onClick={() => onSelect(entry.studentId)}>View Student</button>
     </li>
   );
 }

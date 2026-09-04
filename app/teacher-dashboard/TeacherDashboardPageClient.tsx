@@ -13,6 +13,7 @@ import ClassesPanel from './ClassesPanel';
 import AssignmentsPanel from './AssignmentsPanel';
 import TemplatesPanel from './TemplatesPanel';
 import InsightsPanel from './InsightsPanel';
+import NeedsAttentionPreview from './NeedsAttentionPreview';
 import GradebookPanel from './GradebookPanel';
 import ChallengesPanel from './ChallengesPanel';
 import CalendarPanel from './CalendarPanel';
@@ -479,6 +480,8 @@ export default function TeacherDashboardPage() {
                     <small>Private help flags</small>
                   </article>
                 </div>
+
+                <NeedsAttentionPreview onViewAll={() => setPage('insights')} />
 
                 <section className="teacher-panel teacher-class-overview-panel">
                   <div className="teacher-panel-head">

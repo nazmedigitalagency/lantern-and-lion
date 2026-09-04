@@ -7720,8 +7720,33 @@ footer a:hover{color:var(--gold)}
 .insights-attention-row,.insights-progress-row{padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:white;cursor:pointer}
 .insights-attention-row:hover,.insights-progress-row:hover{border-color:var(--blue-dark)}
 .insights-attention-row strong,.insights-progress-row strong{display:block;color:var(--navy);font-size:14px}
+.insights-attention-row{cursor:default}
 .insights-attention-row ul{margin:6px 0 0;padding-left:18px;color:var(--slate);font-size:12px;line-height:1.6}
 .insights-progress-row p{margin:4px 0 0;color:var(--slate);font-size:12px;line-height:1.5}
+
+.insights-attention-subhead{margin:-8px 0 14px;color:var(--slate);font-size:12px;font-weight:700}
+.insights-attention-row-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.insights-attention-row-head strong{display:inline;flex:1;min-width:80px}
+.insights-attention-asof{font-size:11px;font-weight:700;color:var(--slate)}
+.insights-priority-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:white}
+.insights-priority-high{background:var(--purple)}
+.insights-priority-medium{background:var(--yellow);color:var(--navy)}
+.insights-priority-low{background:var(--slate)}
+.insights-attention-view-btn{margin-top:10px;padding:6px 14px;border:2px solid var(--navy);border-radius:9px;background:white;color:var(--navy);font:800 12px var(--font-nunito),sans-serif;cursor:pointer}
+.insights-attention-view-btn:hover{background:var(--sky)}
+
+.attention-preview-panel{margin-bottom:24px}
+.attention-preview-viewall{border:0;background:transparent;color:var(--blue-dark);font:800 13px var(--font-nunito),sans-serif;cursor:pointer}
+.attention-preview-list{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.attention-preview-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:white}
+.attention-preview-row .insights-attention-view-btn{margin-top:0;flex-shrink:0}
+.attention-preview-body{flex:1;min-width:0}
+.attention-preview-body strong{display:block;color:var(--navy);font-size:14px}
+.attention-preview-body p{margin:2px 0 0;color:var(--slate);font-size:12px;line-height:1.4}
+@media(max-width:640px){
+  .attention-preview-row{flex-wrap:wrap}
+  .attention-preview-body{width:100%;order:3}
+}
 
 .student-insights-section{padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--sky)}
 .student-insights-trend{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;color:var(--navy);font-size:13px}

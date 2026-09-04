@@ -4,7 +4,9 @@ import { getConcept } from '../adaptive/concepts';
 import { getStory } from '../../stories/catalog';
 import type { CurriculumModule } from '../../curriculum-data';
 import type { AssignmentType } from '../assignments/types';
+import { daysSince } from '../classrooms/server';
 import type { StudentCard } from '../classrooms/types';
+import { ATTENTION_THRESHOLDS, computeAttentionPriority } from '../attention/config';
 import type {
   AttentionEntry,
   ClassInsight,
@@ -164,25 +166,29 @@ export function computeStudentTrend(name: string, scoredChronological: number[],
     const recentAvg = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
     const priorAvg = Math.round(prior.reduce((a, b) => a + b, 0) / prior.length);
     const diff = recentAvg - priorAvg;
-    if (diff >= 10) return { trend: 'improving', detail: `${name}'s assignment scores improved from ${priorAvg}% to ${recentAvg}% over the last ${recent.length + prior.length} graded assignments.` };
-    if (diff <= -10) return { trend: 'declining', detail: `${name}'s assignment scores dropped from ${priorAvg}% to ${recentAvg}% over the last ${recent.length + prior.length} graded assignments.` };
-    return { trend: 'stable', detail: `${name}'s assignment scores have stayed steady around ${recentAvg}% recently.` };
+    if (diff >= ATTENTION_THRESHOLDS.QUIZ_DECLINE_MIN_POINTS) {
+      return { trend: 'improving', detail: `${name}'s assignment scores improved from ${priorAvg}% to ${recentAvg}% over the last ${recent.length + prior.length} graded assignments.`, diff };
+    }
+    if (diff <= -ATTENTION_THRESHOLDS.QUIZ_DECLINE_MIN_POINTS) {
+      return { trend: 'declining', detail: `${name}'s quiz/assignment performance decreased from ${priorAvg}% to ${recentAvg}% over the last ${recent.length + prior.length} graded assignments.`, diff };
+    }
+    return { trend: 'stable', detail: `${name}'s assignment scores have stayed steady around ${recentAvg}% recently.`, diff };
   }
 
   const now = Date.now();
   const recentRows = masteryRows.filter((r) => now - new Date(r.last_practiced_at).getTime() <= TREND_LOOKBACK_DAYS * 86_400_000);
-  if (recentRows.length < MIN_RECENT_CONCEPTS_FOR_TREND_FALLBACK) return { trend: 'insufficient_data', detail: null };
+  if (recentRows.length < MIN_RECENT_CONCEPTS_FOR_TREND_FALLBACK) return { trend: 'insufficient_data', detail: null, diff: null };
 
   const improvingCount = recentRows.filter((r) => r.consecutive_correct >= 2).length;
   const decliningCount = recentRows.filter((r) => r.consecutive_incorrect >= 2).length;
 
   if (improvingCount > decliningCount && improvingCount >= 1) {
-    return { trend: 'improving', detail: `${name} has been answering correctly multiple times in a row on ${improvingCount} recent topic${improvingCount === 1 ? '' : 's'}.` };
+    return { trend: 'improving', detail: `${name} has been answering correctly multiple times in a row on ${improvingCount} recent topic${improvingCount === 1 ? '' : 's'}.`, diff: null };
   }
   if (decliningCount > improvingCount && decliningCount >= 1) {
-    return { trend: 'declining', detail: `${name} has missed a few in a row on ${decliningCount} recent topic${decliningCount === 1 ? '' : 's'} — worth a quick check-in.` };
+    return { trend: 'declining', detail: `${name} has repeatedly struggled to recall ${decliningCount} recent topic${decliningCount === 1 ? '' : 's'} — worth a quick check-in.`, diff: null };
   }
-  return { trend: 'stable', detail: null };
+  return { trend: 'stable', detail: null, diff: null };
 }
 
 /**
@@ -285,11 +291,27 @@ export function buildClassInsightCards(metrics: ClassMetric[], weakestTopic: Top
 /** Aggregates each student's own needs-attention reasons plus two Insights-only signals (overdue assignments, declining trend) — additive only, never touching the shared My Students computation. */
 export function buildAttentionEntry(card: StudentCard, overdueCount: number, trend: StudentTrend): AttentionEntry | null {
   const reasons = [...card.needsAttentionReasons];
-  if (overdueCount >= 2) reasons.push(`Has ${overdueCount} overdue assignments.`);
-  else if (overdueCount === 1) reasons.push('Has 1 overdue assignment.');
-  if (trend.trend === 'declining' && trend.detail) reasons.push(trend.detail);
+  if (overdueCount >= ATTENTION_THRESHOLDS.OVERDUE_HIGH) reasons.push(`${overdueCount} assignments are incomplete or overdue.`);
+  else if (overdueCount >= ATTENTION_THRESHOLDS.OVERDUE_TO_FLAG) reasons.push(`${overdueCount} assignment${overdueCount === 1 ? ' is' : 's are'} incomplete or overdue.`);
+  const trendDeclining = trend.trend === 'declining';
+  if (trendDeclining && trend.detail) reasons.push(trend.detail);
   if (reasons.length === 0) return null;
-  return { studentId: card.id, name: card.name, reasons };
+
+  // The exact struggling-concept count isn't threaded through from
+  // buildNeedsAttention — its reason text already required the configured
+  // minimum to appear at all, so its presence alone is enough signal here.
+  const hasStrugglingConceptsReason = card.needsAttentionReasons.some((r) => r.startsWith('Repeated difficulty with'));
+
+  const priority = computeAttentionPriority({
+    overdueCount,
+    inactiveDays: daysSince(card.lastActiveAt),
+    trendDeclining,
+    trendDiff: trend.diff,
+    strugglingCount: hasStrugglingConceptsReason ? ATTENTION_THRESHOLDS.STRUGGLING_CONCEPTS_MIN : 0,
+    needsHelp: card.needsHelp,
+  });
+
+  return { studentId: card.id, name: card.name, reasons, priority, lastActiveAt: card.lastActiveAt };
 }
 
 export function buildImprovingEntry(card: StudentCard, trend: StudentTrend): ImprovingEntry | null {

@@ -3,6 +3,9 @@
 // file adds no new source-of-truth tables, only read-side aggregation shapes.
 
 import type { AssignmentType } from '../assignments/types';
+import type { AttentionPriority } from '../attention/config';
+
+export type { AttentionPriority };
 
 export type MetricKey = 'quiz' | 'memory' | 'reading' | 'story_completion' | 'bible_knowledge' | 'assignment_completion' | 'consistency';
 
@@ -47,6 +50,10 @@ export type AttentionEntry = {
   studentId: string;
   name: string;
   reasons: string[];
+  /** Worst-case severity across every real signal that fired for this student — see app/lib/attention/config.ts. */
+  priority: AttentionPriority;
+  /** For "as of" context in the UI — never a diagnosis, just the most recent recorded activity. */
+  lastActiveAt: string | null;
 };
 
 export type ImprovingEntry = {
@@ -58,6 +65,8 @@ export type ImprovingEntry = {
 export type StudentTrend = {
   trend: 'improving' | 'declining' | 'stable' | 'insufficient_data';
   detail: string | null;
+  /** Recent-vs-prior percentage-point difference when computed from real graded scores; null when the trend came from the coarser mastery-streak fallback. */
+  diff: number | null;
 };
 
 export type StudentRecommendation = {
