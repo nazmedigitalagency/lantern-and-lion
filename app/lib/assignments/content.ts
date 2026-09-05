@@ -28,14 +28,33 @@ export function assignableConcepts(): { id: string; label: string }[] {
   return curriculumModules.map((m) => ({ id: m.id, label: m.title }));
 }
 
+function resolveModuleId(refId: string): string | null {
+  if (curriculumModules.some((m) => m.id === refId)) return refId;
+  const prefixes = ['path-', 'teen-', 'early-'];
+  for (const p of prefixes) {
+    const candidate = `${p}${refId}`;
+    if (curriculumModules.some((m) => m.id === candidate)) return candidate;
+  }
+  return null;
+}
+
 /** Resolves a display label for whatever `reference_id` an assignment points at. */
 export function referenceLabel(type: AssignmentType, referenceId: string | null): string | null {
   if (!referenceId) return null;
   switch (type) {
-    case 'story': return getStory(referenceId)?.title || referenceId;
+    case 'story': {
+      const story = getStory(referenceId);
+      if (story) return story.title;
+      const modId = resolveModuleId(referenceId);
+      if (modId) return curriculumModules.find((m) => m.id === modId)?.title || referenceId;
+      return referenceId;
+    }
     case 'reading':
     case 'quiz':
-    case 'memory': return curriculumModules.find((m) => m.id === referenceId)?.title || referenceId;
+    case 'memory': {
+      const modId = resolveModuleId(referenceId);
+      return (modId ? curriculumModules.find((m) => m.id === modId)?.title : null) || referenceId;
+    }
     case 'game': return getGameDefinition(referenceId as never)?.name || referenceId;
     default: return null;
   }
@@ -43,13 +62,36 @@ export function referenceLabel(type: AssignmentType, referenceId: string | null)
 
 /** Where a student goes to actually do the assigned content. */
 export function contentLink(type: AssignmentType, referenceId: string | null): string | null {
-  if (!referenceId) return null;
+  if (!referenceId) {
+    if (type === 'quiz') return '/arcade/lightning-quiz';
+    if (type === 'memory') return '/arcade/verse-builder';
+    return null;
+  }
   switch (type) {
-    case 'story': return `/stories/${referenceId}`;
-    case 'reading':
-    case 'quiz':
-    case 'memory': return `/curriculum/${referenceId}`;
-    case 'game': return `/arcade/${referenceId}`;
+    case 'story': {
+      if (getStory(referenceId)) return `/stories/${referenceId}`;
+      const modId = resolveModuleId(referenceId);
+      if (modId) return `/curriculum/${modId}`;
+      return `/stories`;
+    }
+    case 'reading': {
+      const modId = resolveModuleId(referenceId);
+      return modId ? `/curriculum/${modId}` : '/curriculum';
+    }
+    case 'quiz': {
+      const modId = resolveModuleId(referenceId);
+      if (modId) return `/curriculum/${modId}`;
+      return '/arcade/lightning-quiz';
+    }
+    case 'memory': {
+      const modId = resolveModuleId(referenceId);
+      if (modId) return `/curriculum/${modId}`;
+      return '/arcade/verse-builder';
+    }
+    case 'game': {
+      if (getGameDefinition(referenceId as never)) return `/arcade/${referenceId}`;
+      return `/arcade`;
+    }
     default: return null;
   }
 }

@@ -604,8 +604,18 @@ export function StoryChapterReader({
 }
 
 /** Memory Verse Practice Card */
-export function MemoryVerseTrainer({ verse }: { verse: MemoryVerseChallenge }) {
+export function MemoryVerseTrainer({
+  verse,
+  returnTo,
+}: {
+  verse: MemoryVerseChallenge;
+  returnTo?: string;
+}) {
   const [showAnswer, setShowAnswer] = useState(false);
+
+  const practiceHref = returnTo
+    ? `/arcade/verse-builder?returnTo=${encodeURIComponent(returnTo)}`
+    : '/arcade/verse-builder';
 
   return (
     <div
@@ -628,27 +638,56 @@ export function MemoryVerseTrainer({ verse }: { verse: MemoryVerseChallenge }) {
         {verse.reference} ({verse.translation})
       </h4>
 
-      <p style={{ fontSize: '1.05rem', lineHeight: 1.6, color: '#1E293B', margin: '0.75rem 0' }}>
+      <p
+        style={{
+          fontSize: 'clamp(0.95rem, 3.8vw, 1.15rem)',
+          lineHeight: 2.2,
+          color: '#1E293B',
+          margin: '0.85rem 0',
+          wordBreak: 'break-word',
+        }}
+      >
         {showAnswer
           ? verse.text
-          : verse.text.split(' ').map((word, i) => {
-              const clean = word.replace(/[^a-zA-Z]/g, '');
-              if (verse.blanks.some((b) => b.toLowerCase() === clean.toLowerCase())) {
+          : verse.text.split(/\s+/).map((word, i) => {
+              const match = word.match(/^([^a-zA-Z0-9]*)([a-zA-Z0-9'’-]+)([^a-zA-Z0-9]*)$/);
+              const leadingPunct = match ? match[1] : '';
+              const core = match ? match[2] : word;
+              const trailingPunct = match ? match[3] : '';
+              const isBlank = verse.blanks.some(
+                (b) => b.toLowerCase() === core.toLowerCase()
+              );
+
+              if (isBlank) {
                 return (
-                  <span
-                    key={i}
-                    style={{
-                      background: '#FFFBEB',
-                      border: '1px solid #D97706',
-                      padding: '0.1rem 0.4rem',
-                      borderRadius: '4px',
-                      margin: '0 0.15rem',
-                      color: '#92400e',
-                      fontWeight: 700,
-                    }}
-                  >
-                    ______
-                  </span>
+                  <React.Fragment key={i}>
+                    {leadingPunct}
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minWidth: '60px',
+                        height: '28px',
+                        padding: '0 10px',
+                        margin: '0 4px',
+                        verticalAlign: 'middle',
+                        background: '#FFFBEB',
+                        border: '1.5px dashed #D97706',
+                        borderRadius: '8px',
+                        color: '#B45309',
+                        fontWeight: 800,
+                        fontSize: '0.85rem',
+                        letterSpacing: '1.5px',
+                        userSelect: 'none',
+                        boxShadow: 'inset 0 1px 2px rgba(217, 119, 6, 0.1)',
+                      }}
+                      title="Hidden word"
+                    >
+                      ••••••
+                    </span>
+                    {trailingPunct}{' '}
+                  </React.Fragment>
                 );
               }
               return word + ' ';
@@ -665,7 +704,7 @@ export function MemoryVerseTrainer({ verse }: { verse: MemoryVerseChallenge }) {
           {showAnswer ? 'Hide Clues' : 'Reveal Full Verse'}
         </button>
         <Link
-          href="/arcade/verse-builder"
+          href={practiceHref}
           className="button button-primary"
           style={{ fontSize: '0.85rem' }}
         >

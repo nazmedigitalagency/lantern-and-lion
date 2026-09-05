@@ -109,8 +109,8 @@
   --pd-error-text:var(--error-dark); --pd-error-bg:var(--error-bg);
 }
 * { box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body { margin:0; background:var(--cream); color:var(--navy); font-family:var(--font-nunito),Arial,sans-serif; }
+html { scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+body { margin:0; min-height:100vh; overflow-y:auto; -webkit-overflow-scrolling:touch; background:var(--cream); color:var(--navy); font-family:var(--font-nunito),Arial,sans-serif; }
 a { color:inherit; text-decoration:none; }
 button,a { -webkit-tap-highlight-color:transparent; }
 button:focus-visible,a:focus-visible { outline:3px solid var(--blue-dark); outline-offset:3px; }
@@ -573,11 +573,14 @@ footer a:hover{color:var(--gold)}
 /* Main Grid Layout: Topbar across top, then sidebar + canvas body */
 .kid-app-layout {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: #fef9f3;
   color: var(--navy);
   font-family: var(--font-nunito);
+  overflow-y: visible;
+  width: 100%;
 }
 
 /* ── TOP HEADER BAR (Logo, Level, XP, Coins, Gems, Help, Profile) ── */
@@ -1826,6 +1829,17 @@ footer a:hover{color:var(--gold)}
   box-shadow: 5px 5px 0 var(--kid-navy);
   z-index: 60;
 }
+@media (max-width: 640px) {
+  .profile-menu {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    left: auto;
+    width: min(300px, calc(100vw - 20px));
+    z-index: 999;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  }
+}
 .profile-menu > button {
   width: 100%;
   padding: 9px 10px;
@@ -2343,7 +2357,7 @@ footer a:hover{color:var(--gold)}
     gap: 6px;
     max-width: 100vw;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow: visible;
   }
   .kid-topbar-left {
     gap: 6px;
@@ -4060,9 +4074,12 @@ footer a:hover{color:var(--gold)}
 
 .teen-dashboard {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #0b1120;
   color: #f8fafc;
   font-family: var(--font-nunito);
+  overflow-y: visible;
+  width: 100%;
 }
 
 /* ── TOPBAR NAVIGATION & HUD ── */
@@ -4255,6 +4272,17 @@ footer a:hover{color:var(--gold)}
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+@media (max-width: 640px) {
+  .teen-profile-menu {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    left: auto;
+    width: min(300px, calc(100vw - 20px));
+    z-index: 999;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  }
 }
 
 .teen-profile-menu-head {
@@ -5929,19 +5957,17 @@ footer a:hover{color:var(--gold)}
     gap: 6px;
     max-width: 100vw;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow: visible;
   }
   .teen-body-container {
     padding: 12px 10px 60px;
     max-width: 100%;
     box-sizing: border-box;
-    overflow-x: hidden;
   }
   .teen-main-canvas,
   .teen-body {
     max-width: 100%;
     box-sizing: border-box;
-    overflow-x: hidden;
   }
   .teen-header-right {
     gap: 6px;

@@ -41,8 +41,9 @@ import {
   type PlayerProfile,
 } from './storage';
 import { canonicalRegions, getQuestsForRegion, getRegion, getRegions } from './world-data';
-import type { RegionId, RegionStatus, StoryChapter } from './types';
+import type { LocationSecret, RegionId, RegionStatus, StoryChapter } from './types';
 import TeenSidebar from '../teen-dashboard/TeenSidebar';
+import { SecretSearchMiniGame } from './SecretSearchMiniGame';
 import { VerseBuilderGame } from '../arcade/verse-builder/VerseBuilderPageClient';
 import { ScriptureMazeGame } from '../arcade/scripture-maze/ScriptureMazePageClient';
 import { ScriptureScrambleGame } from '../arcade/scripture-scramble/ScriptureScramblePageClient';
@@ -128,6 +129,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
   const [showPouch, setShowPouch] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSecretSearch, setActiveSecretSearch] = useState<LocationSecret | null>(null);
   const [activeGameModal, setActiveGameModal] = useState<{ href: string; contentId?: string } | null>(null);
   const launchQuestGame = useCallback((linked: { href: string; contentId?: string }) => {
     setShowRegionModal(false);
@@ -637,7 +639,10 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
 
               {/* TAB 3: MEMORY VERSE */}
               {locationTab === 'memory-verse' && (
-                <MemoryVerseTrainer verse={selectedRegion.memoryVerse} />
+                <MemoryVerseTrainer
+                  verse={selectedRegion.memoryVerse}
+                  returnTo={embedded ? `${dashboardHref}?tab=adventure` : '/adventure'}
+                />
               )}
 
               {/* TAB 4: KNOWLEDGE BOSS */}
@@ -680,7 +685,7 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
                               type="button"
                               className="button button-secondary"
                               style={{ fontSize: '0.75rem', padding: '0.5rem 0.7rem', width: '100%', justifyContent: 'center' }}
-                              onClick={() => handleDiscoverSecret(sec.id, sec.rewardCoins, sec.rewardGems)}
+                              onClick={() => setActiveSecretSearch(sec)}
                             >
                               🔍 Search Area
                             </button>
@@ -729,6 +734,18 @@ export function AdventureWorld({ embedded = false, onClose }: { embedded?: boole
           collectibles={collectibles}
           secrets={[]}
           onClose={() => setShowPouch(false)}
+        />
+      )}
+
+      {activeSecretSearch && selectedRegion && (
+        <SecretSearchMiniGame
+          secret={activeSecretSearch}
+          regionName={selectedRegion.name}
+          isTeen={isTeen}
+          onDiscover={(secretId, coins, gems) => {
+            handleDiscoverSecret(secretId, coins, gems);
+          }}
+          onClose={() => setActiveSecretSearch(null)}
         />
       )}
 

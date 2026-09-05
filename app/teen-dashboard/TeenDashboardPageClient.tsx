@@ -567,6 +567,7 @@ export default function TeenDashboardPage() {
         if (requestedAssignmentId) setFocusAssignmentId(requestedAssignmentId);
       } catch { /* keep demo defaults */ }
       setHydrated(true);
+      document.body.style.overflow = '';
     }, 0);
     return () => window.clearTimeout(timer);
   }, [router]);
@@ -575,12 +576,16 @@ export default function TeenDashboardPage() {
     if (!showProfiles) return;
     const close = (event: Event) => {
       if ((event as KeyboardEvent).key && (event as KeyboardEvent).key !== 'Escape') return;
-      if (event.type === 'pointerdown' && (event.target as HTMLElement).closest('.teen-profile-switch')) return;
+      const target = event.target as Element | null;
+      if (event.type === 'pointerdown' && target?.closest?.('.teen-profile-switch')) return;
       setShowProfiles(false);
     };
     document.addEventListener('keydown', close);
-    document.addEventListener('pointerdown', close);
+    const timer = window.setTimeout(() => {
+      document.addEventListener('pointerdown', close);
+    }, 50);
     return () => {
+      window.clearTimeout(timer);
       document.removeEventListener('keydown', close);
       document.removeEventListener('pointerdown', close);
     };

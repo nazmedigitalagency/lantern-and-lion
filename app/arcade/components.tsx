@@ -58,6 +58,7 @@ export function GameResultModal({
   onPlayAgain,
   backHref,
   onBack,
+  backLabel,
 }: {
   title?: string;
   score: number;
@@ -70,6 +71,7 @@ export function GameResultModal({
   /** Either backHref (standalone page: navigates away) or onBack (embedded/modal: closes in place) — pass whichever fits how this game is being rendered. */
   backHref?: string;
   onBack?: () => void;
+  backLabel?: string;
 }) {
   const dialogRef = useDialogA11y<HTMLElement>(true, onPlayAgain);
   const [appearance] = useState<CharacterAppearance>(() => {
@@ -122,9 +124,9 @@ export function GameResultModal({
         <div className="arcade-result-actions">
           <button type="button" className="button button-primary" onClick={onPlayAgain}>Play again</button>
           {onBack ? (
-            <button type="button" className="button button-danger" onClick={onBack}>Back to Arcade</button>
+            <button type="button" className="button button-danger" onClick={onBack}>{backLabel || 'Back to Arcade'}</button>
           ) : (
-            <Link className="button button-danger" href={backHref || '/arcade'}>Back to Arcade</Link>
+            <Link className="button button-danger" href={backHref || '/arcade'}>{backLabel || 'Back to Arcade'}</Link>
           )}
         </div>
       </section>

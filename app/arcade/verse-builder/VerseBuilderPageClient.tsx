@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { hasActiveSession, readActiveProfile, type PlayerProfile } from '../../adventure/storage';
 import { pickRandomUnique, shuffle } from '../../lib/shuffle';
 import { DifficultyPicker, GameResultModal } from '../components';
@@ -28,7 +29,20 @@ function pickVerses(difficulty: DifficultyLevel, count: number): { reference: st
  * Arcade tab without leaving the dashboard) — `onClose` is called instead
  * of navigating back to /arcade in that case.
  */
-export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boolean; onClose?: () => void } = {}) {
+export function VerseBuilderGame({
+  embedded = false,
+  onClose,
+  returnTo: propReturnTo,
+}: {
+  embedded?: boolean;
+  onClose?: () => void;
+  returnTo?: string;
+} = {}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryReturnTo = searchParams?.get('returnTo');
+  const returnTo = propReturnTo || queryReturnTo || '';
+
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [phase, setPhase] = useState<'setup' | 'playing' | 'result'>('setup');
@@ -46,6 +60,33 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
   const [outcome, setOutcome] = useState<GameOutcome | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [resolving, setResolving] = useState(false);
+
+  const defaultBackHref = profile?.kind === 'teen' ? '/teen-dashboard' : '/child-dashboard';
+  const effectiveBackHref = returnTo || defaultBackHref;
+
+  const backBtnText = returnTo
+    ? (returnTo.includes('dashboard') ? '← Dashboard' : returnTo.includes('adventure') ? '← Adventure' : '← Back')
+    : '← Back';
+
+  const backModalLabel = returnTo
+    ? (returnTo.includes('dashboard') ? 'Back to Dashboard' : returnTo.includes('adventure') ? 'Back to Adventure' : 'Back')
+    : 'Back to Dashboard';
+
+  function handleBack() {
+    if (embedded && onClose) {
+      onClose();
+      return;
+    }
+    if (returnTo) {
+      router.push(returnTo);
+      return;
+    }
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push(defaultBackHref);
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -240,7 +281,9 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
             xpEarned={outcome.session.xpEarned}
             coinsEarned={outcome.session.coinsEarned}
             onPlayAgain={() => setPhase('setup')}
-            {...(embedded && onClose ? { onBack: onClose } : { backHref: '/arcade' })}
+            backHref={effectiveBackHref}
+            backLabel={backModalLabel}
+            onBack={embedded && onClose ? onClose : handleBack}
           />
         )}
       </div>
@@ -251,15 +294,27 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
   return (
     <main className="adventure-page arcade-page">
       <header className="child-topbar adv-topbar">
-        <Link href="/arcade" className="child-logo">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="child-logo"
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+        >
           <Image src="/lantern-lion-logo.png" alt="" width={54} height={54} priority />
           <span>
             <strong>Verse Builder</strong>
             <small>Lantern Arcade</small>
           </span>
-        </Link>
+        </button>
         <div className="child-header-actions">
-          <Link href="/arcade" className="help-button">← Arcade</Link>
+          <button
+            type="button"
+            className="help-button"
+            onClick={handleBack}
+            style={{ cursor: 'pointer' }}
+          >
+            {backBtnText}
+          </button>
         </div>
       </header>
       {body}
@@ -268,5 +323,9 @@ export function VerseBuilderGame({ embedded = false, onClose }: { embedded?: boo
 }
 
 export default function VerseBuilderPage() {
-  return <VerseBuilderGame />;
+  return (
+    <Suspense fallback={null}>
+      <VerseBuilderGame />
+    </Suspense>
+  );
 }

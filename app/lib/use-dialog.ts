@@ -13,12 +13,14 @@ import { useEffect, useRef } from 'react';
  * covers the two gaps that matter most for a modal that asserts
  * aria-modal="true": something happens on open, and Escape works.
  */
+let openDialogCount = 0;
+
 export function useDialogA11y<T extends HTMLElement>(isOpen: boolean, onClose: () => void) {
   const ref = useRef<T>(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    const previousOverflow = document.body.style.overflow;
+    openDialogCount++;
     document.body.style.overflow = 'hidden';
 
     const focusable = ref.current?.querySelector<HTMLElement>('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
@@ -30,7 +32,10 @@ export function useDialogA11y<T extends HTMLElement>(isOpen: boolean, onClose: (
     document.addEventListener('keydown', onKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      openDialogCount = Math.max(0, openDialogCount - 1);
+      if (openDialogCount === 0) {
+        document.body.style.overflow = '';
+      }
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [isOpen, onClose]);

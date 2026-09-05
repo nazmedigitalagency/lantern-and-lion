@@ -310,6 +310,7 @@ export default function ChildDashboardPage() {
   }
 
   useEffect(() => {
+    document.body.style.overflow = '';
     const timer = window.setTimeout(() => {
       const searchParams = new URLSearchParams(window.location.search);
       const previewFlag = searchParams.get('preview') === '1';
@@ -404,11 +405,20 @@ export default function ChildDashboardPage() {
     if (!showProfiles) return;
     const close = (event: Event) => {
       if ((event as KeyboardEvent).key && (event as KeyboardEvent).key !== 'Escape') return;
-      if (event.type === 'pointerdown' && (event.target as HTMLElement).closest('.profile-switch')) return;
-      setShowProfiles(false); window.setTimeout(() => profileButtonRef.current?.focus(), 0);
+      const target = event.target as Element | null;
+      if (event.type === 'pointerdown' && target?.closest?.('.profile-switch')) return;
+      setShowProfiles(false);
+      window.setTimeout(() => profileButtonRef.current?.focus(), 0);
     };
-    document.addEventListener('keydown', close); document.addEventListener('pointerdown', close);
-    return () => { document.removeEventListener('keydown', close); document.removeEventListener('pointerdown', close); };
+    document.addEventListener('keydown', close);
+    const timer = window.setTimeout(() => {
+      document.addEventListener('pointerdown', close);
+    }, 50);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('keydown', close);
+      document.removeEventListener('pointerdown', close);
+    };
   }, [showProfiles]);
 
   useEffect(() => {
