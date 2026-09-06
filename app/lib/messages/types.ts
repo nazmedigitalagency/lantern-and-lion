@@ -38,3 +38,22 @@ export type SendMessagePayload = {
 export type ReadThreadPayload = {
   threadId: string;
 };
+
+export type ConnectCodeInfo = {
+  code: string;
+  role: SenderRole;
+  displayName: string;
+};
+
+export type ConnectViaCodePayload = {
+  code: string;
+  childName?: string;
+};
+
+export type ConnectViaCodeResponse = {
+  success: boolean;
+  message?: string;
+  thread?: MessageThread;
+  error?: string;
+};
+

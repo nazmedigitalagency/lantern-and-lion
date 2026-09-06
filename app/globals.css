@@ -11279,6 +11279,212 @@ footer a:hover{color:var(--gold)}
   min-width: 0;
 }
 
+/* ── Messaging Connect Code Bar ── */
+.messages-connect-bar {
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.parent-connect-bar {
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  border-bottom-color: #fde68a;
+}
+
+.connect-code-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.connect-code-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.connect-code-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.parent-connect-bar .connect-code-label {
+  color: #92400e;
+}
+
+.connect-code-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+  background: #ffffff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  letter-spacing: 0.05em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.parent-connect-bar .connect-code-val {
+  border-color: #fcd34d;
+  color: #78350f;
+}
+
+.btn-copy-code {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-copy-code:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btn-toggle-add-code {
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  background: rgba(255, 255, 255, 0.8);
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.btn-toggle-add-code:hover {
+  background: #ffffff;
+  border-color: #64748b;
+  color: #0f172a;
+}
+
+.parent-connect-bar .btn-toggle-add-code {
+  border-color: #fcd34d;
+  background: rgba(255, 255, 255, 0.9);
+  color: #92400e;
+}
+
+.parent-connect-bar .btn-toggle-add-code:hover {
+  background: #ffffff;
+  border-color: #d97706;
+}
+
+.add-by-code-form {
+  margin-top: 4px;
+  padding: 10px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.parent-connect-bar .add-by-code-form {
+  border-color: #fde68a;
+}
+
+.add-code-input-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.add-code-input-group {
+  display: flex;
+  gap: 6px;
+}
+
+.add-code-input-group input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-transform: uppercase;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
+  outline: none;
+  background: #f8fafc;
+}
+
+.add-code-input-group input:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+}
+
+.parent-connect-bar .add-code-input-group input:focus {
+  border-color: #d97706;
+}
+
+.btn-submit-code {
+  padding: 6px 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  background: #0f172a;
+  color: #ffffff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.parent-connect-bar .btn-submit-code {
+  background: #d97706;
+}
+
+.btn-submit-code:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-submit-code:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-code-error {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.add-code-success {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.add-code-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.71rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
 .teacher-threads-search {
   display: flex;
   align-items: center;

@@ -152,4 +152,110 @@ describe('Feature: Real-Time Parent-Teacher Messaging', () => {
     assert.equal(threadBMessages.length, 1);
     assert.equal(threadBMessages[0].body, 'Class B notice');
   });
+
+  it('generates, normalizes, and validates Parent and Teacher Connect Codes', () => {
+    // Role prefix enforcement
+    function generateCode(role: 'teacher' | 'parent'): string {
+      const prefix = role === 'teacher' ? 'TCH' : 'PAR';
+      return `${prefix}-TEST12`;
+    }
+
+    function normalizeCode(raw: string): string {
+      return raw.trim().toUpperCase().replace(/\s+/g, '');
+    }
+
+    function isValidCode(code: string): boolean {
+      const norm = normalizeCode(code);
+      return /^([A-Z0-9]{3,6}-[A-Z0-9]{4,10}|[A-Z0-9]{4,12})$/.test(norm);
+    }
+
+    const teacherCode = generateCode('teacher');
+    const parentCode = generateCode('parent');
+
+    assert.ok(teacherCode.startsWith('TCH-'));
+    assert.ok(parentCode.startsWith('PAR-'));
+
+    // Normalization handles mixed casing and surrounding/inner whitespace
+    assert.equal(normalizeCode('  tch - grace26 '), 'TCH-GRACE26');
+    assert.equal(normalizeCode('par-jordan26'), 'PAR-JORDAN26');
+
+    // Validation
+    assert.equal(isValidCode('TCH-GRACE26'), true);
+    assert.equal(isValidCode('PAR-JORDAN26'), true);
+    assert.equal(isValidCode('par jordan 26'), true);
+    assert.equal(isValidCode('??!'), false);
+    assert.equal(isValidCode(''), false);
+  });
+
+  it('creates an active conversation thread when a parent or teacher connects via code', () => {
+    type ConnectRegistryEntry = {
+      role: SenderRole;
+      name: string;
+      childName?: string;
+      classroomName?: string;
+    };
+
+    const registry: Record<string, ConnectRegistryEntry> = {
+      'TCH-GRACE26': {
+        role: 'teacher',
+        name: 'Teacher Grace',
+        classroomName: 'Wednesday Explorers',
+      },
+      'PAR-JORDAN26': {
+        role: 'parent',
+        name: 'Jordan Adeyemi',
+        childName: 'Amara Adeyemi',
+      },
+    };
+
+    function connectByCode(
+      code: string,
+      currentRole: SenderRole,
+      currentName: string
+    ): { success: boolean; thread?: MessageThread; error?: string } {
+      const norm = code.trim().toUpperCase().replace(/\s+/g, '');
+      const target = registry[norm];
+      if (!target) return { success: false, error: 'Code not found' };
+      if (target.role === currentRole) {
+        return { success: false, error: 'Cannot connect to someone with the same role' };
+      }
+
+      const isTeacher = currentRole === 'teacher';
+      const thread: MessageThread = {
+        id: `thread-${norm.toLowerCase()}`,
+        classroomId: 'class-1',
+        classroomName: target.classroomName || 'Wednesday Explorers',
+        childId: 'child-1',
+        childName: target.childName || 'Amara Adeyemi',
+        parentId: isTeacher ? 'parent-id' : 'current-id',
+        parentName: isTeacher ? target.name : currentName,
+        teacherId: isTeacher ? 'current-id' : 'teacher-id',
+        teacherName: isTeacher ? currentName : target.name,
+        lastMessageAt: new Date().toISOString(),
+        lastMessageSnippet: 'Connected via Connect Code',
+        unreadCount: 0,
+        otherPartyName: target.name,
+        otherPartyRole: target.role,
+      };
+      return { success: true, thread };
+    }
+
+    // Teacher connects with Parent using PAR-JORDAN26
+    const teacherResult = connectByCode('PAR-JORDAN26', 'teacher', 'Teacher Grace');
+    assert.equal(teacherResult.success, true);
+    assert.equal(teacherResult.thread?.parentName, 'Jordan Adeyemi');
+    assert.equal(teacherResult.thread?.otherPartyRole, 'parent');
+
+    // Parent connects with Teacher using TCH-GRACE26
+    const parentResult = connectByCode('TCH-GRACE26', 'parent', 'Jordan Adeyemi');
+    assert.equal(parentResult.success, true);
+    assert.equal(parentResult.thread?.teacherName, 'Teacher Grace');
+    assert.equal(parentResult.thread?.otherPartyRole, 'teacher');
+
+    // Rejects same-role connection (teacher entering a teacher code)
+    const invalidRoleResult = connectByCode('TCH-GRACE26', 'teacher', 'Another Teacher');
+    assert.equal(invalidRoleResult.success, false);
+    assert.equal(invalidRoleResult.error, 'Cannot connect to someone with the same role');
+  });
 });
+

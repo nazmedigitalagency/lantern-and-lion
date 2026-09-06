@@ -35,12 +35,26 @@ export default function TeacherMessagesPanel({
   initialChildId?: string;
   initialClassroomId?: string;
 } = {}) {
-  const { threads, loading: threadsLoading, refreshThreads } = useMessageThreads('teacher');
+  const {
+    threads,
+    loading: threadsLoading,
+    myConnectCode,
+    connectViaCode,
+    refreshThreads,
+  } = useMessageThreads('teacher');
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
+
+  // Connect code state
+  const [copied, setCopied] = useState(false);
+  const [showAddParent, setShowAddParent] = useState(false);
+  const [parentCodeInput, setParentCodeInput] = useState('');
+  const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -88,6 +102,38 @@ export default function TeacherMessagesPanel({
 
   const totalUnread = threads.reduce((acc, t) => acc + (t.unreadCount || 0), 0);
 
+  function handleCopyCode() {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(myConnectCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  async function handleConnectParent(e: React.FormEvent) {
+    e.preventDefault();
+    if (!parentCodeInput.trim() || connecting) return;
+    setConnecting(true);
+    setConnectError(null);
+    setConnectSuccess(null);
+
+    const res = await connectViaCode(parentCodeInput.trim());
+    setConnecting(false);
+
+    if (res.success && res.thread) {
+      setConnectSuccess(`Connected with ${res.thread.parentName}!`);
+      setSelectedThreadId(res.thread.id);
+      setMobileView('chat');
+      setParentCodeInput('');
+      setTimeout(() => {
+        setShowAddParent(false);
+        setConnectSuccess(null);
+      }, 2500);
+    } else {
+      setConnectError(res.error || 'Failed to connect. Please check the code.');
+    }
+  }
+
   async function handleSend(textToSend?: string) {
     const text = (textToSend || inputText).trim();
     if (!text || sending) return;
@@ -122,6 +168,59 @@ export default function TeacherMessagesPanel({
       <div className={`teacher-chat-panes ${mobileView === 'chat' ? 'show-chat-mobile' : 'show-list-mobile'}`}>
         {/* Left Sidebar: Threads List */}
         <aside className="teacher-threads-sidebar">
+          {/* Teacher Connect Code Bar */}
+          <div className="messages-connect-bar">
+            <div className="connect-code-badge-row">
+              <div className="connect-code-info">
+                <span className="connect-code-label">Your Teacher Code:</span>
+                <strong className="connect-code-val">{myConnectCode}</strong>
+              </div>
+              <button
+                type="button"
+                className="btn-copy-code"
+                onClick={handleCopyCode}
+                title="Copy your Teacher Code to give to parents"
+              >
+                {copied ? '✓ Copied' : '📋 Copy'}
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="btn-toggle-add-code"
+              onClick={() => setShowAddParent((prev) => !prev)}
+            >
+              {showAddParent ? '✕ Close' : '+ Add Parent via Code'}
+            </button>
+
+            {showAddParent && (
+              <form className="add-by-code-form" onSubmit={handleConnectParent}>
+                <label htmlFor="teacher-parent-code-input" className="add-code-input-label">
+                  Enter Parent Connect Code
+                </label>
+                <div className="add-code-input-group">
+                  <input
+                    id="teacher-parent-code-input"
+                    type="text"
+                    placeholder="e.g. PAR-JORDAN26"
+                    value={parentCodeInput}
+                    onChange={(e) => setParentCodeInput(e.target.value)}
+                    disabled={connecting}
+                    required
+                  />
+                  <button type="submit" disabled={connecting || !parentCodeInput.trim()} className="btn-submit-code">
+                    {connecting ? 'Connecting...' : 'Connect'}
+                  </button>
+                </div>
+                {connectError && <p className="add-code-error">{connectError}</p>}
+                {connectSuccess && <p className="add-code-success">{connectSuccess}</p>}
+                <small className="add-code-hint">
+                  Ask the parent for their unique Parent Code (shown in their messages panel).
+                </small>
+              </form>
+            )}
+          </div>
+
           <div className="teacher-threads-search">
             <span aria-hidden="true">🔍</span>
             <input
@@ -142,7 +241,7 @@ export default function TeacherMessagesPanel({
             ) : filteredThreads.length === 0 ? (
               <div className="teacher-threads-empty">
                 <p>No matching conversations.</p>
-                <small>Connected parents will appear here once approved in class.</small>
+                <small>Enter a parent’s code above to start a conversation.</small>
               </div>
             ) : (
               filteredThreads.map((t) => {

@@ -95,21 +95,64 @@ const DEMO_MESSAGES: Record<string, ChatMessage[]> = {
   ],
 };
 
+const CUSTOM_THREADS_KEY = 'lnl_custom_message_threads';
+
+function getLocalCustomThreads(): MessageThread[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(CUSTOM_THREADS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalCustomThread(thread: MessageThread) {
+  if (typeof window === 'undefined') return;
+  try {
+    const existing = getLocalCustomThreads().filter((t) => t.id !== thread.id);
+    window.localStorage.setItem(CUSTOM_THREADS_KEY, JSON.stringify([thread, ...existing]));
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Hook for managing the list of parent-teacher conversation threads.
  */
 export function useMessageThreads(currentRole: SenderRole = 'teacher') {
   const [threads, setThreads] = useState<MessageThread[]>([]);
+  const [myConnectCode, setMyConnectCode] = useState<string>(
+    currentRole === 'teacher' ? 'TCH-GRACE26' : 'PAR-JORDAN26'
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch current user's connect code
+  useEffect(() => {
+    fetch(`/api/messages/connect-code?role=${currentRole}`)
+      .then((res) => res.json() as Promise<{ code?: string }>)
+      .then((data) => {
+        if (data?.code) {
+          setMyConnectCode(data.code);
+        }
+      })
+      .catch(() => {
+        // Keep default demo code
+      });
+  }, [currentRole]);
+
   const refreshThreads = useCallback(async () => {
     try {
+      const customLocal = getLocalCustomThreads();
       const res = await fetch('/api/messages/threads');
       if (res.ok) {
         const data = (await res.json()) as { threads?: MessageThread[] };
         if (Array.isArray(data.threads) && data.threads.length > 0) {
-          setThreads(data.threads);
+          // Merge custom local threads if any
+          const dbIds = new Set(data.threads.map((t) => t.id));
+          const unmerged = customLocal.filter((t) => !dbIds.has(t.id));
+          setThreads([...unmerged, ...data.threads]);
           setLoading(false);
           return;
         }
@@ -120,7 +163,9 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
         otherPartyName: currentRole === 'teacher' ? t.parentName : t.teacherName,
         otherPartyRole: (currentRole === 'teacher' ? 'parent' : 'teacher') as SenderRole,
       }));
-      setThreads(adjustedDemo);
+      const demoIds = new Set(adjustedDemo.map((t) => t.id));
+      const unmerged = customLocal.filter((t) => !demoIds.has(t.id));
+      setThreads([...unmerged, ...adjustedDemo]);
     } catch {
       // Fallback to demo threads on fetch failure
       const adjustedDemo = DEMO_THREADS.map((t) => ({
@@ -128,7 +173,10 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
         otherPartyName: currentRole === 'teacher' ? t.parentName : t.teacherName,
         otherPartyRole: (currentRole === 'teacher' ? 'parent' : 'teacher') as SenderRole,
       }));
-      setThreads(adjustedDemo);
+      const customLocal = getLocalCustomThreads();
+      const demoIds = new Set(adjustedDemo.map((t) => t.id));
+      const unmerged = customLocal.filter((t) => !demoIds.has(t.id));
+      setThreads([...unmerged, ...adjustedDemo]);
     } finally {
       setLoading(false);
     }
@@ -159,8 +207,54 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
     };
   }, [refreshThreads]);
 
-  return { threads, loading, error, refreshThreads };
+  /**
+   * Connect with a parent or teacher using their unique connect code.
+   */
+  const connectViaCode = useCallback(
+    async (
+      code: string,
+      childName?: string
+    ): Promise<{ success: boolean; thread?: MessageThread; error?: string }> => {
+      try {
+        const res = await fetch('/api/messages/connect-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, childName }),
+        });
+        const data = (await res.json()) as {
+          success?: boolean;
+          error?: string;
+          thread?: MessageThread;
+        };
+        if (!res.ok || !data.success) {
+          return {
+            success: false,
+            error: data.error || 'Failed to connect. Please check the code and try again.',
+          };
+        }
+
+        const newThread = data.thread;
+        if (newThread) {
+          saveLocalCustomThread(newThread);
+          setThreads((prev) => {
+            const filtered = prev.filter((t) => t.id !== newThread.id);
+            return [newThread, ...filtered];
+          });
+        }
+        return { success: true, thread: newThread };
+      } catch (err: unknown) {
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Network error while connecting.',
+        };
+      }
+    },
+    []
+  );
+
+  return { threads, loading, error, myConnectCode, connectViaCode, refreshThreads };
 }
+
 
 /**
  * Hook for managing active chat messages in a single thread with live Supabase Realtime.
