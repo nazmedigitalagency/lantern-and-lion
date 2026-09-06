@@ -132,6 +132,7 @@ const fallbackFamily: Family = {
 export default function ParentDashboardPage() {
   const router = useRouter();
   const [page, setPage] = useState<Page>('overview');
+  const [searchQuery, setSearchQuery] = useState('');
   const [family, setFamily] = useState<Family>(fallbackFamily);
   const [hasFamily, setHasFamily] = useState(true);
   const [connectedClass, setConnectedClass] = useState<{ id: number; name: string; ageBand: string; code: string; teacher: string } | null>(null);
@@ -143,8 +144,6 @@ export default function ParentDashboardPage() {
   const [helpRequest, setHelpRequest] = useState<HelpRequest | null>(null);
   const [showHelpDetail, setShowHelpDetail] = useState(false);
   const [savedNotice, setSavedNotice] = useState('');
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([{ from: 'Mrs Grace', body: 'Amara asked a thoughtful question about courage today.', time: 'Today, 10:24' }]);
   const [hydrated, setHydrated] = useState(false);
   const [todayActivity, setTodayActivity] = useState<TodayActivityChild[]>([]);
   const [activityTimezone, setActivityTimezone] = useState('UTC');
@@ -897,13 +896,6 @@ export default function ParentDashboardPage() {
     setSavedNotice('Family settings saved on this device.');
   }
 
-  function sendMessage() {
-    if (!message.trim()) return;
-    setMessages((current) => [...current, { from: 'You', body: message.trim(), time: 'Just now' }]);
-    setMessage('');
-    setSavedNotice('Your demo message was added.');
-  }
-
   if (!hydrated) return <main className="dashboard-loading" aria-live="polite"><span></span><p>Opening the parent space…</p></main>;
 
   if (!hasFamily) {
@@ -923,16 +915,48 @@ export default function ParentDashboardPage() {
           <Image src="/lantern-lion-logo.png" alt="" width={58} height={58} priority />
           <span><strong>Lantern &amp; Lion</strong><small>Parent space</small></span>
         </Link>
-        <nav aria-label="Parent dashboard">
-          <button aria-pressed={page === 'overview'} className={page === 'overview' ? 'active' : ''} onClick={() => setPage('overview')}><span>H</span>Home</button>
-          <button aria-pressed={page === 'children'} className={page === 'children' ? 'active' : ''} onClick={() => setPage('children')}><span>C</span>Children</button>
-          <button aria-pressed={page === 'assignments'} className={page === 'assignments' ? 'active' : ''} onClick={() => setPage('assignments')}><span>A</span>Assignments</button>
-          <button aria-pressed={page === 'teachers'} className={page === 'teachers' ? 'active' : ''} onClick={() => setPage('teachers')}><span>T</span>Teachers &amp; Classes</button>
-          <button aria-pressed={page === 'messages'} className={page === 'messages' ? 'active' : ''} onClick={() => setPage('messages')}><span>M</span>Messages <b>1</b></button>
-          <button aria-pressed={page === 'settings'} className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}><span>S</span>Settings</button>
+        <nav aria-label="Parent dashboard" className="parent-sidebar-sections">
+          <div className="sidebar-section-group">
+            <span className="sidebar-section-title">MENU</span>
+            <div className="sidebar-section-links">
+              <button aria-pressed={page === 'overview'} className={page === 'overview' ? 'active' : ''} onClick={() => setPage('overview')}>
+                <span className="sidebar-nav-icon">🏠</span>
+                <span className="sidebar-nav-label">Home</span>
+              </button>
+              <button aria-pressed={page === 'children'} className={page === 'children' ? 'active' : ''} onClick={() => setPage('children')}>
+                <span className="sidebar-nav-icon">🧒</span>
+                <span className="sidebar-nav-label">Children</span>
+              </button>
+              <button aria-pressed={page === 'assignments'} className={page === 'assignments' ? 'active' : ''} onClick={() => setPage('assignments')}>
+                <span className="sidebar-nav-icon">📋</span>
+                <span className="sidebar-nav-label">Assignments</span>
+              </button>
+              <button aria-pressed={page === 'messages'} className={page === 'messages' ? 'active' : ''} onClick={() => setPage('messages')}>
+                <span className="sidebar-nav-icon">💬</span>
+                <span className="sidebar-nav-label">Messages</span>
+                <b className="sidebar-badge">1</b>
+              </button>
+            </div>
+          </div>
+
+          <div className="sidebar-section-group">
+            <span className="sidebar-section-title">COMMUNITY &amp; SETTINGS</span>
+            <div className="sidebar-section-links">
+              <button aria-pressed={page === 'teachers'} className={page === 'teachers' ? 'active' : ''} onClick={() => setPage('teachers')}>
+                <span className="sidebar-nav-icon">🏛️</span>
+                <span className="sidebar-nav-label">Teachers &amp; Classes</span>
+              </button>
+              <button aria-pressed={page === 'settings'} className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}>
+                <span className="sidebar-nav-icon">⚙️</span>
+                <span className="sidebar-nav-label">Settings</span>
+              </button>
+            </div>
+          </div>
         </nav>
         <div className="parent-sidebar-bottom">
-          <a href={`/child-dashboard?preview=1&child=${activeChild.id}`}>Preview child space</a>
+          <a href={activeChild.age >= 13 ? `/teen-dashboard?preview=1&child=${activeChild.id}` : `/child-dashboard?preview=1&child=${activeChild.id}`}>
+            Preview {activeChild.age >= 13 ? 'teen space' : 'child space'}
+          </a>
           <a href="/family-setup">Edit family &amp; profiles</a>
           <a
             href="/parent-access"
@@ -948,10 +972,23 @@ export default function ParentDashboardPage() {
 
       <section className="parent-dashboard-main">
         <header className="parent-dashboard-top">
-          <div>
+          <div className="parent-dashboard-top-brand">
             <p>{family.familyName}</p>
             <span>Live Parent Dashboard · {children.length} {children.length === 1 ? 'child' : 'children'}</span>
           </div>
+
+          <div className="dashboard-search-wrap" role="search">
+            <span className="search-icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              aria-label="Search family activities"
+              placeholder="Type to search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="dashboard-search-input"
+            />
+          </div>
+
           <div className="parent-account-button">
             <span>{parentName.slice(0, 1)}</span>
             <div><strong>{parentName}</strong><small>Family owner</small></div>
@@ -1271,7 +1308,9 @@ export default function ParentDashboardPage() {
                           <span>Gear: {getItem(childEq.clothing || 'starter-tunic')?.name} · {getItem(childEq.lantern || 'starter-lantern')?.name}{childEq.pet ? ` · Companion: ${getItem(childEq.pet)?.name}` : ''}</span>
                         </div>
                       </div>
-                      <a href={`/child-dashboard?preview=1&child=${activeChild.id}`}>Preview child dashboard</a>
+                      <a href={activeChild.age >= 13 ? `/teen-dashboard?preview=1&child=${activeChild.id}` : `/child-dashboard?preview=1&child=${activeChild.id}`}>
+                        Preview {activeChild.age >= 13 ? 'teen dashboard' : 'child dashboard'}
+                      </a>
                     </div>
                   </>
                 );
@@ -2116,10 +2155,17 @@ export default function ParentDashboardPage() {
         )}
 
         {page === 'messages' && (
-          <ParentMessagesPanel
-            targetClassroomId={messageTarget?.classroomId}
-            targetChildId={messageTarget?.childId}
-          />
+          <div className="parent-dashboard-content">
+            <div className="parent-page-title">
+              <p className="parent-dash-kicker">Church &amp; Sunday School Educational Messaging</p>
+              <h1>Parent Messages</h1>
+              <p>Coordinate directly with your children&apos;s teachers about lessons, scripture memory, and class updates.</p>
+            </div>
+            <ParentMessagesPanel
+              targetClassroomId={messageTarget?.classroomId}
+              targetChildId={messageTarget?.childId}
+            />
+          </div>
         )}
 
         {page === 'settings' && (

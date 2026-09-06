@@ -3,24 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMessageThreads, useRealtimeMessages } from '../lib/messages/useRealtimeMessages';
 import { createClient } from '../lib/supabase/client';
-import type { MessageThread } from '../lib/messages/types';
-
-function formatRelativeTime(dateStr: string): string {
-  try {
-    const diffMs = Date.now() - new Date(dateStr).getTime();
-    const diffSec = Math.floor(diffMs / 1000);
-    if (diffSec < 60) return 'just now';
-    const diffMin = Math.floor(diffSec / 60);
-    if (diffMin < 60) return `${diffMin}m ago`;
-    const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr}h ago`;
-    const diffDays = Math.floor(diffHr / 24);
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  } catch {
-    return '';
-  }
-}
+import { formatCardTimestamp, formatMessageTime } from '../lib/messages/formatters';
 
 export default function ParentMessagesPanel({
   targetClassroomId,
@@ -37,14 +20,15 @@ export default function ParentMessagesPanel({
     refreshThreads,
   } = useMessageThreads('parent');
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Connect code state
+  // Connect code drawer state
   const [copied, setCopied] = useState(false);
-  const [showAddTeacher, setShowAddTeacher] = useState(false);
+  const [showConnectDrawer, setShowConnectDrawer] = useState(false);
   const [teacherCodeInput, setTeacherCodeInput] = useState('');
   const [connecting, setConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
@@ -66,21 +50,23 @@ export default function ParentMessagesPanel({
   // Auto-select targeted thread or first thread
   useEffect(() => {
     if (threads.length > 0) {
-      if (targetClassroomId || targetChildId) {
-        const found = threads.find(
-          (t) =>
-            (!targetClassroomId || t.classroomId === targetClassroomId) &&
-            (!targetChildId || t.childId === targetChildId)
-        );
-        if (found) {
-          setSelectedThreadId(found.id);
-          setMobileView('chat');
-          return;
+      window.queueMicrotask(() => {
+        if (targetClassroomId || targetChildId) {
+          const found = threads.find(
+            (t) =>
+              (!targetClassroomId || t.classroomId === targetClassroomId) &&
+              (!targetChildId || t.childId === targetChildId)
+          );
+          if (found) {
+            setSelectedThreadId(found.id);
+            setMobileView('chat');
+            return;
+          }
         }
-      }
-      if (!selectedThreadId) {
-        setSelectedThreadId(threads[0].id);
-      }
+        if (!selectedThreadId) {
+          setSelectedThreadId(threads[0].id);
+        }
+      });
     }
   }, [threads, targetClassroomId, targetChildId, selectedThreadId]);
 
@@ -90,7 +76,6 @@ export default function ParentMessagesPanel({
     messages,
     sendMessage,
     loading: messagesLoading,
-    isRealtimeActive,
   } = useRealtimeMessages({
     threadId: activeThread ? activeThread.id : null,
     currentRole: 'parent',
@@ -101,6 +86,18 @@ export default function ParentMessagesPanel({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const filteredThreads = threads.filter((t) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      t.teacherName.toLowerCase().includes(q) ||
+      t.childName.toLowerCase().includes(q) ||
+      t.classroomName.toLowerCase().includes(q)
+    );
+  });
+
+  const totalUnread = threads.reduce((acc, t) => acc + (t.unreadCount || 0), 0);
 
   const parentStarters = activeThread
     ? [
@@ -135,7 +132,7 @@ export default function ParentMessagesPanel({
       setMobileView('chat');
       setTeacherCodeInput('');
       setTimeout(() => {
-        setShowAddTeacher(false);
+        setShowConnectDrawer(false);
         setConnectSuccess(null);
       }, 2500);
     } else {
@@ -153,126 +150,120 @@ export default function ParentMessagesPanel({
     refreshThreads();
   }
 
+  const sortedMessages = [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
   return (
-    <div className="parent-dashboard-content parent-messages-page">
-      <div className="parent-page-title" style={{ marginBottom: '1.25rem' }}>
-        <p className="parent-dash-kicker">Church &amp; Sunday School Educational Messaging</p>
-        <h1>Parent Messages</h1>
-        <p>Coordinate directly with your children’s teachers about lessons, scripture memory, and class updates.</p>
-
-        {/* Prominent Connect Code Card in the Parent Message Section */}
-        <div className="messages-section-connect-card parent-theme-card">
-          <div className="connect-card-col my-code-col">
-            <span className="connect-card-label">Your Parent Connect Code</span>
-            <div className="connect-code-pill-wrap">
-              <span className="connect-code-value">{myConnectCode}</span>
-              <button
-                type="button"
-                className="btn-copy-code-prominent"
-                onClick={handleCopyCode}
-                title="Copy your Parent Code to give to teachers"
-              >
-                {copied ? '✓ Copied!' : '📋 Copy Code'}
-              </button>
+    <div className="saas-messages-layout parent-chat-theme">
+      {/* Collapsible Connect Codes Accordion */}
+      <div className="saas-connect-accordion-wrapper">
+        <div className="saas-connect-accordion-bar">
+          <button
+            type="button"
+            className="saas-connect-accordion-toggle"
+            onClick={() => setShowConnectDrawer((prev) => !prev)}
+            aria-expanded={showConnectDrawer}
+          >
+            <span className="accordion-icon">🔑</span>
+            <div className="accordion-title-group">
+              <strong>Connect Codes &amp; Add Teacher</strong>
+              <small>{showConnectDrawer ? 'Click to collapse' : 'Click to view your code or connect with a teacher code'}</small>
             </div>
-            <small className="connect-card-subtext">Give this code to your child’s teachers so they can connect with you directly.</small>
-          </div>
+            <span className="accordion-arrow">{showConnectDrawer ? '▲' : '▼'}</span>
+          </button>
 
-          <div className="connect-card-divider" aria-hidden="true" />
-
-          <div className="connect-card-col add-code-col">
-            <span className="connect-card-label">Add Teacher via Code</span>
-            <form onSubmit={handleConnectTeacher} className="prominent-add-form">
-              <input
-                type="text"
-                placeholder="Enter Teacher Code (e.g. TCH-GRACE26)"
-                value={teacherCodeInput}
-                onChange={(e) => setTeacherCodeInput(e.target.value)}
-                disabled={connecting}
-                required
-              />
-              <button type="submit" disabled={connecting || !teacherCodeInput.trim()} className="btn-prominent-connect">
-                {connecting ? 'Connecting...' : '🔗 Add Teacher'}
-              </button>
-            </form>
-            {connectError && <p className="add-code-error">{connectError}</p>}
-            {connectSuccess && <p className="add-code-success">{connectSuccess}</p>}
-            <small className="connect-card-subtext">Enter a teacher’s code to immediately open a direct conversation thread.</small>
+          <div className="saas-connect-quick-chip">
+            <span className="quick-chip-label">Your Parent Code:</span>
+            <strong className="quick-chip-code">{myConnectCode}</strong>
+            <button type="button" onClick={handleCopyCode} className="btn-quick-copy">
+              {copied ? '✓ Copied' : '📋 Copy'}
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className={`teacher-chat-panes parent-chat-theme ${mobileView === 'chat' ? 'show-chat-mobile' : 'show-list-mobile'}`}>
-        {/* Left Sidebar: Threads List */}
-        <aside className="teacher-threads-sidebar">
-          {/* Parent Connect Code Bar */}
-          <div className="messages-connect-bar parent-connect-bar">
-            <div className="connect-code-badge-row">
-              <div className="connect-code-info">
-                <span className="connect-code-label">Your Parent Code:</span>
-                <strong className="connect-code-val">{myConnectCode}</strong>
+        {showConnectDrawer && (
+          <div className="saas-connect-dropdown-content">
+            <div className="connect-card-grid">
+              <div className="connect-col-code">
+                <span className="connect-col-kicker">YOUR PARENT CONNECT CODE</span>
+                <div className="connect-code-pill-row">
+                  <span className="connect-code-big">{myConnectCode}</span>
+                  <button type="button" onClick={handleCopyCode} className="button button-secondary btn-copy-big">
+                    {copied ? '✓ Copied' : '📋 Copy Code'}
+                  </button>
+                </div>
+                <p className="connect-col-desc">Give this code to your child&apos;s teachers so they can connect with you directly.</p>
               </div>
-              <button
-                type="button"
-                className="btn-copy-code"
-                onClick={handleCopyCode}
-                title="Copy your Parent Code to give to teachers"
-              >
-                {copied ? '✓ Copied' : '📋 Copy'}
-              </button>
-            </div>
 
-            <button
-              type="button"
-              className="btn-toggle-add-code"
-              onClick={() => setShowAddTeacher((prev) => !prev)}
-            >
-              {showAddTeacher ? '✕ Close' : '+ Add Teacher via Code'}
-            </button>
+              <div className="connect-col-divider" />
 
-            {showAddTeacher && (
-              <form className="add-by-code-form" onSubmit={handleConnectTeacher}>
-                <label htmlFor="parent-teacher-code-input" className="add-code-input-label">
-                  Enter Teacher Connect Code
-                </label>
-                <div className="add-code-input-group">
+              <form onSubmit={handleConnectTeacher} className="connect-col-form">
+                <span className="connect-col-kicker">ADD TEACHER VIA CODE</span>
+                <div className="connect-form-row">
                   <input
-                    id="parent-teacher-code-input"
                     type="text"
-                    placeholder="e.g. TCH-GRACE26"
+                    placeholder="ENTER TEACHER CODE (E.G. TCH-GRACE26)"
                     value={teacherCodeInput}
                     onChange={(e) => setTeacherCodeInput(e.target.value)}
                     disabled={connecting}
                     required
                   />
-                  <button type="submit" disabled={connecting || !teacherCodeInput.trim()} className="btn-submit-code">
-                    {connecting ? 'Connecting...' : 'Connect'}
+                  <button type="submit" disabled={connecting || !teacherCodeInput.trim()} className="button button-primary btn-add-big">
+                    {connecting ? 'Connecting...' : '🔗 Add Teacher'}
                   </button>
                 </div>
-                {connectError && <p className="add-code-error">{connectError}</p>}
-                {connectSuccess && <p className="add-code-success">{connectSuccess}</p>}
-                <small className="add-code-hint">
-                  Ask your child’s teacher for their Teacher Code (found in their messages panel).
-                </small>
+                <p className="connect-col-desc">Enter a teacher&apos;s code to immediately open a direct conversation thread.</p>
+                {connectError && <p className="connect-error-msg">{connectError}</p>}
+                {connectSuccess && <p className="connect-success-msg">{connectSuccess}</p>}
               </form>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Two-Pane SaaS Container */}
+      <div className={`saas-chat-panes ${mobileView === 'chat' ? 'show-chat-mobile' : 'show-list-mobile'}`}>
+        
+        {/* Left Column: Conversations List */}
+        <aside className="saas-conversations-sidebar">
+          {/* Header Row: Teacher count & status */}
+          <div className="saas-conv-header">
+            <div className="saas-conv-title-wrap">
+              <h2 className="saas-conv-title">Teachers ({threads.length})</h2>
+              {totalUnread > 0 && <span className="saas-total-badge">{totalUnread} new</span>}
+            </div>
+            <span className="saas-conv-subtitle">
+              {threads.length === 1 ? '1 connected teacher' : `${threads.length} connected teachers`}
+            </span>
+          </div>
+
+          {/* Search Bar */}
+          <div className="saas-conv-search">
+            <span aria-hidden="true" className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search teachers, children, or classes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search teachers"
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery('')} className="search-clear-btn" aria-label="Clear search">✕</button>
             )}
           </div>
 
-          <div className="parent-threads-header">
-            <strong>Teachers &amp; Classes</strong>
-            <small>{threads.length} connected</small>
-          </div>
-
-          <div className="teacher-threads-list" role="tablist" aria-label="Teacher conversations">
+          {/* Threads List */}
+          <div className="saas-threads-scroll" role="tablist" aria-label="Teacher conversations">
             {threadsLoading && threads.length === 0 ? (
-              <div className="teacher-threads-loading">Loading teachers...</div>
-            ) : threads.length === 0 ? (
-              <div className="teacher-threads-empty">
-                <p>No connected teachers yet.</p>
-                <small>Enter a teacher’s code above to connect and start messaging.</small>
+              <div className="saas-threads-loading">Loading conversations...</div>
+            ) : filteredThreads.length === 0 ? (
+              <div className="saas-threads-empty">
+                <p>No conversations found.</p>
+                <button type="button" onClick={() => setShowConnectDrawer(true)} className="btn-empty-connect">
+                  + Add Teacher via Code
+                </button>
               </div>
             ) : (
-              threads.map((t) => {
+              filteredThreads.map((t) => {
                 const isSelected = activeThread?.id === t.id;
                 return (
                   <button
@@ -280,31 +271,41 @@ export default function ParentMessagesPanel({
                     type="button"
                     role="tab"
                     aria-selected={isSelected}
-                    className={`teacher-thread-item ${isSelected ? 'active' : ''} ${t.unreadCount > 0 ? 'unread' : ''}`}
+                    className={`saas-thread-card ${isSelected ? 'active' : ''} ${t.unreadCount > 0 ? 'has-unread' : ''}`}
                     onClick={() => {
                       setSelectedThreadId(t.id);
                       setMobileView('chat');
                     }}
                   >
-                    <div className="thread-avatar parent-teacher-avatar">
+                    {/* Left Avatar */}
+                    <div className="saas-thread-avatar parent-teacher-avatar">
                       {t.teacherName.slice(0, 1).toUpperCase()}
                     </div>
-                    <div className="thread-details">
-                      <div className="thread-top-row">
-                        <strong className="thread-parent-name">{t.teacherName}</strong>
-                        <span className="thread-time">{formatRelativeTime(t.lastMessageAt)}</span>
+
+                    {/* Card Content */}
+                    <div className="saas-thread-body">
+                      <div className="saas-thread-top">
+                        <strong className="saas-thread-name">{t.teacherName}</strong>
+                        <span className="saas-thread-time">{formatCardTimestamp(t.lastMessageAt)}</span>
                       </div>
-                      <div className="thread-child-tag">
-                        <span>Child: <b>{t.childName}</b></span>
-                        <span className="thread-class-pill">{t.classroomName}</span>
+
+                      <div className="saas-thread-sub">
+                        <span>Child: {t.childName} · {t.classroomName}</span>
                       </div>
-                      <p className="thread-snippet">
-                        {t.lastMessageSnippet || 'Conversation open'}
-                      </p>
+
+                      <div className="saas-thread-bottom">
+                        <p className="saas-thread-snippet">
+                          {t.lastMessageSnippet || 'Conversation open'}
+                        </p>
+                        <div className="saas-thread-status">
+                          {t.unreadCount > 0 ? (
+                            <span className="saas-unread-badge">{t.unreadCount}</span>
+                          ) : (
+                            <span className="saas-read-doublecheck" title="Delivered and read">✓✓</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    {t.unreadCount > 0 && (
-                      <span className="thread-unread-badge">{t.unreadCount}</span>
-                    )}
                   </button>
                 );
               })
@@ -312,73 +313,98 @@ export default function ParentMessagesPanel({
           </div>
         </aside>
 
-        {/* Right Pane: Active Conversation */}
-        <section className="teacher-chat-surface" aria-label="Active teacher conversation">
+        {/* Right Column: Active Conversation */}
+        <section className="saas-chat-surface" aria-label="Active teacher conversation">
           {activeThread ? (
             <>
               {/* Chat Topbar */}
-              <div className="teacher-chat-header">
+              <div className="saas-chat-header">
                 <button
                   type="button"
-                  className="teacher-chat-back-mobile"
+                  className="saas-mobile-back"
                   onClick={() => setMobileView('list')}
-                  aria-label="Back to teachers list"
+                  aria-label="Back to conversations list"
                 >
                   ← All Teachers
                 </button>
-                <div className="chat-recipient-info">
-                  <div className="recipient-avatar parent-teacher-avatar">
+
+                <div className="saas-recipient-meta">
+                  <div className="saas-header-avatar parent-teacher-avatar">
                     {activeThread.teacherName.slice(0, 1).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="recipient-name">{activeThread.teacherName}</h3>
-                    <small className="recipient-sub">
+                    <h3 className="saas-recipient-title">{activeThread.teacherName}</h3>
+                    <p className="saas-recipient-subtitle">
                       Teacher of <strong>{activeThread.childName}</strong> in {activeThread.classroomName}
                       {activeThread.churchOrOrg ? ` · ${activeThread.churchOrOrg}` : ''}
-                    </small>
+                    </p>
                   </div>
                 </div>
 
-                <div className="chat-realtime-status" title={isRealtimeActive ? 'Live Real-time connection active' : 'Connected'}>
-                  <span className={`status-dot ${isRealtimeActive ? 'live' : 'ready'}`} />
-                  <span className="status-text">{isRealtimeActive ? 'Live' : 'Connected'}</span>
+                {/* Right utility cluster matching reference screenshot */}
+                <div className="saas-header-actions">
+                  <div className="saas-avatar-stack" title="Conversation participants">
+                    <span className="stack-avatar stack-1" title="Teacher">T</span>
+                    <span className="stack-avatar stack-2" title="Parent">P</span>
+                    <span className="stack-avatar stack-add" title="Verified COPPA Classroom">+</span>
+                  </div>
+                  <div className="saas-header-divider" />
+                  <button type="button" className="saas-icon-btn" title="Classroom Video (Scheduled)" aria-label="Video Call">📹</button>
+                  <button type="button" className="saas-icon-btn" title="Notifications" aria-label="Notifications">🔔</button>
+                  <button type="button" className="saas-icon-btn" title="Conversation settings" aria-label="Settings">⚙️</button>
                 </div>
               </div>
 
-              {/* Messages Scroll Area */}
-              <div className="teacher-chat-messages">
-                {messagesLoading && messages.length === 0 ? (
-                  <div className="chat-loading-placeholder">Loading messages...</div>
-                ) : messages.length === 0 ? (
-                  <div className="chat-empty-callout">
-                    <div className="empty-icon">✉️</div>
-                    <h4>Message {activeThread.teacherName}</h4>
+              {/* Messages Stream - Older messages at top, latest/recent messages at bottom */}
+              <div className="saas-chat-stream">
+                {messagesLoading && sortedMessages.length === 0 ? (
+                  <div className="saas-chat-loading">Loading message history...</div>
+                ) : sortedMessages.length === 0 ? (
+                  <div className="saas-chat-empty-state">
+                    <div className="empty-bubble-icon">✉️</div>
+                    <h4>Direct conversation with {activeThread.teacherName}</h4>
                     <p>
                       Ask questions about <strong>{activeThread.childName}</strong>’s assignments, lesson themes, or share encouraging updates.
                     </p>
                   </div>
                 ) : (
-                  messages.map((m) => {
+                  sortedMessages.map((m) => {
                     const isMe =
                       m.senderRole === 'parent' ||
                       (Boolean(currentUserId) &&
                         m.senderId === currentUserId &&
                         activeThread.teacherId !== activeThread.parentId);
+
                     return (
-                      <div key={m.id} className={`chat-bubble-row ${isMe ? 'row-sent' : 'row-received'}`}>
-                        {!isMe && (
-                          <div className="bubble-avatar parent-teacher-avatar" title={activeThread.teacherName}>
-                            {activeThread.teacherName.slice(0, 1)}
+                      <div key={m.id} className={`saas-msg-group ${isMe ? 'is-sent' : 'is-received'}`}>
+                        {!isMe ? (
+                          <div className="saas-msg-received-wrap">
+                            <div className="saas-msg-avatar parent-teacher-avatar" title={activeThread.teacherName}>
+                              {activeThread.teacherName.slice(0, 1).toUpperCase()}
+                            </div>
+                            <div className="saas-msg-received-body">
+                              <div className="saas-msg-bubble bubble-received">
+                                <span className="bubble-text">{m.body}</span>
+                                <span className="bubble-timestamp">{formatMessageTime(m.createdAt)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="saas-msg-sent-wrap">
+                            <div className="saas-msg-bubble bubble-sent">
+                              <span className="bubble-text">{m.body}</span>
+                              <div className="bubble-meta-sent">
+                                <span className="bubble-timestamp">{formatMessageTime(m.createdAt)}</span>
+                                <span
+                                  className={`saas-double-check ${m.read ? 'is-read' : 'is-delivered'}`}
+                                  title={m.read ? 'Read by teacher' : 'Delivered'}
+                                >
+                                  ✓✓
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         )}
-                        <div className={`chat-bubble ${isMe ? 'bubble-sent' : 'bubble-received'}`}>
-                          <div className="bubble-author">{isMe ? 'You (Parent)' : activeThread.teacherName}</div>
-                          <div className="bubble-text">{m.body}</div>
-                          <div className="bubble-meta">
-                            <span className="bubble-time">{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            {isMe && <span className="bubble-check" title="Delivered">✓</span>}
-                          </div>
-                        </div>
                       </div>
                     );
                   })
@@ -387,7 +413,7 @@ export default function ParentMessagesPanel({
               </div>
 
               {/* Quick Starters */}
-              <div className="teacher-quick-starters">
+              <div className="saas-quick-starters-bar">
                 <span className="starters-label">💡 Quick Starters:</span>
                 <div className="starters-scroll">
                   {parentStarters.map((s, idx) => (
@@ -403,17 +429,17 @@ export default function ParentMessagesPanel({
                 </div>
               </div>
 
-              {/* Input Area */}
+              {/* Chat Input Bar */}
               <form
-                className="teacher-chat-input-bar"
+                className="saas-chat-input-bar"
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSend();
                 }}
               >
                 <textarea
-                  rows={2}
-                  placeholder={`Send a message to ${activeThread.teacherName}...`}
+                  rows={1}
+                  placeholder="Type a message..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => {
@@ -424,25 +450,26 @@ export default function ParentMessagesPanel({
                   }}
                   aria-label="Message text"
                 />
-                <button
-                  type="submit"
-                  className="button button-primary chat-send-btn"
-                  disabled={!inputText.trim() || sending}
-                >
-                  {sending ? 'Sending...' : 'Send →'}
-                </button>
+                <div className="saas-input-tools">
+                  <button type="button" className="input-tool-btn" title="Add picture" aria-label="Add picture">🖼️</button>
+                  <button type="button" className="input-tool-btn" title="Attach study material" aria-label="Attach file">📎</button>
+                  <button type="button" className="input-tool-btn" title="Insert emoji" aria-label="Emoji">😊</button>
+                  <button
+                    type="submit"
+                    className="saas-send-btn"
+                    disabled={!inputText.trim() || sending}
+                    title="Send message"
+                  >
+                    {sending ? '...' : 'Send →'}
+                  </button>
+                </div>
               </form>
             </>
           ) : (
-            <div className="teacher-chat-unselected parent-welcome-empty">
+            <div className="saas-chat-unselected">
               <div className="unselected-icon">💬</div>
-              <h3>Parent Messages</h3>
-              <p>Coordinate directly with your children’s Sunday school and church teachers about lessons, memory verses, and class activities.</p>
-              <div className="parent-empty-code-reminder" style={{ marginTop: '0.85rem', marginBottom: '0.85rem' }}>
-                <span className="code-lead" style={{ fontSize: '0.85rem', color: '#64748B', display: 'block' }}>Your Unique Parent Connect Code:</span>
-                <strong className="code-display" style={{ fontSize: '1.25rem', color: 'var(--brand-navy, #1E293B)', letterSpacing: '0.05em' }}>{myConnectCode}</strong>
-              </div>
-              <p className="empty-subtext" style={{ fontSize: '0.82rem', color: '#64748B' }}>Give this code to your child’s teacher, or enter their Teacher Code above to open a direct conversation thread.</p>
+              <h3>Select a teacher conversation</h3>
+              <p>Choose a teacher from the list on the left to coordinate lessons and scripture memory.</p>
             </div>
           )}
         </section>

@@ -61,7 +61,9 @@ export default function ParentAccessPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('error') === 'auth_callback_failed') {
-        setError('Google sign-in could not be completed. Please try again or sign in with email.');
+        window.queueMicrotask(() => {
+          setError('Google sign-in could not be completed. Please try again or sign in with email.');
+        });
       }
     }
 

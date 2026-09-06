@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   try {
     const admin = createServerAdminClient();
     let targetThreadId = threadId || `thread-${classroomId || 'cls'}-${childId || 'ch'}`;
-    let thread: any = null;
+    let thread: Record<string, unknown> | null = null;
 
     try {
       if (threadId) {
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert message into DB if parent_teacher_messages table exists
-    let insertedMsg: any = null;
+    let insertedMsg: Record<string, unknown> | null = null;
     try {
       const { data: dbMsg } = await admin
         .from('parent_teacher_messages')
@@ -111,14 +111,14 @@ export async function POST(req: NextRequest) {
 
     // Update parent_teacher_threads if exists
     try {
-      const updatePayload: Record<string, any> = {
+      const updatePayload: Record<string, unknown> = {
         last_message_at: new Date().toISOString(),
         last_message_snippet: body.slice(0, 100),
       };
       if (senderRole === 'teacher') {
-        updatePayload.parent_unread_count = (thread?.parent_unread_count || 0) + 1;
+        updatePayload.parent_unread_count = (Number(thread?.parent_unread_count) || 0) + 1;
       } else {
-        updatePayload.teacher_unread_count = (thread?.teacher_unread_count || 0) + 1;
+        updatePayload.teacher_unread_count = (Number(thread?.teacher_unread_count) || 0) + 1;
       }
 
       await admin
@@ -130,13 +130,13 @@ export async function POST(req: NextRequest) {
     }
 
     const message: ChatMessage = {
-      id: insertedMsg?.id || `msg-${Date.now()}`,
+      id: String(insertedMsg?.id || `msg-${Date.now()}`),
       threadId: targetThreadId,
       senderId: user.id,
       senderRole,
       body,
       read: false,
-      createdAt: insertedMsg?.created_at || new Date().toISOString(),
+      createdAt: String(insertedMsg?.created_at || new Date().toISOString()),
     };
 
     return NextResponse.json({ success: true, message, threadId: targetThreadId });

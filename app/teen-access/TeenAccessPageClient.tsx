@@ -100,7 +100,7 @@ export default function TeenAccessPage() {
         pending = sessionStorage.getItem('lanternLionPendingModuleRedirect');
         if (pending) sessionStorage.removeItem('lanternLionPendingModuleRedirect');
       } catch { /* Storage unavailable; fall back to the dashboard. */ }
-      router.push(pending || '/teen-dashboard');
+      router.push(pending || (found.age < 13 ? '/child-dashboard' : '/teen-dashboard'));
     }, 1200);
   }
 

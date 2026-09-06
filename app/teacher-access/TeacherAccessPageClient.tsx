@@ -24,11 +24,15 @@ export default function TeacherAccessPage() {
     // Check URL parameters for errors or initial mode
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('error') === 'auth_callback_failed') {
-        setError('Google sign-in could not be completed. Please try again or use email sign-in.');
-      }
-      if (params.get('mode') === 'signup') {
-        setMode('signup');
+      if (params.get('error') === 'auth_callback_failed' || params.get('mode') === 'signup') {
+        window.queueMicrotask(() => {
+          if (params.get('error') === 'auth_callback_failed') {
+            setError('Google sign-in could not be completed. Please try again or use email sign-in.');
+          }
+          if (params.get('mode') === 'signup') {
+            setMode('signup');
+          }
+        });
       }
     }
 

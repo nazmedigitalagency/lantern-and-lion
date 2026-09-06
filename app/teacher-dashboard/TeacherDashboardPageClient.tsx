@@ -110,9 +110,6 @@ export default function TeacherDashboardPage() {
   const [notice, setNotice] = useState('');
   const [newClass, setNewClass] = useState('');
   const [ageBand, setAgeBand] = useState('Ages 8–11');
-  const [message, setMessage] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState(1);
-  const [sentMessages, setSentMessages] = useState<Array<{ studentId: number; body: string }>>([]);
   const [reviewed, setReviewed] = useState<number[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [sessionUnverified, setSessionUnverified] = useState(false);
@@ -441,18 +438,40 @@ export default function TeacherDashboardPage() {
     router.replace('/teacher-access');
   }
 
-  const nav: Array<[Page, string, string]> = [
-    ['overview', 'O', 'Overview'],
-    ['students', 'St', 'My Students'],
-    ['classes', 'C', 'Classes'],
-    ['assignments', 'A', 'Assignments'],
-    ['gradebook', 'G', 'Gradebook'],
-    ['challenges', 'Ch', 'Challenges'],
-    ['calendar', '📅', 'Calendar'],
-    ['insights', 'I', 'Insights'],
-    ['messages', 'M', 'Parent messages'],
-    ['safety', 'S', 'Safety'],
+  const [topSearchQuery, setTopSearchQuery] = useState('');
+
+  const navSections: Array<{
+    title: string;
+    items: Array<[Page, string, string]>;
+  }> = [
+    {
+      title: 'MENU',
+      items: [
+        ['overview', '🏠', 'Overview'],
+        ['students', '👥', 'My Students'],
+        ['classes', '🏛️', 'Classes'],
+        ['assignments', '📋', 'Assignments'],
+        ['messages', '💬', 'Parent messages'],
+      ],
+    },
+    {
+      title: 'ACADEMIC & LEARNING',
+      items: [
+        ['gradebook', '📊', 'Gradebook'],
+        ['challenges', '🏆', 'Challenges'],
+        ['calendar', '📅', 'Calendar'],
+        ['insights', '💡', 'Insights'],
+      ],
+    },
+    {
+      title: 'SAFETY & SETTINGS',
+      items: [
+        ['safety', '🛡️', 'Safety'],
+      ],
+    },
   ];
+
+  const nav = navSections.flatMap((s) => s.items);
 
   if (!hydrated) {
     return (
@@ -496,18 +515,28 @@ export default function TeacherDashboardPage() {
           </div>
         </div>
 
-        <nav aria-label="Teacher dashboard">
-          {nav.map(([id, mark, label]) => (
-            <button
-              key={id}
-              className={page === id ? 'active' : ''}
-              aria-pressed={page === id}
-              onClick={() => setPage(id)}
-            >
-              <span>{mark}</span>
-              {label}
-              {id === 'safety' && helpStudents.length > 0 ? <b>{helpStudents.length}</b> : null}
-            </button>
+        <nav aria-label="Teacher dashboard" className="teacher-sidebar-sections">
+          {navSections.map((section) => (
+            <div key={section.title} className="sidebar-section-group">
+              <span className="sidebar-section-title">{section.title}</span>
+              <div className="sidebar-section-links">
+                {section.items.map(([id, mark, label]) => (
+                  <button
+                    key={id}
+                    className={page === id ? 'active' : ''}
+                    aria-pressed={page === id}
+                    onClick={() => setPage(id)}
+                  >
+                    <span className="sidebar-nav-icon">{mark}</span>
+                    <span className="sidebar-nav-label">{label}</span>
+                    {id === 'messages' ? <b className="sidebar-badge">1</b> : null}
+                    {id === 'safety' && helpStudents.length > 0 ? (
+                      <b className="sidebar-badge warning">{helpStudents.length}</b>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <div>
@@ -543,6 +572,19 @@ export default function TeacherDashboardPage() {
               </strong>
             </div>
           </div>
+
+          <div className="dashboard-search-wrap" role="search">
+            <span className="search-icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              aria-label="Search dashboard"
+              placeholder="Type to search..."
+              value={topSearchQuery}
+              onChange={(e) => setTopSearchQuery(e.target.value)}
+              className="dashboard-search-input"
+            />
+          </div>
+
           <div className="teacher-topbar-actions">
             {classes.length > 0 && classroom && (
               <label>
@@ -967,7 +1009,14 @@ export default function TeacherDashboardPage() {
             )}
 
             {page === 'messages' && (
-              <TeacherMessagesPanel />
+              <div className="teacher-content">
+                <div className="teacher-title">
+                  <p className="teacher-kicker">Parent &amp; Classroom Messaging</p>
+                  <h1 className="teacher-title-oneline">Teacher Messages</h1>
+                  <p>Coordinate directly with parents about lessons, scripture memory, and classroom updates.</p>
+                </div>
+                <TeacherMessagesPanel />
+              </div>
             )}
 
             {page === 'safety' && (
@@ -1097,21 +1146,31 @@ export default function TeacherDashboardPage() {
               </div>
 
               <nav className="teacher-mobile-drawer-nav" aria-label="Teacher mobile dashboard">
-                {nav.map(([id, mark, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={page === id ? 'active' : ''}
-                    aria-pressed={page === id}
-                    onClick={() => {
-                      setPage(id);
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <span>{mark}</span>
-                    {label}
-                    {id === 'safety' && helpStudents.length > 0 ? <b>{helpStudents.length}</b> : null}
-                  </button>
+                {navSections.map((section) => (
+                  <div key={section.title} className="sidebar-section-group">
+                    <span className="sidebar-section-title">{section.title}</span>
+                    <div className="sidebar-section-links">
+                      {section.items.map(([id, mark, label]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          className={page === id ? 'active' : ''}
+                          aria-pressed={page === id}
+                          onClick={() => {
+                            setPage(id);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <span className="sidebar-nav-icon">{mark}</span>
+                          <span className="sidebar-nav-label">{label}</span>
+                          {id === 'messages' ? <b className="sidebar-badge">1</b> : null}
+                          {id === 'safety' && helpStudents.length > 0 ? (
+                            <b className="sidebar-badge warning">{helpStudents.length}</b>
+                          ) : null}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </nav>
 

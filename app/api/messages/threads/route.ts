@@ -3,6 +3,20 @@ import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import type { MessageThread } from '../../../lib/messages/types';
 
+interface DBThreadRow {
+  id: string;
+  classroom_id: string;
+  child_id: string;
+  parent_id: string;
+  teacher_id: string;
+  last_message_at: string;
+  last_message_snippet?: string;
+  parent_unread_count?: number;
+  teacher_unread_count?: number;
+  classrooms?: { name?: string; church_or_org?: string | null };
+  children?: { name?: string };
+}
+
 export async function GET(req: NextRequest) {
   const user = await getAuthenticatedUser(req);
   if (!user) {
@@ -28,7 +42,7 @@ export async function GET(req: NextRequest) {
     const isParent = !!family;
 
     // 3. Fetch existing persisted threads for this user (as parent or teacher)
-    const threadsMap = new Map<string, any>();
+    const threadsMap = new Map<string, DBThreadRow>();
     try {
       const { data: existingThreads } = await admin
         .from('parent_teacher_threads')
@@ -36,7 +50,7 @@ export async function GET(req: NextRequest) {
         .or(`parent_id.eq.${user.id},teacher_id.eq.${user.id}`)
         .order('last_message_at', { ascending: false });
 
-      for (const t of existingThreads || []) {
+      for (const t of (existingThreads || []) as unknown as DBThreadRow[]) {
         const key = `${t.classroom_id}_${t.child_id}_${t.parent_id}_${t.teacher_id}`;
         threadsMap.set(key, t);
       }
@@ -202,7 +216,7 @@ export async function GET(req: NextRequest) {
         teacherId: t.teacher_id,
         teacherName: userNameMap.get(t.teacher_id) || 'Teacher',
         lastMessageAt: t.last_message_at,
-        lastMessageSnippet: t.last_message_snippet,
+        lastMessageSnippet: t.last_message_snippet || null,
         unreadCount: unread,
         otherPartyName: otherName,
         otherPartyRole: otherRole,

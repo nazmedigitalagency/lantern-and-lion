@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
   let targetUserId: string | null = null;
   let targetName: string = isTargetTeacher ? `Teacher (${code})` : `Parent (${code})`;
   let targetClassroomId: string | null = null;
-  let targetChildId: string | null = null;
+  const targetChildId: string | null = null;
   let churchOrOrg: string | null = null;
 
   // 1. Check parent_teacher_connect_codes table (PRIMARY SOURCE OF TRUTH)

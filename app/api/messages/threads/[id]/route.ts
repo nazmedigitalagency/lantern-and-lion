@@ -21,7 +21,7 @@ export async function GET(
     const admin = createServerAdminClient();
 
     // 1. Check thread in DB
-    let thread: any = null;
+    let thread: Record<string, unknown> | null = null;
     try {
       const { data: threadData } = await admin
         .from('parent_teacher_threads')
@@ -34,7 +34,7 @@ export async function GET(
     }
 
     // 2. Fetch messages in chronological order
-    let messagesData: any[] = [];
+    let messagesData: Array<Record<string, unknown>> = [];
     try {
       const { data: dbMessages } = await admin
         .from('parent_teacher_messages')
@@ -42,7 +42,7 @@ export async function GET(
         .eq('thread_id', threadId)
         .order('created_at', { ascending: true })
         .limit(150);
-      messagesData = dbMessages || [];
+      messagesData = (dbMessages as Array<Record<string, unknown>>) || [];
     } catch {
       // Table may not exist yet
     }
@@ -57,13 +57,13 @@ export async function GET(
         }
       }
       return {
-        id: m.id,
-        threadId: m.thread_id,
-        senderId: m.sender_id,
-        senderRole: role,
-        body: m.body,
-        read: m.read,
-        createdAt: m.created_at,
+        id: String(m.id),
+        threadId: String(m.thread_id || threadId),
+        senderId: String(m.sender_id || ''),
+        senderRole: role || 'parent',
+        body: String(m.body || ''),
+        read: Boolean(m.read),
+        createdAt: String(m.created_at || new Date().toISOString()),
       };
     });
 

@@ -507,7 +507,11 @@ export default function TeenDashboardPage() {
 
         const teenList: Teen[] = family?.children?.length ? family.children.filter((c: Teen) => c.age >= 13) : fallbackTeens;
         setTeens(teenList.length ? teenList : fallbackTeens);
-        const savedId = session?.teenId || Number(localStorage.getItem('lanternLionActiveChildId'));
+
+        const searchParams = new URLSearchParams(window.location.search);
+        const childParam = searchParams.get('child');
+        const paramId = childParam ? Number(childParam) : null;
+        const savedId = (paramId && !Number.isNaN(paramId)) ? paramId : (session?.teenId || Number(localStorage.getItem('lanternLionActiveChildId')));
         
         const currentTeenId = savedId && teenList.some((t) => t.id === savedId) ? savedId : teenList[0]?.id || fallbackTeens[0].id;
         setActiveId(currentTeenId);

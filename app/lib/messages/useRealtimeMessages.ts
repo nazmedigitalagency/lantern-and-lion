@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { createClient } from '../supabase/client';
 import { playRewardSound } from '../sound/sound-effects';
 import type { ChatMessage, MessageThread, SenderRole } from './types';
@@ -167,8 +168,8 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
             setMyConnectCode(data.code);
           }
         }
-      } catch {
-        // Fallback to initial code
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch connect code');
       }
     }
     fetchCode();
@@ -225,7 +226,8 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
       const demoIds = new Set(adjustedDemo.map((t) => t.id));
       const unmerged = customLocal.filter((t) => !demoIds.has(t.id));
       setThreads([...unmerged, ...adjustedDemo]);
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load threads');
       // Fallback on network failure
       const customLocal = getLocalCustomThreads();
       const supabase = createClient();
@@ -252,7 +254,7 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
   }, [currentRole]);
 
   useEffect(() => {
-    refreshThreads();
+    void Promise.resolve().then(refreshThreads);
   }, [refreshThreads]);
 
   // Subscribe to threads table changes via Supabase Realtime
@@ -344,11 +346,15 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
 }
 
 
+function sortChronological(list: ChatMessage[]): ChatMessage[] {
+  return [...list].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+}
+
 function getStoredMessages(id: string): ChatMessage[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem(`lnl_chat_history_${id}`);
-    return raw ? JSON.parse(raw) : [];
+    return raw ? sortChronological(JSON.parse(raw)) : [];
   } catch {
     return [];
   }
@@ -357,7 +363,7 @@ function getStoredMessages(id: string): ChatMessage[] {
 function saveStoredMessages(id: string, msgs: ChatMessage[]) {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(`lnl_chat_history_${id}`, JSON.stringify(msgs));
+    window.localStorage.setItem(`lnl_chat_history_${id}`, JSON.stringify(sortChronological(msgs)));
   } catch {
     // ignore
   }
@@ -379,8 +385,10 @@ export function useRealtimeMessages({
   const [loading, setLoading] = useState(false);
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const activeThreadRef = useRef<string | null>(threadId);
-  activeThreadRef.current = threadId;
-  const channelRef = useRef<any>(null);
+  useEffect(() => {
+    activeThreadRef.current = threadId;
+  }, [threadId]);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Load message history
   const loadMessages = useCallback(async (id: string) => {
@@ -408,24 +416,25 @@ export function useRealtimeMessages({
       if (res.ok) {
         const data = (await res.json()) as { messages?: ChatMessage[] };
         if (Array.isArray(data.messages) && data.messages.length > 0) {
-          setMessages(data.messages);
-          saveStoredMessages(id, data.messages);
+          const sorted = sortChronological(data.messages);
+          setMessages(sorted);
+          saveStoredMessages(id, sorted);
           setLoading(false);
           return;
         } else if (isAuthed) {
-          setMessages(local);
+          setMessages(sortChronological(local));
           setLoading(false);
           return;
         }
       }
       // Demo fallback only for unauthenticated preview
       if (!isAuthed && DEMO_MESSAGES[id]) {
-        setMessages(DEMO_MESSAGES[id]);
+        setMessages(sortChronological(DEMO_MESSAGES[id]));
       } else {
-        setMessages(local);
+        setMessages(sortChronological(local));
       }
     } catch {
-      setMessages(local);
+      setMessages(sortChronological(local));
     } finally {
       setLoading(false);
     }
@@ -433,10 +442,10 @@ export function useRealtimeMessages({
 
   useEffect(() => {
     if (!threadId) {
-      setMessages([]);
+      window.queueMicrotask(() => setMessages([]));
       return;
     }
-    loadMessages(threadId);
+    void Promise.resolve().then(() => loadMessages(threadId));
   }, [threadId, loadMessages]);
 
   // Supabase Realtime WebSocket subscription for live incoming messages (both broadcast and postgres changes)
@@ -453,12 +462,15 @@ export function useRealtimeMessages({
         if (!newMsg || newMsg.threadId !== activeThreadRef.current) return;
 
         setMessages((prev) => {
+          let next: ChatMessage[];
           if (prev.some((m) => m.id === newMsg.id || (m.id.startsWith('temp-') && m.body === newMsg.body))) {
-            return prev.map((m) => (m.body === newMsg.body ? newMsg : m));
+            next = prev.map((m) => (m.body === newMsg.body ? newMsg : m));
+          } else {
+            next = [...prev, newMsg];
           }
-          const next = [...prev, newMsg];
-          saveStoredMessages(threadId, next);
-          return next;
+          const sorted = sortChronological(next);
+          saveStoredMessages(threadId, sorted);
+          return sorted;
         });
 
         if (newMsg.senderRole !== currentRole) {
@@ -474,26 +486,29 @@ export function useRealtimeMessages({
           filter: `thread_id=eq.${threadId}`,
         },
         (payload) => {
-          const row = payload.new as any;
+          const row = payload.new as Record<string, unknown>;
           if (!row || row.thread_id !== activeThreadRef.current) return;
 
           const newMsg: ChatMessage = {
-            id: row.id,
-            threadId: row.thread_id,
-            senderId: row.sender_id,
+            id: String(row.id),
+            threadId: String(row.thread_id),
+            senderId: String(row.sender_id),
             senderRole: row.sender_role as SenderRole,
-            body: row.body,
-            read: row.read,
-            createdAt: row.created_at,
+            body: String(row.body || ''),
+            read: Boolean(row.read),
+            createdAt: String(row.created_at || new Date().toISOString()),
           };
 
           setMessages((prev) => {
+            let next: ChatMessage[];
             if (prev.some((m) => m.id === newMsg.id || (m.id.startsWith('temp-') && m.body === newMsg.body))) {
-              return prev.map((m) => (m.id.startsWith('temp-') && m.body === newMsg.body ? newMsg : m));
+              next = prev.map((m) => (m.id.startsWith('temp-') && m.body === newMsg.body ? newMsg : m));
+            } else {
+              next = [...prev, newMsg];
             }
-            const next = [...prev, newMsg];
-            saveStoredMessages(threadId, next);
-            return next;
+            const sorted = sortChronological(next);
+            saveStoredMessages(threadId, sorted);
+            return sorted;
           });
 
           if (newMsg.senderRole !== currentRole) {
@@ -552,7 +567,7 @@ export function useRealtimeMessages({
 
       // Optimistic append
       setMessages((prev) => {
-        const next = [...prev, optimisticMsg];
+        const next = sortChronological([...prev, optimisticMsg]);
         saveStoredMessages(threadId, next);
         return next;
       });
@@ -599,7 +614,7 @@ export function useRealtimeMessages({
               senderRole: data.message.senderRole || currentRole,
             };
             setMessages((prev) => {
-              const next = prev.map((m) => (m.id === tempId ? confirmedMsg : m));
+              const next = sortChronological(prev.map((m) => (m.id === tempId ? confirmedMsg : m)));
               saveStoredMessages(threadId, next);
               return next;
             });

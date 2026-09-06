@@ -341,10 +341,14 @@ export default function ChildDashboardPage() {
       // locally-created demo profile, a UUID string for a real server
       // account) — parseInt/Number() on savedChildSession would truncate a
       // UUID down to its leading digits and silently match the wrong
-      // child, so prefer the JSON session and only fall back to the loose
+      // child, so prefer the query param or JSON session and only fall back to the loose
       // legacy key when it's missing.
+      const childQueryParam = searchParams.get('child');
       let activeChildId: number | string = fallbackChildren[0].id;
-      if (childSessionJson) {
+      if (childQueryParam) {
+        const n = Number(childQueryParam);
+        activeChildId = Number.isNaN(n) ? childQueryParam : n;
+      } else if (childSessionJson) {
         try {
           const parsed = JSON.parse(childSessionJson);
           if (parsed.childId !== undefined && parsed.childId !== null) activeChildId = parsed.childId;
@@ -523,7 +527,7 @@ export default function ChildDashboardPage() {
           <p>
             <strong>Preview Mode:</strong> You are viewing the children’s interactive learning dashboard.
           </p>
-          <button type="button" className="button button-secondary" onClick={() => router.push('/onboarding')}>
+          <button type="button" className="button button-secondary" onClick={() => router.push('/parent-access')}>
             Create your account
           </button>
         </div>
