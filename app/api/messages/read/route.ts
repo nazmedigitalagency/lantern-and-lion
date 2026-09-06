@@ -8,7 +8,7 @@ const ReadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const user = await getAuthenticatedUser();
+  const user = await getAuthenticatedUser(req);
   if (!user) {
     return NextResponse.json({ error: 'Please sign in to update read status.' }, { status: 401 });
   }

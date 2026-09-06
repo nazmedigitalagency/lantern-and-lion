@@ -101,8 +101,13 @@ export async function GET(req: NextRequest) {
 
   try {
     const info = await ensureConnectCode(admin, user.id, roleParam, displayName);
+    const expectedPrefix = roleParam === 'teacher' ? 'TCH-' : 'PAR-';
+    let finalCode = info.code;
+    if (!finalCode.startsWith(expectedPrefix)) {
+      finalCode = `${expectedPrefix}${finalCode.replace(/^(TCH|PAR)-/, '')}`;
+    }
     return NextResponse.json({
-      code: info.code,
+      code: finalCode,
       role: roleParam,
       displayName: info.displayName,
     });

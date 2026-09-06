@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
 import type { MessageThread } from '../../../lib/messages/types';
 
-export async function GET() {
-  const user = await getAuthenticatedUser();
+export async function GET(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
   if (!user) {
     return NextResponse.json({ error: 'Please sign in to access messages.' }, { status: 401 });
   }

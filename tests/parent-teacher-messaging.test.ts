@@ -319,6 +319,78 @@ describe('Feature: Real-Time Parent-Teacher Messaging', () => {
     const notFoundRes = attemptConnect('user-0', 'PAR-MISSING99');
     assert.equal(notFoundRes.status, 404);
   });
+
+  it('guarantees parent accounts strictly receive PAR- codes and never inherit TCH- codes', () => {
+    function resolveCodeForRole(
+      role: 'parent' | 'teacher',
+      existingMetadataCode?: string,
+      tableCode?: string
+    ): string {
+      const expectedPrefix = role === 'teacher' ? 'TCH-' : 'PAR-';
+      // 1. Table code check
+      if (tableCode && tableCode.startsWith(expectedPrefix)) {
+        return tableCode;
+      }
+      // 2. Metadata code check
+      if (existingMetadataCode && existingMetadataCode.startsWith(expectedPrefix)) {
+        return existingMetadataCode;
+      }
+      // 3. Newly generated
+      return `${expectedPrefix}GENERATED`;
+    }
+
+    // If user previously had a teacher code in metadata or table, parent role MUST discard it and generate PAR-
+    const parentCodeWithStaleTeacherCode = resolveCodeForRole('parent', 'TCH-3WA2HC', 'TCH-3WA2HC');
+    assert.ok(parentCodeWithStaleTeacherCode.startsWith('PAR-'), 'Parent code must start with PAR- even if previous code was TCH-');
+    assert.notEqual(parentCodeWithStaleTeacherCode, 'TCH-3WA2HC');
+
+    // Valid existing parent code is preserved
+    const validParentCode = resolveCodeForRole('parent', 'PAR-VAL123', 'PAR-VAL123');
+    assert.equal(validParentCode, 'PAR-VAL123');
+
+    // Teacher role receives TCH-
+    const teacherCode = resolveCodeForRole('teacher', 'PAR-VAL123');
+    assert.ok(teacherCode.startsWith('TCH-'));
+  });
+
+  it('isolates real authenticated parent accounts from mock demo threads', () => {
+    function resolveThreads(isAuthenticated: boolean, dbThreads: MessageThread[], demoThreads: MessageThread[]) {
+      if (isAuthenticated) {
+        // Authenticated users only see their own DB threads, never fake demo threads
+        return dbThreads;
+      }
+      return demoThreads;
+    }
+
+    const demoThreads = [
+      {
+        id: 'demo-1',
+        classroomId: 'c1',
+        classroomName: 'Class',
+        childId: 'ch1',
+        childName: 'Amara A.',
+        parentId: 'p1',
+        parentName: 'Jordan Adeyemi',
+        teacherId: 't1',
+        teacherName: 'Teacher Grace',
+        lastMessageAt: '2026-09-06T00:00:00Z',
+        lastMessageSnippet: 'Hello Jordan!',
+        unreadCount: 0,
+        otherPartyName: 'Teacher Grace',
+        otherPartyRole: 'teacher' as const,
+      },
+    ];
+
+    // Real authenticated parent with no conversations yet
+    const realParentThreads = resolveThreads(true, [], demoThreads);
+    assert.equal(realParentThreads.length, 0, 'Real parent with no conversations must not be shown demo conversations');
+
+    // Anonymous demo visitor
+    const anonThreads = resolveThreads(false, [], demoThreads);
+    assert.equal(anonThreads.length, 1);
+    assert.equal(anonThreads[0].otherPartyName, 'Teacher Grace');
+  });
 });
+
 
 

@@ -162,7 +162,8 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
         const res = await fetch(url, { headers });
         if (active && res.ok) {
           const data = (await res.json()) as { code?: string };
-          if (data?.code) {
+          const expectedPrefix = currentRole === 'teacher' ? 'TCH-' : 'PAR-';
+          if (data?.code && data.code.startsWith(expectedPrefix)) {
             setMyConnectCode(data.code);
           }
         }
@@ -179,19 +180,43 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
   const refreshThreads = useCallback(async () => {
     try {
       const customLocal = getLocalCustomThreads();
-      const res = await fetch('/api/messages/threads');
+      const supabase = createClient();
+      let token: string | undefined;
+      let isAuthenticated = false;
+      if (supabase) {
+        const { data } = await supabase.auth.getSession();
+        token = data?.session?.access_token;
+        isAuthenticated = !!data?.session?.user;
+      }
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch('/api/messages/threads', { headers });
       if (res.ok) {
         const data = (await res.json()) as { threads?: MessageThread[] };
-        if (Array.isArray(data.threads) && data.threads.length > 0) {
-          // Merge custom local threads if any
-          const dbIds = new Set(data.threads.map((t) => t.id));
-          const unmerged = customLocal.filter((t) => !dbIds.has(t.id));
-          setThreads([...unmerged, ...data.threads]);
+        const fetched = Array.isArray(data.threads) ? data.threads : [];
+        const dbIds = new Set(fetched.map((t) => t.id));
+        const unmerged = customLocal.filter((t) => !dbIds.has(t.id));
+        const combined = [...unmerged, ...fetched];
+
+        if (isAuthenticated || combined.length > 0) {
+          // Real live account or has custom threads: NEVER force demo threads!
+          setThreads(combined);
           setLoading(false);
           return;
         }
       }
-      // Fallback for demo or when no DB threads yet
+
+      if (isAuthenticated) {
+        // Real authenticated account with no threads yet: show custom or empty list
+        setThreads(customLocal);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback ONLY for unauthenticated demo preview
       const adjustedDemo = DEMO_THREADS.map((t) => ({
         ...t,
         otherPartyName: currentRole === 'teacher' ? t.parentName : t.teacherName,
@@ -201,16 +226,26 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
       const unmerged = customLocal.filter((t) => !demoIds.has(t.id));
       setThreads([...unmerged, ...adjustedDemo]);
     } catch {
-      // Fallback to demo threads on fetch failure
-      const adjustedDemo = DEMO_THREADS.map((t) => ({
-        ...t,
-        otherPartyName: currentRole === 'teacher' ? t.parentName : t.teacherName,
-        otherPartyRole: (currentRole === 'teacher' ? 'parent' : 'teacher') as SenderRole,
-      }));
+      // Fallback on network failure
       const customLocal = getLocalCustomThreads();
-      const demoIds = new Set(adjustedDemo.map((t) => t.id));
-      const unmerged = customLocal.filter((t) => !demoIds.has(t.id));
-      setThreads([...unmerged, ...adjustedDemo]);
+      const supabase = createClient();
+      let isAuthed = false;
+      if (supabase) {
+        const { data } = await supabase.auth.getSession();
+        isAuthed = !!data?.session?.user;
+      }
+      if (isAuthed) {
+        setThreads(customLocal);
+      } else {
+        const adjustedDemo = DEMO_THREADS.map((t) => ({
+          ...t,
+          otherPartyName: currentRole === 'teacher' ? t.parentName : t.teacherName,
+          otherPartyRole: (currentRole === 'teacher' ? 'parent' : 'teacher') as SenderRole,
+        }));
+        const demoIds = new Set(adjustedDemo.map((t) => t.id));
+        const unmerged = customLocal.filter((t) => !demoIds.has(t.id));
+        setThreads([...unmerged, ...adjustedDemo]);
+      }
     } finally {
       setLoading(false);
     }
@@ -356,7 +391,20 @@ export function useRealtimeMessages({
     }
 
     try {
-      const res = await fetch(`/api/messages/threads/${id}`);
+      const supabase = createClient();
+      let token: string | undefined;
+      let isAuthed = false;
+      if (supabase) {
+        const { data } = await supabase.auth.getSession();
+        token = data?.session?.access_token;
+        isAuthed = !!data?.session?.user;
+      }
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`/api/messages/threads/${id}`, { headers });
       if (res.ok) {
         const data = (await res.json()) as { messages?: ChatMessage[] };
         if (Array.isArray(data.messages) && data.messages.length > 0) {
@@ -364,20 +412,20 @@ export function useRealtimeMessages({
           saveStoredMessages(id, data.messages);
           setLoading(false);
           return;
+        } else if (isAuthed) {
+          setMessages(local);
+          setLoading(false);
+          return;
         }
       }
-      // Demo fallback
-      if (DEMO_MESSAGES[id]) {
+      // Demo fallback only for unauthenticated preview
+      if (!isAuthed && DEMO_MESSAGES[id]) {
         setMessages(DEMO_MESSAGES[id]);
-      } else if (local.length === 0) {
-        setMessages([]);
+      } else {
+        setMessages(local);
       }
     } catch {
-      if (DEMO_MESSAGES[id]) {
-        setMessages(DEMO_MESSAGES[id]);
-      } else if (local.length === 0) {
-        setMessages([]);
-      }
+      setMessages(local);
     } finally {
       setLoading(false);
     }
@@ -508,9 +556,20 @@ export function useRealtimeMessages({
       }
 
       try {
+        const supabase = createClient();
+        let token: string | undefined;
+        if (supabase) {
+          const { data } = await supabase.auth.getSession();
+          token = data?.session?.access_token;
+        }
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const res = await fetch('/api/messages/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ threadId, body: trimmed }),
         });
 

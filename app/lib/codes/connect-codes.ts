@@ -43,6 +43,8 @@ export async function ensureConnectCode(
   displayName: string,
   classroomId?: string | null
 ): Promise<{ code: string; displayName: string }> {
+  const expectedPrefix = role === 'teacher' ? 'TCH-' : 'PAR-';
+
   // 1. Check parent_teacher_connect_codes table first for this user and role
   try {
     const { data: existing } = await admin
@@ -52,12 +54,20 @@ export async function ensureConnectCode(
       .eq('role', role)
       .maybeSingle();
 
-    if (existing?.code) {
+    // Verify code exists AND has the strict expected prefix for this role
+    if (existing?.code && existing.code.startsWith(expectedPrefix)) {
       const finalName = existing.display_name || displayName;
-      // Sync to user_metadata if needed
+      // Sync role-specific connect code to user_metadata
       try {
         await admin.auth.admin.updateUserById(userId, {
-          user_metadata: { connect_code: existing.code, connect_role: role, full_name: finalName },
+          user_metadata: {
+            connect_code: existing.code,
+            connect_role: role,
+            ...(role === 'parent'
+              ? { parent_connect_code: existing.code }
+              : { teacher_connect_code: existing.code }),
+            full_name: finalName,
+          },
         });
       } catch {
         /* ignore */
@@ -72,8 +82,17 @@ export async function ensureConnectCode(
   let candidateCode: string | null = null;
   try {
     const { data: userRes } = await admin.auth.admin.getUserById(userId);
-    const existingCode = userRes?.user?.user_metadata?.connect_code as string | undefined;
-    if (existingCode && typeof existingCode === 'string' && existingCode.length >= 4) {
+    const meta = userRes?.user?.user_metadata || {};
+    const existingCode =
+      role === 'parent'
+        ? (meta.parent_connect_code as string | undefined) ||
+          (meta.parent_code as string | undefined) ||
+          ((meta.connect_code as string | undefined)?.startsWith('PAR-') ? (meta.connect_code as string) : undefined)
+        : (meta.teacher_connect_code as string | undefined) ||
+          (meta.teacher_code as string | undefined) ||
+          ((meta.connect_code as string | undefined)?.startsWith('TCH-') ? (meta.connect_code as string) : undefined);
+
+    if (existingCode && typeof existingCode === 'string' && existingCode.startsWith(expectedPrefix)) {
       // Check if this existingCode is already claimed by someone else in the table
       try {
         const { data: conflict } = await admin
@@ -136,6 +155,9 @@ export async function ensureConnectCode(
         ...currentMeta,
         connect_code: finalCode,
         connect_role: role,
+        ...(role === 'parent'
+          ? { parent_connect_code: finalCode }
+          : { teacher_connect_code: finalCode }),
         full_name: displayName || currentMeta.full_name || (role === 'teacher' ? 'Teacher' : 'Parent'),
       },
     });

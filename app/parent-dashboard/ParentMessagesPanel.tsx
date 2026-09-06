@@ -142,9 +142,9 @@ export default function ParentMessagesPanel({
   return (
     <div className="parent-dashboard-content parent-messages-page">
       <div className="parent-page-title" style={{ marginBottom: '1.25rem' }}>
-        <p className="parent-dash-kicker">Church &amp; School Educational Coordination</p>
-        <h1>Teacher Messages</h1>
-        <p>Coordinate directly with your children’s teachers about assignments, lessons, and spiritual growth.</p>
+        <p className="parent-dash-kicker">Church &amp; Sunday School Educational Messaging</p>
+        <h1>Parent Messages</h1>
+        <p>Coordinate directly with your children’s teachers about lessons, scripture memory, and class updates.</p>
 
         {/* Prominent Connect Code Card in the Parent Message Section */}
         <div className="messages-section-connect-card parent-theme-card">
@@ -416,10 +416,15 @@ export default function ParentMessagesPanel({
               </form>
             </>
           ) : (
-            <div className="teacher-chat-unselected">
-              <div className="unselected-icon">📬</div>
-              <h3>Select a teacher conversation</h3>
-              <p>Choose a teacher from the list on the left to view messages and ask questions.</p>
+            <div className="teacher-chat-unselected parent-welcome-empty">
+              <div className="unselected-icon">💬</div>
+              <h3>Parent Messages</h3>
+              <p>Coordinate directly with your children’s Sunday school and church teachers about lessons, memory verses, and class activities.</p>
+              <div className="parent-empty-code-reminder" style={{ marginTop: '0.85rem', marginBottom: '0.85rem' }}>
+                <span className="code-lead" style={{ fontSize: '0.85rem', color: '#64748B', display: 'block' }}>Your Unique Parent Connect Code:</span>
+                <strong className="code-display" style={{ fontSize: '1.25rem', color: 'var(--brand-navy, #1E293B)', letterSpacing: '0.05em' }}>{myConnectCode}</strong>
+              </div>
+              <p className="empty-subtext" style={{ fontSize: '0.82rem', color: '#64748B' }}>Give this code to your child’s teacher, or enter their Teacher Code above to open a direct conversation thread.</p>
             </div>
           )}
         </section>

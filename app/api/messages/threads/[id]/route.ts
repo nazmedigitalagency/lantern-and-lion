@@ -4,10 +4,10 @@ import { createServerAdminClient } from '../../../../lib/supabase/server';
 import type { ChatMessage } from '../../../../lib/messages/types';
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const user = await getAuthenticatedUser();
+  const user = await getAuthenticatedUser(req);
   if (!user) {
     return NextResponse.json({ error: 'Please sign in to access messages.' }, { status: 401 });
   }
