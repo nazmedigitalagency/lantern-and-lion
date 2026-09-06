@@ -20,6 +20,7 @@ import CalendarPanel from './CalendarPanel';
 import UpcomingCalendarWidget from './UpcomingCalendarWidget';
 import TeacherNotificationBell from './TeacherNotificationBell';
 import NotificationPreferencesModal from './NotificationPreferencesModal';
+import TeacherMessagesPanel from './TeacherMessagesPanel';
 import type { TeacherDeepLink } from '../lib/notifications/types';
 
 type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'challenges' | 'calendar' | 'insights' | 'messages' | 'safety';
@@ -828,77 +829,7 @@ export default function TeacherDashboardPage() {
             )}
 
             {page === 'messages' && (
-              <div className="teacher-content">
-                <div className="teacher-title">
-                  <p className="teacher-kicker">Parent messages</p>
-                  <h1 className="teacher-title-oneline">Keep adults in the conversation.</h1>
-                  <p>Teachers message a verified parent account. Children cannot receive or send private messages.</p>
-                </div>
-
-                <section className="teacher-message-layout">
-                  <aside>
-                    {approvedStudents.slice(0, 4).map((student) => (
-                      <button
-                        className={selectedStudent === student.id ? 'active' : ''}
-                        aria-pressed={selectedStudent === student.id}
-                        onClick={() => setSelectedStudent(student.id)}
-                        key={student.id}
-                      >
-                        <span>{student.parent[0]}</span>
-                        <div>
-                          <strong>{student.parent}</strong>
-                          <small>Parent of {student.name}</small>
-                        </div>
-                      </button>
-                    ))}
-                  </aside>
-
-                  <div>
-                    <header>
-                      <strong>{approvedStudents.find((item) => item.id === selectedStudent)?.parent || approvedStudents[0]?.parent}</strong>
-                      <small>Parent of {approvedStudents.find((item) => item.id === selectedStudent)?.name || approvedStudents[0]?.name}</small>
-                    </header>
-                    <div className="teacher-message-list">
-                      {(() => {
-                        const activeStudent = approvedStudents.find((item) => item.id === selectedStudent) || approvedStudents[0];
-                        if (!activeStudent) return <p>No approved students in this class yet.</p>;
-                        const studentClass = classes.find((c) => c.students.some((s) => s.id === activeStudent.id));
-                        const topicAssignment = assignments.find((item) => item.classId === studentClass?.id);
-                        const topic = topicAssignment?.title || 'this week’s activity';
-                        return (
-                          <p>
-                            <b>{activeStudent.parent}</b>
-                            {activeStudent.name} enjoyed “{topic}.” Is there something we can talk about at home?
-                          </p>
-                        );
-                      })()}
-                      <p className="sent">
-                        <b>You</b>Ask what stood out to them most — that detail helped today.
-                      </p>
-                      {sentMessages
-                        .filter((item) => item.studentId === selectedStudent)
-                        .map((item, index) => (
-                          <p className="sent" key={index}>
-                            <b>You</b>{item.body}
-                          </p>
-                        ))}
-                    </div>
-
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!message.trim()) return;
-                        setSentMessages([...sentMessages, { studentId: selectedStudent, body: message.trim() }]);
-                        setNotice('Your message was added to the parent conversation.');
-                        setMessage('');
-                      }}
-                    >
-                      <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Write to the parent, not the child" />
-                      <button>Send to parent</button>
-                    </form>
-                  </div>
-                </section>
-              </div>
+              <TeacherMessagesPanel />
             )}
 
             {page === 'safety' && (

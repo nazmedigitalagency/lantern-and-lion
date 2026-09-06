@@ -18,6 +18,7 @@ import { getRegionCompletionPercent, getCurrentRegionId } from '../adventure/pro
 import { loadWorldContext } from '../adventure/storage';
 import { signOutOfPersona } from '../lib/session';
 import type { ParentChildClassroomInfo } from '../api/family/classrooms/route';
+import ParentMessagesPanel from './ParentMessagesPanel';
 import type {
   ParentAssignmentItem,
   ParentAssignmentStatus,
@@ -157,6 +158,7 @@ export default function ParentDashboardPage() {
   const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<'all' | ParentAssignmentStatus>('all');
   const [loadingAssignments, setLoadingAssignments] = useState(true);
   const [revokeTarget, setRevokeTarget] = useState<{ classroomId: string; childId: string; childName: string; teacherName: string; classroomName: string } | null>(null);
+  const [messageTarget, setMessageTarget] = useState<{ classroomId: string; childId: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -2016,6 +2018,17 @@ export default function ParentDashboardPage() {
                         <div className="parent-class-footer-actions">
                           <button
                             type="button"
+                            className="button button-primary"
+                            style={{ fontSize: '0.85rem', padding: '0.45rem 0.9rem' }}
+                            onClick={() => {
+                              setMessageTarget({ classroomId: info.classroomId || '', childId: String(child.id) });
+                              setPage('messages');
+                            }}
+                          >
+                            💬 Message Teacher
+                          </button>
+                          <button
+                            type="button"
                             className="parent-revoke-btn"
                             onClick={() => setRevokeTarget({
                               classroomId: info.classroomId || '',
@@ -2103,45 +2116,10 @@ export default function ParentDashboardPage() {
         )}
 
         {page === 'messages' && (
-          <div className="parent-dashboard-content">
-            <div className="parent-page-title">
-              <p className="parent-dash-kicker">Teacher messages</p>
-              <h1>Keep the conversation with grown-ups.</h1>
-              <p>Teachers can message you about assigned groups. Children never receive private teacher messages.</p>
-            </div>
-            <section className="message-layout">
-              <aside>
-                <button className="active">
-                  <span>G</span>
-                  <div><strong>Mrs Grace</strong><small>Children’s group · 1 new</small></div>
-                </button>
-                <button>
-                  <span>D</span>
-                  <div><strong>Mr Daniel</strong><small>Teen group</small></div>
-                </button>
-              </aside>
-              <div className="message-thread">
-                <header>
-                  <span>G</span>
-                  <div><strong>Mrs Grace</strong><small>Assigned teacher for {children[0].name}</small></div>
-                </header>
-                <div className="message-list">
-                  {messages.map((item, index) => (
-                    <article className={item.from === 'You' ? 'sent' : ''} key={`${item.time}-${index}`}>
-                      <span>{item.from}</span>
-                      <p>{index === 0 && item.from === 'Mrs Grace' ? `${children[0].name} asked a thoughtful question about courage today.` : item.body}</p>
-                      <small>{item.time}</small>
-                    </article>
-                  ))}
-                </div>
-                <div className="message-compose">
-                  <label className="sr-only" htmlFor="parent-message">Message Mrs Grace</label>
-                  <textarea id="parent-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Write a short message to Mrs Grace" />
-                  <button onClick={sendMessage}>Send message</button>
-                </div>
-              </div>
-            </section>
-          </div>
+          <ParentMessagesPanel
+            targetClassroomId={messageTarget?.classroomId}
+            targetChildId={messageTarget?.childId}
+          />
         )}
 
         {page === 'settings' && (
