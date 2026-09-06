@@ -117,6 +117,20 @@ function saveLocalCustomThread(thread: MessageThread) {
   }
 }
 
+function getBrowserSessionKey(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    let key = window.localStorage.getItem('lnl_browser_session_key');
+    if (!key) {
+      key = 'ses_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+      window.localStorage.setItem('lnl_browser_session_key', key);
+    }
+    return key;
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Hook for managing the list of parent-teacher conversation threads.
  */
@@ -128,18 +142,38 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch current user's connect code
+  // Fetch current user's unique dynamic connect code
   useEffect(() => {
-    fetch(`/api/messages/connect-code?role=${currentRole}`)
-      .then((res) => res.json() as Promise<{ code?: string }>)
-      .then((data) => {
-        if (data?.code) {
-          setMyConnectCode(data.code);
+    let active = true;
+    async function fetchCode() {
+      try {
+        const supabase = createClient();
+        let token: string | undefined;
+        if (supabase) {
+          const { data } = await supabase.auth.getSession();
+          token = data?.session?.access_token;
         }
-      })
-      .catch(() => {
-        // Keep default demo code
-      });
+        const sessionKey = getBrowserSessionKey();
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        const url = `/api/messages/connect-code?role=${currentRole}${sessionKey ? `&sessionKey=${encodeURIComponent(sessionKey)}` : ''}`;
+        const res = await fetch(url, { headers });
+        if (active && res.ok) {
+          const data = (await res.json()) as { code?: string };
+          if (data?.code) {
+            setMyConnectCode(data.code);
+          }
+        }
+      } catch {
+        // Fallback to initial code
+      }
+    }
+    fetchCode();
+    return () => {
+      active = false;
+    };
   }, [currentRole]);
 
   const refreshThreads = useCallback(async () => {
@@ -216,10 +250,29 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
       childName?: string
     ): Promise<{ success: boolean; thread?: MessageThread; error?: string }> => {
       try {
+        const supabase = createClient();
+        let token: string | undefined;
+        if (supabase) {
+          const { data } = await supabase.auth.getSession();
+          token = data?.session?.access_token;
+        }
+        const sessionKey = getBrowserSessionKey();
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const res = await fetch('/api/messages/connect-code', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, childName }),
+          headers,
+          body: JSON.stringify({
+            code,
+            childName,
+            callerRole: currentRole,
+            sessionKey,
+          }),
         });
         const data = (await res.json()) as {
           success?: boolean;
@@ -249,7 +302,7 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
         };
       }
     },
-    []
+    [currentRole]
   );
 
   return { threads, loading, error, myConnectCode, connectViaCode, refreshThreads };

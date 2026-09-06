@@ -30,10 +30,24 @@ export async function createRouteClient() {
 }
 
 /** Returns the authenticated Supabase user for the current request, or null. */
-export async function getAuthenticatedUser() {
+export async function getAuthenticatedUser(req?: Request) {
   const supabase = await createRouteClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return user;
+  if (user) return user;
+
+  // Also check Authorization: Bearer <token> if request is provided
+  if (req) {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7).trim();
+      if (token) {
+        const { data: tokenUser } = await supabase.auth.getUser(token);
+        if (tokenUser?.user) return tokenUser.user;
+      }
+    }
+  }
+
+  return null;
 }

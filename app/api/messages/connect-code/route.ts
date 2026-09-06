@@ -12,6 +12,8 @@ import type { MessageThread, SenderRole } from '../../../lib/messages/types';
 const ConnectCodeBodySchema = z.object({
   code: z.string().trim().min(3).max(32),
   childName: z.string().trim().max(50).optional(),
+  callerRole: z.enum(['teacher', 'parent']).optional(),
+  sessionKey: z.string().trim().max(100).optional(),
 });
 
 // Demo fallback registry
@@ -61,8 +63,21 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const roleParam = searchParams.get('role') === 'parent' ? 'parent' : 'teacher';
 
-  const user = await getAuthenticatedUser();
+  const user = await getAuthenticatedUser(req);
   if (!user) {
+    const sessionKey = searchParams.get('sessionKey') || searchParams.get('email') || '';
+    if (sessionKey) {
+      const prefix = roleParam === 'teacher' ? 'TCH' : 'PAR';
+      const hash = Math.abs(
+        sessionKey.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)
+      ).toString(36).toUpperCase().padStart(6, '0').slice(0, 6);
+      return NextResponse.json({
+        code: `${prefix}-${hash}`,
+        role: roleParam,
+        displayName: roleParam === 'teacher' ? 'Teacher' : 'Parent',
+      });
+    }
+
     if (roleParam === 'teacher') {
       return NextResponse.json({
         code: 'TCH-GRACE26',
@@ -122,15 +137,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const user = await getAuthenticatedUser();
+  const isTargetTeacher = code.startsWith('TCH');
+  const isTargetParent = code.startsWith('PAR');
+  const cleanCode = code.replace(/^(TCH|PAR)-/, '');
+
+  const user = await getAuthenticatedUser(req);
+  const callerRole = parsed.data.callerRole || (user?.user_metadata?.role as SenderRole) || (user?.user_metadata?.connect_role as SenderRole) || (isTargetTeacher ? 'parent' : 'teacher');
+
+  // Role validation: Teachers can only connect with parents, parents can only connect with teachers
+  if (callerRole === 'teacher' && isTargetTeacher) {
+    return NextResponse.json(
+      { error: 'This code belongs to a teacher. Teachers can only connect with parents.' },
+      { status: 400 }
+    );
+  }
+  if (callerRole === 'parent' && isTargetParent) {
+    return NextResponse.json(
+      { error: 'This code belongs to a parent. Parents can only connect with teachers.' },
+      { status: 400 }
+    );
+  }
 
   // If user is not authenticated, handle via demo registry & fallback
   if (!user) {
     const demoEntry = DEMO_REGISTRY[code];
-    const isTeacherCode = code.startsWith('TCH') || demoEntry?.role === 'teacher';
-
     let thread: MessageThread;
-    if (isTeacherCode) {
+    if (isTargetTeacher) {
       const teacherName = demoEntry?.name || `Teacher (${code})`;
       const className = demoEntry?.classroomName || 'Sunday School Class';
       thread = {
@@ -187,16 +219,13 @@ export async function POST(req: NextRequest) {
     (user.email ? user.email.split('@')[0] : '') ||
     'User';
 
-  const isTargetTeacher = code.startsWith('TCH');
-  const cleanCode = code.replace(/^(TCH|PAR)-/, '');
-
   let targetUserId: string | null = null;
   let targetName: string = isTargetTeacher ? `Teacher (${code})` : `Parent (${code})`;
   let targetClassroomId: string | null = null;
   let targetChildId: string | null = null;
   let churchOrOrg: string | null = null;
 
-  // 1. Check parent_teacher_connect_codes table if available
+  // 1. Check parent_teacher_connect_codes table (PRIMARY SOURCE OF TRUTH)
   try {
     const { data: codeRow } = await admin
       .from('parent_teacher_connect_codes')
@@ -210,16 +239,16 @@ export async function POST(req: NextRequest) {
       targetClassroomId = codeRow.classroom_id || null;
     }
   } catch {
-    // Table may not exist yet
+    /* Table query fallback */
   }
 
-  // 2. Search auth.users via admin client
+  // 2. Search auth.users via admin client by exact connect_code
   if (!targetUserId) {
     try {
       const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
       const allUsers = listData?.users || [];
 
-      // Check if any user has this connect_code in user_metadata
+      // Look ONLY for an exact match to this code
       const matchedUser = allUsers.find(
         (u) =>
           (u.user_metadata?.connect_code as string)?.toUpperCase() === code ||
@@ -234,29 +263,20 @@ export async function POST(req: NextRequest) {
           (matchedUser.user_metadata?.name as string) ||
           (matchedUser.email ? matchedUser.email.split('@')[0] : '') ||
           targetName;
-      } else {
-        // Fallback: Check if there is another user in the project who is not the caller
-        const otherUser = allUsers.find((u) => u.id !== user.id);
-        if (otherUser) {
-          targetUserId = otherUser.id;
-          targetName =
-            (otherUser.user_metadata?.full_name as string) ||
-            (otherUser.user_metadata?.name as string) ||
-            (otherUser.email ? otherUser.email.split('@')[0] : '') ||
-            (isTargetTeacher ? 'Teacher' : 'Parent');
 
-          // Bind this code to that user so it stays persistent
-          try {
-            await admin.auth.admin.updateUserById(otherUser.id, {
-              user_metadata: {
-                ...otherUser.user_metadata,
-                connect_code: code,
-                connect_role: isTargetTeacher ? 'teacher' : 'parent',
-              },
-            });
-          } catch {
-            // ignore
-          }
+        // Sync to parent_teacher_connect_codes table so subsequent lookups are instant
+        try {
+          await admin.from('parent_teacher_connect_codes').upsert(
+            {
+              user_id: matchedUser.id,
+              role: isTargetTeacher ? 'teacher' : 'parent',
+              code,
+              display_name: targetName,
+            },
+            { onConflict: 'user_id,role' }
+          );
+        } catch {
+          /* ignore */
         }
       }
     } catch (err) {
@@ -264,8 +284,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 3. Check classrooms table by join code
-  if (!targetClassroomId) {
+  // 3. Check classrooms table by join code (if teacher shared class code)
+  if (!targetUserId && !targetClassroomId) {
     try {
       const { data: cls } = await admin
         .from('classrooms')
@@ -276,36 +296,15 @@ export async function POST(req: NextRequest) {
       if (cls) {
         targetClassroomId = cls.id;
         churchOrOrg = cls.church_or_org || null;
-        if (!targetUserId) {
-          targetUserId = cls.teacher_id;
-        }
+        targetUserId = cls.teacher_id;
+        targetName = cls.name;
       }
     } catch {
-      // ignore
+      /* ignore */
     }
   }
 
-  // 4. Check children table by teacher_code
-  if (!targetChildId) {
-    try {
-      const { data: ch } = await admin
-        .from('children')
-        .select('id, name, parent_id, family_id')
-        .or(`teacher_code.eq.${code},teacher_code.eq.LNL-${code}`)
-        .maybeSingle();
-
-      if (ch) {
-        targetChildId = ch.id;
-        if (!targetUserId) {
-          targetUserId = ch.parent_id;
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  // 5. Check DEMO_REGISTRY fallback if still not resolved
+  // 4. Check DEMO_REGISTRY fallback
   if (!targetUserId) {
     const demoEntry = DEMO_REGISTRY[code];
     if (demoEntry) {
@@ -314,15 +313,21 @@ export async function POST(req: NextRequest) {
       targetUserId = isTargetTeacher
         ? '00000000-0000-0000-0000-000000000004'
         : '00000000-0000-0000-0000-000000000003';
-    } else {
-      // Dynamic fallback for any valid formatted code
-      targetUserId = `auto-${cleanCode.toLowerCase()}`;
     }
   }
 
+  // 5. IF STILL NOT FOUND: Return 404 error! NEVER reassign another user's account!
+  if (!targetUserId) {
+    return NextResponse.json(
+      { error: `No account found with connect code "${code}". Please verify the code with your parent/teacher.` },
+      { status: 404 }
+    );
+  }
+
+  // Prevent connecting to your own code
   if (targetUserId === user.id) {
     return NextResponse.json(
-      { error: 'You cannot connect to your own connect code.' },
+      { error: 'You cannot connect with your own connect code.' },
       { status: 400 }
     );
   }

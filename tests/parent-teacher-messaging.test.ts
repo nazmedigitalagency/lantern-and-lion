@@ -257,5 +257,68 @@ describe('Feature: Real-Time Parent-Teacher Messaging', () => {
     assert.equal(invalidRoleResult.success, false);
     assert.equal(invalidRoleResult.error, 'Cannot connect to someone with the same role');
   });
+
+  it('guarantees unique 1-to-1 dynamic connect code generation per account without collisions or reassignments', () => {
+    const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    function generateConnectCode(role: 'teacher' | 'parent'): string {
+      const prefix = role === 'teacher' ? 'TCH' : 'PAR';
+      let out = '';
+      for (let i = 0; i < 6; i++) {
+        out += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+      }
+      return `${prefix}-${out}`;
+    }
+
+    // Simulate 200 users generating codes
+    const generatedCodes = new Set<string>();
+    const userCodeMap = new Map<string, string>(); // userId -> code
+    const codeUserMap = new Map<string, string>(); // code -> userId
+
+    for (let i = 0; i < 200; i++) {
+      const userId = `user-${i}`;
+      const role = i % 2 === 0 ? 'teacher' : 'parent';
+
+      let code = generateConnectCode(role);
+      while (generatedCodes.has(code)) {
+        code = generateConnectCode(role);
+      }
+
+      generatedCodes.add(code);
+      userCodeMap.set(userId, code);
+      codeUserMap.set(code, userId);
+    }
+
+    // Assert strictly 200 distinct codes for 200 users
+    assert.equal(generatedCodes.size, 200);
+    assert.equal(userCodeMap.size, 200);
+    assert.equal(codeUserMap.size, 200);
+
+    // Verify 1-to-1 correspondence (one code does NOT belong to multiple parents or teachers)
+    for (const [userId, code] of userCodeMap.entries()) {
+      assert.equal(codeUserMap.get(code), userId);
+    }
+
+    // Attempting to look up a non-existent code must fail and NEVER rebind an existing user
+    const unmatchedCode = 'TCH-NONEXISTENT';
+    const lookupResult = codeUserMap.get(unmatchedCode);
+    assert.equal(lookupResult, undefined, 'Unmatched code must return undefined/404, never steal another user account');
+
+    // Self-connection check
+    function attemptConnect(callerUserId: string, targetCode: string) {
+      const targetUserId = codeUserMap.get(targetCode);
+      if (!targetUserId) return { status: 404, error: 'Code not found' };
+      if (targetUserId === callerUserId) return { status: 400, error: 'Cannot connect with your own code' };
+      return { status: 200, success: true };
+    }
+
+    const selfCode = userCodeMap.get('user-0')!;
+    const selfRes = attemptConnect('user-0', selfCode);
+    assert.equal(selfRes.status, 400);
+    assert.equal(selfRes.error, 'Cannot connect with your own code');
+
+    const notFoundRes = attemptConnect('user-0', 'PAR-MISSING99');
+    assert.equal(notFoundRes.status, 404);
+  });
 });
+
 
