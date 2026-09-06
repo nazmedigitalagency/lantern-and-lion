@@ -145,6 +145,47 @@ export default function ParentMessagesPanel({
         <p className="parent-dash-kicker">Church &amp; School Educational Coordination</p>
         <h1>Teacher Messages</h1>
         <p>Coordinate directly with your children’s teachers about assignments, lessons, and spiritual growth.</p>
+
+        {/* Prominent Connect Code Card in the Parent Message Section */}
+        <div className="messages-section-connect-card parent-theme-card">
+          <div className="connect-card-col my-code-col">
+            <span className="connect-card-label">Your Parent Connect Code</span>
+            <div className="connect-code-pill-wrap">
+              <span className="connect-code-value">{myConnectCode}</span>
+              <button
+                type="button"
+                className="btn-copy-code-prominent"
+                onClick={handleCopyCode}
+                title="Copy your Parent Code to give to teachers"
+              >
+                {copied ? '✓ Copied!' : '📋 Copy Code'}
+              </button>
+            </div>
+            <small className="connect-card-subtext">Give this code to your child’s teachers so they can connect with you directly.</small>
+          </div>
+
+          <div className="connect-card-divider" aria-hidden="true" />
+
+          <div className="connect-card-col add-code-col">
+            <span className="connect-card-label">Add Teacher via Code</span>
+            <form onSubmit={handleConnectTeacher} className="prominent-add-form">
+              <input
+                type="text"
+                placeholder="Enter Teacher Code (e.g. TCH-GRACE26)"
+                value={teacherCodeInput}
+                onChange={(e) => setTeacherCodeInput(e.target.value)}
+                disabled={connecting}
+                required
+              />
+              <button type="submit" disabled={connecting || !teacherCodeInput.trim()} className="btn-prominent-connect">
+                {connecting ? 'Connecting...' : '🔗 Add Teacher'}
+              </button>
+            </form>
+            {connectError && <p className="add-code-error">{connectError}</p>}
+            {connectSuccess && <p className="add-code-success">{connectSuccess}</p>}
+            <small className="connect-card-subtext">Enter a teacher’s code to immediately open a direct conversation thread.</small>
+          </div>
+        </div>
       </div>
 
       <div className={`teacher-chat-panes parent-chat-theme ${mobileView === 'chat' ? 'show-chat-mobile' : 'show-list-mobile'}`}>

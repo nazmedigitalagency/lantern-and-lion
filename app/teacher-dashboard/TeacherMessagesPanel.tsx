@@ -162,6 +162,47 @@ export default function TeacherMessagesPanel({
             Direct, real-time messaging with verified parents. Children and teenagers cannot view or send private messages.
           </p>
         </div>
+
+        {/* Prominent Connect Code Card in the Message Section */}
+        <div className="messages-section-connect-card">
+          <div className="connect-card-col my-code-col">
+            <span className="connect-card-label">Your Teacher Connect Code</span>
+            <div className="connect-code-pill-wrap">
+              <span className="connect-code-value">{myConnectCode}</span>
+              <button
+                type="button"
+                className="btn-copy-code-prominent"
+                onClick={handleCopyCode}
+                title="Copy your Teacher Code to give to parents"
+              >
+                {copied ? '✓ Copied!' : '📋 Copy Code'}
+              </button>
+            </div>
+            <small className="connect-card-subtext">Give this code to parents so they can connect with you directly.</small>
+          </div>
+
+          <div className="connect-card-divider" aria-hidden="true" />
+
+          <div className="connect-card-col add-code-col">
+            <span className="connect-card-label">Add Parent via Code</span>
+            <form onSubmit={handleConnectParent} className="prominent-add-form">
+              <input
+                type="text"
+                placeholder="Enter Parent Code (e.g. PAR-JORDAN26)"
+                value={parentCodeInput}
+                onChange={(e) => setParentCodeInput(e.target.value)}
+                disabled={connecting}
+                required
+              />
+              <button type="submit" disabled={connecting || !parentCodeInput.trim()} className="btn-prominent-connect">
+                {connecting ? 'Connecting...' : '🔗 Add Parent'}
+              </button>
+            </form>
+            {connectError && <p className="add-code-error">{connectError}</p>}
+            {connectSuccess && <p className="add-code-success">{connectSuccess}</p>}
+            <small className="connect-card-subtext">Enter a parent’s code to immediately open a direct conversation thread.</small>
+          </div>
+        </div>
       </div>
 
       {/* Main Two-Pane Layout */}
