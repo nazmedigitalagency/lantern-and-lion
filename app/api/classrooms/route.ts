@@ -17,7 +17,7 @@ export async function GET() {
   const admin = createServerAdminClient();
   const { data: classrooms } = await admin
     .from('classrooms')
-    .select('id, name, description, age_band, meeting_day, meeting_time, code, created_at')
+    .select('id, name, description, age_band, meeting_day, meeting_time, code, church_or_org, created_at')
     .eq('teacher_id', user.id)
     .order('created_at', { ascending: false });
   return NextResponse.json({ classrooms: classrooms || [] });
@@ -29,6 +29,7 @@ const CreateSchema = z.object({
   description: z.string().trim().max(500).optional(),
   meetingDay: z.string().trim().max(24).optional(),
   meetingTime: z.string().trim().max(24).optional(),
+  churchOrOrg: z.string().trim().max(120).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -47,18 +48,24 @@ export async function POST(req: NextRequest) {
     code = generateClassCode();
   }
 
+  const churchName =
+    parsed.data.churchOrOrg ||
+    (user.user_metadata?.church_name as string | undefined) ||
+    null;
+
   const { data: classroom, error } = await admin
     .from('classrooms')
     .insert({
       teacher_id: user.id,
       name: parsed.data.name,
+      church_or_org: churchName,
       age_band: parsed.data.ageBand || null,
       description: parsed.data.description || null,
       meeting_day: parsed.data.meetingDay || null,
       meeting_time: parsed.data.meetingTime || null,
       code,
     })
-    .select('id, name, description, age_band, meeting_day, meeting_time, code, created_at')
+    .select('id, name, description, age_band, meeting_day, meeting_time, code, church_or_org, created_at')
     .maybeSingle();
 
   if (error || !classroom) return NextResponse.json({ error: 'Could not create the class.' }, { status: 500 });

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { getTierForXp, LEAGUE_TIERS } from '../lib/leagues/config';
 import { canonicalRegions } from '../adventure/world-data';
 import { signOutOfPersona } from '../lib/session';
@@ -93,6 +93,12 @@ export default function TeacherDashboardPage() {
   const router = useRouter();
   const [teacherEmail, setTeacherEmail] = useState('');
   const [teacherName, setTeacherName] = useState('Teacher');
+  const [churchName, setChurchName] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
+  const [showChurchModal, setShowChurchModal] = useState(false);
+  const [churchInput, setChurchInput] = useState('');
+  const [churchError, setChurchError] = useState('');
+  const [isSavingChurch, setIsSavingChurch] = useState(false);
   const [page, setPage] = useState<Page>('overview');
   const [assignmentsSubTab, setAssignmentsSubTab] = useState<'assignments' | 'templates'>('assignments');
   const [allClasses, setAllClasses] = useState<Classroom[]>([]);
@@ -186,31 +192,76 @@ export default function TeacherDashboardPage() {
     let cancelled = false;
     async function initSession() {
       try {
-        let session = JSON.parse(localStorage.getItem('lanternLionTeacherSession') || 'null');
-
-        // If not in localStorage, check if Supabase has an active session
-        // (e.g. redirected from Google OAuth or active SSR session cookies)
-        if (!session?.email) {
-          try {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user && user.email) {
-              const teacherName =
-                user.user_metadata?.full_name ||
-                user.user_metadata?.name ||
-                user.email.split('@')[0] ||
-                'Teacher';
-              session = { name: teacherName, email: user.email };
-              localStorage.setItem('lanternLionTeacherSession', JSON.stringify(session));
-            }
-          } catch {
-            /* continue checking */
-          }
+        let authUser: { email?: string; user_metadata?: Record<string, unknown> } | null = null;
+        try {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          authUser = user;
+        } catch {
+          /* Supabase client fallback */
         }
 
-        if (cancelled) return;
+        let session = JSON.parse(localStorage.getItem('lanternLionTeacherSession') || 'null');
 
-        if (!session?.email) {
+        if (authUser && authUser.email) {
+          // Real live authenticated user (Google OAuth or verified email)
+          const teacherName =
+            (authUser.user_metadata?.full_name as string | undefined) ||
+            (authUser.user_metadata?.name as string | undefined) ||
+            authUser.email.split('@')[0] ||
+            'Teacher';
+
+          let church = (authUser.user_metadata?.church_name as string | undefined) || '';
+
+          // Check if pending church was stashed before OAuth redirect
+          if (!church && typeof window !== 'undefined') {
+            try {
+              const pendingChurch = sessionStorage.getItem('lanternLionPendingChurchName');
+              if (pendingChurch && pendingChurch.trim()) {
+                church = pendingChurch.trim();
+                sessionStorage.removeItem('lanternLionPendingChurchName');
+                const supabase = createClient();
+                void supabase.auth.updateUser({ data: { church_name: church } });
+                void fetch('/api/teacher/church', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ churchName: church }),
+                });
+              }
+            } catch { /* storage unavailable */ }
+          }
+
+          session = {
+            name: teacherName,
+            email: authUser.email,
+            churchName: church,
+            isDemo: false,
+          };
+          localStorage.setItem('lanternLionTeacherSession', JSON.stringify(session));
+
+          setIsDemo(false);
+          setTeacherEmail(authUser.email);
+          setTeacherName(teacherName);
+          setChurchName(church);
+
+          // If real user hasn't set their Church or Sunday School name yet, force prompt!
+          if (!church.trim()) {
+            setShowChurchModal(true);
+          }
+        } else if (session?.email) {
+          // Fallback to local session (e.g. offline explore demo space)
+          const isDemoSession =
+            session.isDemo !== false &&
+            (session.email === 'grace@example.com' ||
+              session.email === 'teacher@lanternandlion.com' ||
+              session.isDemo === true ||
+              !session.churchName);
+
+          setIsDemo(isDemoSession);
+          setTeacherEmail(session.email);
+          setTeacherName(session.name || 'Teacher');
+          setChurchName(session.churchName || '');
+        } else {
           try {
             sessionStorage.setItem('lanternLionPendingModuleRedirect', '/teacher-dashboard');
           } catch { /* Storage unavailable. */ }
@@ -218,10 +269,10 @@ export default function TeacherDashboardPage() {
           return;
         }
 
+        if (cancelled) return;
+
         const email = session.email;
         const name = session.name || 'Teacher';
-        setTeacherEmail(email);
-        setTeacherName(name);
 
         const saved = JSON.parse(localStorage.getItem('lanternLionTeacherClasses') || 'null');
         const work = JSON.parse(localStorage.getItem('lanternLionTeacherAssignments') || 'null');
@@ -271,7 +322,7 @@ export default function TeacherDashboardPage() {
     const timer = window.setTimeout(async () => {
       try {
         const session = JSON.parse(localStorage.getItem('lanternLionTeacherSession') || 'null');
-        if (!session?.email) return;
+        if (!session?.email || session.isDemo) return;
         const { data: { user } } = await createClient().auth.getUser();
         if (!cancelled && !user) setSessionUnverified(true);
       } catch {
@@ -327,6 +378,62 @@ export default function TeacherDashboardPage() {
     setActiveClass(nextClass.id);
     setNewClass('');
     setNotice(`${nextClass.name} is ready. Share its code only with approved families.`);
+
+    if (!isDemo) {
+      fetch('/api/classrooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nextClass.name, ageBand, churchOrOrg: churchName || undefined }),
+      })
+        .then((res) => res.json() as Promise<{ classroom?: LiveClassroom }>)
+        .then((data) => {
+          if (data?.classroom) {
+            setLiveClassrooms((prev) => [data.classroom as LiveClassroom, ...prev]);
+            setLiveClassId((data.classroom as LiveClassroom).id);
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
+  async function handleSaveChurch(e: FormEvent) {
+    e.preventDefault();
+    const clean = churchInput.trim();
+    if (!clean) {
+      setChurchError('Please enter the name of your Church or Sunday School.');
+      return;
+    }
+    if (clean.length < 2) {
+      setChurchError('Please enter at least 2 characters.');
+      return;
+    }
+
+    setIsSavingChurch(true);
+    setChurchError('');
+
+    try {
+      const supabase = createClient();
+      await supabase.auth.updateUser({ data: { church_name: clean } });
+
+      await fetch('/api/teacher/church', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ churchName: clean }),
+      });
+
+      setChurchName(clean);
+      setShowChurchModal(false);
+
+      const current = JSON.parse(localStorage.getItem('lanternLionTeacherSession') || '{}');
+      const updated = { ...current, churchName: clean, isDemo: false };
+      localStorage.setItem('lanternLionTeacherSession', JSON.stringify(updated));
+
+      setNotice(`Church workspace set to "${clean}".`);
+    } catch {
+      setChurchError('Could not save church name. Please check your connection and try again.');
+    } finally {
+      setIsSavingChurch(false);
+    }
   }
 
   async function signOut() {
@@ -363,9 +470,32 @@ export default function TeacherDashboardPage() {
           <Image src="/lantern-lion-logo.png" alt="" width={58} height={58} />
           <span>
             <strong>Lantern &amp; Lion</strong>
-            <small>Teacher space</small>
+            <small>{isDemo ? 'Demo workspace' : 'Teacher space'}</small>
           </span>
         </Link>
+
+        <div className="teacher-sidebar-account">
+          <div className="teacher-sidebar-user">
+            <span className="teacher-sidebar-avatar" aria-hidden="true">
+              {teacherName[0]?.toUpperCase() || 'T'}
+            </span>
+            <div className="teacher-sidebar-user-details">
+              <strong className="teacher-sidebar-name" title={teacherName}>{teacherName}</strong>
+              {churchName ? (
+                <span className="teacher-sidebar-church" title={churchName}>⛪ {churchName}</span>
+              ) : (
+                <span className="teacher-sidebar-email" title={teacherEmail}>{teacherEmail}</span>
+              )}
+            </div>
+          </div>
+          <div className="teacher-sidebar-status-row">
+            <span className={`teacher-account-badge ${isDemo ? 'is-demo' : 'is-live'}`}>
+              <span className="teacher-status-dot" aria-hidden="true"></span>
+              {isDemo ? 'Demo Account' : 'Live Account'}
+            </span>
+          </div>
+        </div>
+
         <nav aria-label="Teacher dashboard">
           {nav.map(([id, mark, label]) => (
             <button
@@ -383,7 +513,7 @@ export default function TeacherDashboardPage() {
         <div>
           <Link href="/learn?activity=david-chooses-courage">Preview an activity</Link>
           <button type="button" onClick={signOut} className="teacher-signout-btn">
-            Sign out of demo
+            {isDemo ? 'Sign out of demo' : 'Sign out'}
           </button>
         </div>
       </aside>
@@ -401,8 +531,16 @@ export default function TeacherDashboardPage() {
               ☰
             </button>
             <div className="teacher-topbar-title">
-              <span>Teacher workspace</span>
-              <strong>{teacherName}</strong>
+              <div className="teacher-topbar-meta">
+                <span>{isDemo ? 'Demo space' : 'Teacher workspace'}</span>
+                <span className={`teacher-status-pill ${isDemo ? 'pill-demo' : 'pill-live'}`}>
+                  {isDemo ? 'Demo' : 'Live Account'}
+                </span>
+              </div>
+              <strong>
+                {teacherName}
+                {churchName ? <span className="teacher-topbar-church"> · ⛪ {churchName}</span> : ''}
+              </strong>
             </div>
           </div>
           <div className="teacher-topbar-actions">
@@ -842,7 +980,12 @@ export default function TeacherDashboardPage() {
 
                 <div className="teacher-safety-banner">
                   <strong>Children cannot message teachers privately.</strong>
-                  <span>Help flags are visible to the teacher and parent. This demo stores review status only on this device.</span>
+                  <span>
+                    Help flags are visible to the teacher and parent.{' '}
+                    {isDemo
+                      ? 'This demo stores review status only on this device.'
+                      : 'Review status is synced with your live classroom.'}
+                  </span>
                 </div>
 
                 <section className="teacher-panel teacher-flags">
@@ -918,7 +1061,7 @@ export default function TeacherDashboardPage() {
                   <Image src="/lantern-lion-logo.png" alt="" width={44} height={44} />
                   <span>
                     <strong>Lantern &amp; Lion</strong>
-                    <small>Teacher space</small>
+                    <small>{isDemo ? 'Demo workspace' : 'Teacher space'}</small>
                   </span>
                 </Link>
                 <button
@@ -929,6 +1072,28 @@ export default function TeacherDashboardPage() {
                 >
                   ✕
                 </button>
+              </div>
+
+              <div className="teacher-mobile-drawer-account">
+                <div className="teacher-sidebar-user">
+                  <span className="teacher-sidebar-avatar" aria-hidden="true">
+                    {teacherName[0]?.toUpperCase() || 'T'}
+                  </span>
+                  <div className="teacher-sidebar-user-details">
+                    <strong className="teacher-sidebar-name">{teacherName}</strong>
+                    {churchName ? (
+                      <span className="teacher-sidebar-church">⛪ {churchName}</span>
+                    ) : (
+                      <span className="teacher-sidebar-email">{teacherEmail}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="teacher-sidebar-status-row">
+                  <span className={`teacher-account-badge ${isDemo ? 'is-demo' : 'is-live'}`}>
+                    <span className="teacher-status-dot" aria-hidden="true"></span>
+                    {isDemo ? 'Demo Account' : 'Live Account'}
+                  </span>
+                </div>
               </div>
 
               <nav className="teacher-mobile-drawer-nav" aria-label="Teacher mobile dashboard">
@@ -962,10 +1127,48 @@ export default function TeacherDashboardPage() {
                   }}
                   className="teacher-signout-btn"
                 >
-                  Sign out of demo
+                  {isDemo ? 'Sign out of demo' : 'Sign out'}
                 </button>
               </div>
             </aside>
+          </div>
+        )}
+
+        {showChurchModal && (
+          <div className="teacher-church-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="church-modal-title">
+            <div className="teacher-church-modal-card">
+              <div className="teacher-church-modal-icon" aria-hidden="true">⛪</div>
+              <h2 id="church-modal-title">Welcome to Lantern &amp; Lion</h2>
+              <p>
+                To complete your teacher workspace setup, please enter the name of your Church or Sunday School.
+              </p>
+              <form onSubmit={handleSaveChurch}>
+                <label>
+                  <span>
+                    Church or Sunday School name <b style={{ color: 'var(--coral, #ea4335)' }}>*</b>
+                  </span>
+                  <input
+                    type="text"
+                    value={churchInput}
+                    onChange={(e) => {
+                      setChurchInput(e.target.value);
+                      setChurchError('');
+                    }}
+                    placeholder="e.g. St. Luke's Sunday School or Grace Bible Church"
+                    required
+                    autoFocus
+                  />
+                </label>
+                {churchError && <p className="teacher-church-modal-error" role="alert">{churchError}</p>}
+                <button
+                  type="submit"
+                  disabled={isSavingChurch}
+                  className="button button-primary"
+                >
+                  {isSavingChurch ? 'Saving...' : 'Confirm & Open Workspace'}
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </section>

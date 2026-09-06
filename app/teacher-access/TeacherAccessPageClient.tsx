@@ -42,9 +42,10 @@ export default function TeacherAccessPage() {
             user.user_metadata?.name ||
             user.email?.split('@')[0] ||
             'Teacher';
+          const userChurch = user.user_metadata?.church_name || '';
           localStorage.setItem(
             'lanternLionTeacherSession',
-            JSON.stringify({ name: teacherName, email: user.email })
+            JSON.stringify({ name: teacherName, email: user.email, churchName: userChurch, isDemo: false })
           );
           let pending: string | null = null;
           try {
@@ -63,9 +64,10 @@ export default function TeacherAccessPage() {
             session.user.user_metadata?.name ||
             session.user.email?.split('@')[0] ||
             'Teacher';
+          const userChurch = session.user.user_metadata?.church_name || '';
           localStorage.setItem(
             'lanternLionTeacherSession',
-            JSON.stringify({ name: teacherName, email: session.user.email })
+            JSON.stringify({ name: teacherName, email: session.user.email, churchName: userChurch, isDemo: false })
           );
           let pending: string | null = null;
           try {
@@ -100,6 +102,18 @@ export default function TeacherAccessPage() {
   async function handleGoogleSignIn() {
     setError('');
     setNotice('');
+
+    // If in signup mode, enforce Church / Sunday School name first
+    if (mode === 'signup') {
+      if (!church.trim()) {
+        setError('Please enter the name of your Church or Sunday School before continuing with Google.');
+        return;
+      }
+      try {
+        sessionStorage.setItem('lanternLionPendingChurchName', church.trim());
+      } catch { /* Storage unavailable */ }
+    }
+
     setIsGoogleLoading(true);
 
     if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
@@ -163,6 +177,11 @@ export default function TeacherAccessPage() {
         setIsSubmitting(false);
         return;
       }
+      if (!church.trim()) {
+        setError('Please enter the name of your Church or Sunday School.');
+        setIsSubmitting(false);
+        return;
+      }
 
       try {
         const supabase = createClient();
@@ -172,7 +191,7 @@ export default function TeacherAccessPage() {
           options: {
             data: {
               full_name: name.trim(),
-              church_name: church.trim() || undefined,
+              church_name: church.trim(),
               role: 'teacher',
             },
           },
@@ -196,7 +215,7 @@ export default function TeacherAccessPage() {
 
         localStorage.setItem(
           'lanternLionTeacherSession',
-          JSON.stringify({ name: teacherName, email: cleanEmail })
+          JSON.stringify({ name: teacherName, email: cleanEmail, churchName: church.trim(), isDemo: false })
         );
 
         let pending: string | null = null;
@@ -236,10 +255,11 @@ export default function TeacherAccessPage() {
         data.user.user_metadata?.name ||
         data.user.email?.split('@')[0] ||
         'Teacher';
+      const userChurch = data.user.user_metadata?.church_name || '';
 
       localStorage.setItem(
         'lanternLionTeacherSession',
-        JSON.stringify({ name: teacherName, email: cleanEmail })
+        JSON.stringify({ name: teacherName, email: cleanEmail, churchName: userChurch, isDemo: false })
       );
 
       let pending: string | null = null;
@@ -306,6 +326,25 @@ export default function TeacherAccessPage() {
               : 'Create your teacher account to start managing classes and assignments.'}
           </p>
 
+          {mode === 'signup' && (
+            <label style={{ display: 'grid', gap: 6, marginBottom: 16, fontSize: 13, fontWeight: 900 }}>
+              <span>
+                Church or Sunday School <b style={{ color: 'var(--coral, #ea4335)' }}>*</b>
+              </span>
+              <input
+                type="text"
+                autoComplete="organization"
+                value={church}
+                onChange={(e) => {
+                  setChurch(e.target.value);
+                  setError('');
+                }}
+                placeholder="e.g. St. Mark's Sunday School or Grace Chapel"
+                required
+              />
+            </label>
+          )}
+
           <button
             type="button"
             className="button-google"
@@ -333,29 +372,19 @@ export default function TeacherAccessPage() {
 
           <form onSubmit={submit} noValidate>
             {mode === 'signup' && (
-              <>
-                <label>
-                  Full name
-                  <input
-                    type="text"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => { setName(e.target.value); setError(''); }}
-                    placeholder="e.g. Pastor Grace or David Okon"
-                    required
-                  />
-                </label>
-                <label>
-                  Church or organization <small style={{ fontWeight: 400, color: 'var(--muted)' }}>(optional)</small>
-                  <input
-                    type="text"
-                    autoComplete="organization"
-                    value={church}
-                    onChange={(e) => { setChurch(e.target.value); setError(''); }}
-                    placeholder="e.g. St. Mark's Sunday School"
-                  />
-                </label>
-              </>
+              <label>
+                <span>
+                  Full name <b style={{ color: 'var(--coral, #ea4335)' }}>*</b>
+                </span>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); setError(''); }}
+                  placeholder="e.g. Pastor Grace or David Okon"
+                  required
+                />
+              </label>
             )}
 
             <label>
