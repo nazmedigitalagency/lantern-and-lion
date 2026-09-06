@@ -247,16 +247,39 @@ export async function POST(req: NextRequest) {
     /* Table query fallback */
   }
 
+  // 1b. Check current caller's metadata (instant resolution when testing both roles on one account)
+  if (!targetUserId && user) {
+    const myMeta = user.user_metadata || {};
+    const myTeacherCode = (myMeta.teacher_connect_code as string)?.toUpperCase();
+    const myParentCode = (myMeta.parent_connect_code as string)?.toUpperCase();
+    const myTeacherCodeLegacy = (myMeta.teacher_code as string)?.toUpperCase();
+    const myParentCodeLegacy = (myMeta.parent_code as string)?.toUpperCase();
+    const myLegacyCode = (myMeta.connect_code as string)?.toUpperCase();
+
+    if (
+      code === myTeacherCode ||
+      code === myParentCode ||
+      code === myTeacherCodeLegacy ||
+      code === myParentCodeLegacy ||
+      code === myLegacyCode
+    ) {
+      targetUserId = user.id;
+      targetName = callerName;
+    }
+  }
+
   // 2. Search auth.users via admin client by exact connect_code
   if (!targetUserId) {
     try {
       const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
       const allUsers = listData?.users || [];
 
-      // Look ONLY for an exact match to this code
+      // Look ONLY for an exact match to this code across all user metadata code fields
       const matchedUser = allUsers.find(
         (u) =>
           (u.user_metadata?.connect_code as string)?.toUpperCase() === code ||
+          (u.user_metadata?.teacher_connect_code as string)?.toUpperCase() === code ||
+          (u.user_metadata?.parent_connect_code as string)?.toUpperCase() === code ||
           (u.user_metadata?.teacher_code as string)?.toUpperCase() === code ||
           (u.user_metadata?.parent_code as string)?.toUpperCase() === code
       );
@@ -329,18 +352,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Prevent connecting to your own code
-  if (targetUserId === user.id) {
-    return NextResponse.json(
-      { error: 'You cannot connect with your own connect code.' },
-      { status: 400 }
-    );
-  }
-
+  const isSelf = targetUserId === user.id;
   const teacherId = isTargetTeacher ? targetUserId : user.id;
   const parentId = isTargetTeacher ? user.id : targetUserId;
-  const teacherName = isTargetTeacher ? targetName : callerName;
-  const parentName = isTargetTeacher ? callerName : targetName;
+  const teacherName = isTargetTeacher ? targetName : (isSelf ? `${callerName} (Teacher)` : callerName);
+  const parentName = isTargetTeacher ? (isSelf ? `${callerName} (Parent)` : callerName) : targetName;
 
   // Ensure classroom exists in classrooms table
   let classroomId = targetClassroomId;

@@ -156,8 +156,8 @@ export async function ensureConnectCode(
         connect_code: finalCode,
         connect_role: role,
         ...(role === 'parent'
-          ? { parent_connect_code: finalCode }
-          : { teacher_connect_code: finalCode }),
+          ? { parent_connect_code: finalCode, parent_code: finalCode }
+          : { teacher_connect_code: finalCode, teacher_code: finalCode }),
         full_name: displayName || currentMeta.full_name || (role === 'teacher' ? 'Teacher' : 'Parent'),
       },
     });

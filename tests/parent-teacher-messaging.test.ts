@@ -303,20 +303,47 @@ describe('Feature: Real-Time Parent-Teacher Messaging', () => {
     const lookupResult = codeUserMap.get(unmatchedCode);
     assert.equal(lookupResult, undefined, 'Unmatched code must return undefined/404, never steal another user account');
 
-    // Self-connection check
-    function attemptConnect(callerUserId: string, targetCode: string) {
+    // Role-validation and cross-role connection check
+    function attemptConnect(
+      callerUserId: string,
+      callerRole: 'teacher' | 'parent',
+      targetCode: string
+    ) {
+      const isTargetTeacher = targetCode.startsWith('TCH-');
+      const isTargetParent = targetCode.startsWith('PAR-');
+      if (callerRole === 'teacher' && isTargetTeacher) {
+        return { status: 400, error: 'This code belongs to a teacher. Teachers can only connect with parents.' };
+      }
+      if (callerRole === 'parent' && isTargetParent) {
+        return { status: 400, error: 'This code belongs to a parent. Parents can only connect with teachers.' };
+      }
+
       const targetUserId = codeUserMap.get(targetCode);
       if (!targetUserId) return { status: 404, error: 'Code not found' };
-      if (targetUserId === callerUserId) return { status: 400, error: 'Cannot connect with your own code' };
-      return { status: 200, success: true };
+
+      // Cross-role connection (even on the same user account for testing/teacher-parents) succeeds
+      return { status: 200, success: true, isSelf: targetUserId === callerUserId };
     }
 
-    const selfCode = userCodeMap.get('user-0')!;
-    const selfRes = attemptConnect('user-0', selfCode);
-    assert.equal(selfRes.status, 400);
-    assert.equal(selfRes.error, 'Cannot connect with your own code');
+    // Teacher entering their own teacher code -> rejected by role validation
+    const teacherSelfCode = userCodeMap.get('user-0')!; // Teacher code TCH-
+    const sameRoleRes = attemptConnect('user-0', 'teacher', teacherSelfCode);
+    assert.equal(sameRoleRes.status, 400);
+    assert.equal(sameRoleRes.error, 'This code belongs to a teacher. Teachers can only connect with parents.');
 
-    const notFoundRes = attemptConnect('user-0', 'PAR-MISSING99');
+    // Teacher entering opposite role parent code -> succeeds!
+    const parentCode = userCodeMap.get('user-1')!; // Parent code PAR-
+    const crossRoleRes = attemptConnect('user-0', 'teacher', parentCode);
+    assert.equal(crossRoleRes.status, 200);
+    assert.equal(crossRoleRes.success, true);
+
+    // Cross-role connection when same user tests both roles -> succeeds!
+    const selfOppositeRes = attemptConnect('user-1', 'teacher', parentCode);
+    assert.equal(selfOppositeRes.status, 200);
+    assert.equal(selfOppositeRes.isSelf, true);
+
+    // Non-existent code returns 404
+    const notFoundRes = attemptConnect('user-0', 'teacher', 'PAR-MISSING99');
     assert.equal(notFoundRes.status, 404);
   });
 
