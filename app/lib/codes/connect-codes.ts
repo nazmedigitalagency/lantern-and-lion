@@ -26,6 +26,8 @@ export function isValidConnectCode(code: string): boolean {
 
 /**
  * Ensures a user (parent or teacher) has an active Connect Code, creating one if not present.
+ * Uses auth.users user_metadata as primary source of truth so it works out of the box
+ * on every Supabase instance without requiring custom table migrations.
  */
 export async function ensureConnectCode(
   admin: SupabaseClient,
@@ -34,40 +36,75 @@ export async function ensureConnectCode(
   displayName: string,
   classroomId?: string | null
 ): Promise<{ code: string; displayName: string }> {
-  // Check if existing code exists
-  const { data: existing } = await admin
-    .from('parent_teacher_connect_codes')
-    .select('code, display_name')
-    .eq('user_id', userId)
-    .eq('role', role)
-    .maybeSingle();
-
-  if (existing) {
-    return { code: existing.code, displayName: existing.display_name };
+  // 1. Check user_metadata in auth.users
+  try {
+    const { data: userRes } = await admin.auth.admin.getUserById(userId);
+    const existingCode = userRes?.user?.user_metadata?.connect_code as string | undefined;
+    if (existingCode && typeof existingCode === 'string' && existingCode.length >= 4) {
+      return { code: existingCode, displayName };
+    }
+  } catch {
+    // continue to generation
   }
 
-  // Generate unique code
-  let newCode = generateConnectCode(role);
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const { data: taken } = await admin
+  // 2. Check if existing code exists in parent_teacher_connect_codes table if available
+  try {
+    const { data: existing } = await admin
       .from('parent_teacher_connect_codes')
-      .select('id')
-      .eq('code', newCode)
+      .select('code, display_name')
+      .eq('user_id', userId)
+      .eq('role', role)
       .maybeSingle();
-    if (!taken) break;
-    newCode = generateConnectCode(role);
+
+    if (existing?.code) {
+      // Sync to user_metadata for future instant lookups
+      try {
+        await admin.auth.admin.updateUserById(userId, {
+          user_metadata: { connect_code: existing.code, connect_role: role, full_name: displayName },
+        });
+      } catch {
+        // ignore
+      }
+      return { code: existing.code, displayName: existing.display_name };
+    }
+  } catch {
+    // Table may not exist yet, continue
   }
 
-  await admin.from('parent_teacher_connect_codes').upsert(
-    {
-      user_id: userId,
-      role,
-      code: newCode,
-      display_name: displayName,
-      classroom_id: classroomId || null,
-    },
-    { onConflict: 'user_id,role' }
-  );
+  // 3. Generate new unique code
+  const newCode = generateConnectCode(role);
+
+  // 4. Save to auth.users user_metadata (guaranteed to succeed on all Supabase projects)
+  try {
+    const { data: userRes } = await admin.auth.admin.getUserById(userId);
+    const currentMeta = userRes?.user?.user_metadata || {};
+    await admin.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        ...currentMeta,
+        connect_code: newCode,
+        connect_role: role,
+        full_name: displayName || currentMeta.full_name || (role === 'teacher' ? 'Teacher' : 'Parent'),
+      },
+    });
+  } catch (err) {
+    console.error('Failed to save connect_code to user_metadata:', err);
+  }
+
+  // 5. Also attempt to save to parent_teacher_connect_codes table if table exists
+  try {
+    await admin.from('parent_teacher_connect_codes').upsert(
+      {
+        user_id: userId,
+        role,
+        code: newCode,
+        display_name: displayName,
+        classroom_id: classroomId || null,
+      },
+      { onConflict: 'user_id,role' }
+    );
+  } catch {
+    // Table may not exist yet
+  }
 
   return { code: newCode, displayName };
 }

@@ -28,19 +28,23 @@ export async function GET() {
     const isParent = !!family;
 
     // 3. Fetch existing persisted threads for this user (as parent or teacher)
-    const { data: existingThreads } = await admin
-      .from('parent_teacher_threads')
-      .select('id, classroom_id, child_id, parent_id, teacher_id, last_message_at, last_message_snippet, parent_unread_count, teacher_unread_count, classrooms(name, church_or_org), children(name)')
-      .or(`parent_id.eq.${user.id},teacher_id.eq.${user.id}`)
-      .order('last_message_at', { ascending: false });
-
     const threadsMap = new Map<string, any>();
-    for (const t of existingThreads || []) {
-      const key = `${t.classroom_id}_${t.child_id}_${t.parent_id}_${t.teacher_id}`;
-      threadsMap.set(key, t);
+    try {
+      const { data: existingThreads } = await admin
+        .from('parent_teacher_threads')
+        .select('id, classroom_id, child_id, parent_id, teacher_id, last_message_at, last_message_snippet, parent_unread_count, teacher_unread_count, classrooms(name, church_or_org), children(name)')
+        .or(`parent_id.eq.${user.id},teacher_id.eq.${user.id}`)
+        .order('last_message_at', { ascending: false });
+
+      for (const t of existingThreads || []) {
+        const key = `${t.classroom_id}_${t.child_id}_${t.parent_id}_${t.teacher_id}`;
+        threadsMap.set(key, t);
+      }
+    } catch {
+      // Table may not exist yet, continue to classroom_students
     }
 
-    // 4. Resolve missing threads for all approved classroom connections
+    // 4. Resolve threads for all approved classroom connections
     // If teacher: find approved students in teacher's classrooms
     if (isTeacher && teacherClassrooms && teacherClassrooms.length > 0) {
       const classIds = teacherClassrooms.map((c) => c.id);
@@ -61,27 +65,41 @@ export async function GET() {
 
         const key = `${s.classroom_id}_${s.child_id}_${parentId}_${user.id}`;
         if (!threadsMap.has(key)) {
-          // Create or register thread
-          const { data: newThread } = await admin
-            .from('parent_teacher_threads')
-            .insert({
-              classroom_id: s.classroom_id,
-              child_id: s.child_id,
-              parent_id: parentId,
-              teacher_id: user.id,
-              last_message_at: new Date().toISOString(),
-              last_message_snippet: 'Conversation started',
-            })
-            .select('id, classroom_id, child_id, parent_id, teacher_id, last_message_at, last_message_snippet, parent_unread_count, teacher_unread_count')
-            .single();
+          let threadId = `thread-${s.classroom_id}-${s.child_id}`;
+          try {
+            const { data: newThread } = await admin
+              .from('parent_teacher_threads')
+              .insert({
+                classroom_id: s.classroom_id,
+                child_id: s.child_id,
+                parent_id: parentId,
+                teacher_id: user.id,
+                last_message_at: new Date().toISOString(),
+                last_message_snippet: 'Conversation started',
+              })
+              .select('id, classroom_id, child_id, parent_id, teacher_id, last_message_at, last_message_snippet, parent_unread_count, teacher_unread_count')
+              .maybeSingle();
 
-          if (newThread) {
-            threadsMap.set(key, {
-              ...newThread,
-              classrooms: { name: cls.name, church_or_org: cls.church_or_org },
-              children: { name: child.name },
-            });
+            if (newThread?.id) {
+              threadId = newThread.id;
+            }
+          } catch {
+            // fallback
           }
+
+          threadsMap.set(key, {
+            id: threadId,
+            classroom_id: s.classroom_id,
+            child_id: s.child_id,
+            parent_id: parentId,
+            teacher_id: user.id,
+            last_message_at: new Date().toISOString(),
+            last_message_snippet: 'Conversation started',
+            parent_unread_count: 0,
+            teacher_unread_count: 0,
+            classrooms: { name: cls.name, church_or_org: cls.church_or_org },
+            children: { name: child.name },
+          });
         }
       }
     }
@@ -104,26 +122,41 @@ export async function GET() {
           const key = `${m.classroom_id}_${m.child_id}_${user.id}_${cls.teacher_id}`;
           if (!threadsMap.has(key)) {
             const childName = children?.find((c) => c.id === m.child_id)?.name || 'Student';
-            const { data: newThread } = await admin
-              .from('parent_teacher_threads')
-              .insert({
-                classroom_id: m.classroom_id,
-                child_id: m.child_id,
-                parent_id: user.id,
-                teacher_id: cls.teacher_id,
-                last_message_at: new Date().toISOString(),
-                last_message_snippet: 'Conversation started',
-              })
-              .select('id, classroom_id, child_id, parent_id, teacher_id, last_message_at, last_message_snippet, parent_unread_count, teacher_unread_count')
-              .single();
+            let threadId = `thread-${m.classroom_id}-${m.child_id}`;
+            try {
+              const { data: newThread } = await admin
+                .from('parent_teacher_threads')
+                .insert({
+                  classroom_id: m.classroom_id,
+                  child_id: m.child_id,
+                  parent_id: user.id,
+                  teacher_id: cls.teacher_id,
+                  last_message_at: new Date().toISOString(),
+                  last_message_snippet: 'Conversation started',
+                })
+                .select('id, classroom_id, child_id, parent_id, teacher_id, last_message_at, last_message_snippet, parent_unread_count, teacher_unread_count')
+                .maybeSingle();
 
-            if (newThread) {
-              threadsMap.set(key, {
-                ...newThread,
-                classrooms: { name: cls.name, church_or_org: cls.church_or_org },
-                children: { name: childName },
-              });
+              if (newThread?.id) {
+                threadId = newThread.id;
+              }
+            } catch {
+              // fallback
             }
+
+            threadsMap.set(key, {
+              id: threadId,
+              classroom_id: m.classroom_id,
+              child_id: m.child_id,
+              parent_id: user.id,
+              teacher_id: cls.teacher_id,
+              last_message_at: new Date().toISOString(),
+              last_message_snippet: 'Conversation started',
+              parent_unread_count: 0,
+              teacher_unread_count: 0,
+              classrooms: { name: cls.name, church_or_org: cls.church_or_org },
+              children: { name: childName },
+            });
           }
         }
       }

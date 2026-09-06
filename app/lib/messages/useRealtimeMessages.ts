@@ -256,6 +256,25 @@ export function useMessageThreads(currentRole: SenderRole = 'teacher') {
 }
 
 
+function getStoredMessages(id: string): ChatMessage[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(`lnl_chat_history_${id}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredMessages(id: string, msgs: ChatMessage[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`lnl_chat_history_${id}`, JSON.stringify(msgs));
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Hook for managing active chat messages in a single thread with live Supabase Realtime.
  */
@@ -273,16 +292,23 @@ export function useRealtimeMessages({
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const activeThreadRef = useRef<string | null>(threadId);
   activeThreadRef.current = threadId;
+  const channelRef = useRef<any>(null);
 
   // Load message history
   const loadMessages = useCallback(async (id: string) => {
     setLoading(true);
+    const local = getStoredMessages(id);
+    if (local.length > 0) {
+      setMessages(local);
+    }
+
     try {
       const res = await fetch(`/api/messages/threads/${id}`);
       if (res.ok) {
         const data = (await res.json()) as { messages?: ChatMessage[] };
-        if (Array.isArray(data.messages)) {
+        if (Array.isArray(data.messages) && data.messages.length > 0) {
           setMessages(data.messages);
+          saveStoredMessages(id, data.messages);
           setLoading(false);
           return;
         }
@@ -290,13 +316,13 @@ export function useRealtimeMessages({
       // Demo fallback
       if (DEMO_MESSAGES[id]) {
         setMessages(DEMO_MESSAGES[id]);
-      } else {
+      } else if (local.length === 0) {
         setMessages([]);
       }
     } catch {
       if (DEMO_MESSAGES[id]) {
         setMessages(DEMO_MESSAGES[id]);
-      } else {
+      } else if (local.length === 0) {
         setMessages([]);
       }
     } finally {
@@ -312,7 +338,7 @@ export function useRealtimeMessages({
     loadMessages(threadId);
   }, [threadId, loadMessages]);
 
-  // Supabase Realtime WebSocket subscription for live incoming messages
+  // Supabase Realtime WebSocket subscription for live incoming messages (both broadcast and postgres changes)
   useEffect(() => {
     if (!threadId) return;
 
@@ -321,6 +347,23 @@ export function useRealtimeMessages({
 
     const channel = supabase
       .channel(`thread:${threadId}`)
+      .on('broadcast', { event: 'new_message' }, (payload) => {
+        const newMsg = payload.payload as ChatMessage;
+        if (!newMsg || newMsg.threadId !== activeThreadRef.current) return;
+
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id || (m.id.startsWith('temp-') && m.body === newMsg.body))) {
+            return prev.map((m) => (m.body === newMsg.body ? newMsg : m));
+          }
+          const next = [...prev, newMsg];
+          saveStoredMessages(threadId, next);
+          return next;
+        });
+
+        if (newMsg.senderRole !== currentRole) {
+          playRewardSound('tap');
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -344,17 +387,16 @@ export function useRealtimeMessages({
           };
 
           setMessages((prev) => {
-            // Deduplicate if already added via optimistic update
             if (prev.some((m) => m.id === newMsg.id || (m.id.startsWith('temp-') && m.body === newMsg.body))) {
               return prev.map((m) => (m.id.startsWith('temp-') && m.body === newMsg.body ? newMsg : m));
             }
-            return [...prev, newMsg];
+            const next = [...prev, newMsg];
+            saveStoredMessages(threadId, next);
+            return next;
           });
 
-          // Play incoming sound if from the other party
           if (newMsg.senderRole !== currentRole) {
             playRewardSound('tap');
-            // Acknowledge read state
             fetch('/api/messages/read', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -367,13 +409,16 @@ export function useRealtimeMessages({
         setIsRealtimeActive(status === 'SUBSCRIBED');
       });
 
+    channelRef.current = channel;
+
     return () => {
       supabase.removeChannel(channel);
+      channelRef.current = null;
       setIsRealtimeActive(false);
     };
   }, [threadId, currentRole]);
 
-  // Send message function with optimistic update
+  // Send message function with optimistic update and instant broadcast
   const sendMessage = useCallback(
     async (body: string) => {
       if (!threadId || !body.trim()) return false;
@@ -391,8 +436,23 @@ export function useRealtimeMessages({
       };
 
       // Optimistic append
-      setMessages((prev) => [...prev, optimisticMsg]);
+      setMessages((prev) => {
+        const next = [...prev, optimisticMsg];
+        saveStoredMessages(threadId, next);
+        return next;
+      });
       playRewardSound('tap');
+
+      // Instant live WebSocket broadcast
+      try {
+        channelRef.current?.send({
+          type: 'broadcast',
+          event: 'new_message',
+          payload: optimisticMsg,
+        });
+      } catch {
+        // ignore
+      }
 
       try {
         const res = await fetch('/api/messages/send', {
@@ -404,20 +464,20 @@ export function useRealtimeMessages({
         if (res.ok) {
           const data = (await res.json()) as { message?: ChatMessage };
           if (data.message) {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === tempId ? data.message! : m))
-            );
+            setMessages((prev) => {
+              const next = prev.map((m) => (m.id === tempId ? data.message! : m));
+              saveStoredMessages(threadId, next);
+              return next;
+            });
             return true;
           }
         } else {
-          // If in demo mode (e.g. 401 unauthenticated), keep demo message in memory
           if (DEMO_MESSAGES[threadId]) {
             DEMO_MESSAGES[threadId].push(optimisticMsg);
           }
           return true;
         }
       } catch {
-        // Kept optimistically
         if (DEMO_MESSAGES[threadId]) {
           DEMO_MESSAGES[threadId].push(optimisticMsg);
         }
