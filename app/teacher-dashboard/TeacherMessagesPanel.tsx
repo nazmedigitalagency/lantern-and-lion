@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useMessageThreads, useRealtimeMessages } from '../lib/messages/useRealtimeMessages';
+import { createClient } from '../lib/supabase/client';
 import type { MessageThread } from '../lib/messages/types';
 
 function formatRelativeTime(dateStr: string): string {
@@ -47,6 +48,7 @@ export default function TeacherMessagesPanel({
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Connect code state
   const [copied, setCopied] = useState(false);
@@ -57,6 +59,17 @@ export default function TeacherMessagesPanel({
   const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    if (supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user?.id) {
+          setCurrentUserId(data.user.id);
+        }
+      });
+    }
+  }, []);
 
   // Auto-select initial thread or first available thread
   useEffect(() => {
@@ -83,6 +96,7 @@ export default function TeacherMessagesPanel({
   } = useRealtimeMessages({
     threadId: activeThread ? activeThread.id : null,
     currentRole: 'teacher',
+    currentUserId: currentUserId || undefined,
   });
 
   // Auto-scroll to bottom of messages
@@ -372,7 +386,11 @@ export default function TeacherMessagesPanel({
                   </div>
                 ) : (
                   messages.map((m) => {
-                    const isMe = m.senderRole === 'teacher';
+                    const isMe =
+                      m.senderRole === 'teacher' ||
+                      (Boolean(currentUserId) &&
+                        m.senderId === currentUserId &&
+                        activeThread.teacherId !== activeThread.parentId);
                     return (
                       <div key={m.id} className={`chat-bubble-row ${isMe ? 'row-sent' : 'row-received'}`}>
                         {!isMe && (
@@ -384,8 +402,8 @@ export default function TeacherMessagesPanel({
                           <div className="bubble-author">{isMe ? 'You (Teacher)' : activeThread.parentName}</div>
                           <div className="bubble-text">{m.body}</div>
                           <div className="bubble-meta">
-                            <span>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            {isMe && <span className="bubble-check">✓</span>}
+                            <span className="bubble-time">{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            {isMe && <span className="bubble-check" title="Delivered">✓</span>}
                           </div>
                         </div>
                       </div>

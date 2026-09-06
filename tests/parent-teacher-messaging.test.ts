@@ -417,6 +417,117 @@ describe('Feature: Real-Time Parent-Teacher Messaging', () => {
     assert.equal(anonThreads.length, 1);
     assert.equal(anonThreads[0].otherPartyName, 'Teacher Grace');
   });
+
+  it('prioritizes caller explicit senderRole in send message resolution', () => {
+    function resolveSenderRole({
+      requestedSenderRole,
+      threadTeacherId,
+      threadParentId,
+      userId,
+      userConnectRole,
+    }: {
+      requestedSenderRole?: 'teacher' | 'parent';
+      threadTeacherId?: string;
+      threadParentId?: string;
+      userId: string;
+      userConnectRole?: string;
+    }): 'teacher' | 'parent' {
+      if (requestedSenderRole) return requestedSenderRole;
+      if (threadTeacherId === userId && threadParentId !== userId) return 'teacher';
+      if (userConnectRole === 'teacher') return 'teacher';
+      return 'parent';
+    }
+
+    // Teacher sends from teacher dashboard: explicit role honored even if metadata says parent
+    const role1 = resolveSenderRole({
+      requestedSenderRole: 'teacher',
+      userId: 'user-123',
+      userConnectRole: 'parent',
+    });
+    assert.equal(role1, 'teacher', 'Teacher dashboard explicit role must take priority over user_metadata.connect_role');
+
+    // Parent sends from parent dashboard: explicit role honored even if metadata says teacher
+    const role2 = resolveSenderRole({
+      requestedSenderRole: 'parent',
+      userId: 'user-123',
+      userConnectRole: 'teacher',
+    });
+    assert.equal(role2, 'parent', 'Parent dashboard explicit role must take priority');
+
+    // Self-connected testing (teacherId === parentId === userId) with explicit role
+    const role3 = resolveSenderRole({
+      requestedSenderRole: 'teacher',
+      threadTeacherId: 'user-123',
+      threadParentId: 'user-123',
+      userId: 'user-123',
+    });
+    assert.equal(role3, 'teacher', 'Self-connected testing must preserve caller dashboard role');
+  });
+
+  it('evaluates isMe correctly so sent messages render on the right with proper author labels', () => {
+    function computeIsMe(
+      message: ChatMessage,
+      dashboardRole: 'teacher' | 'parent',
+      currentUserId: string | null,
+      thread: { teacherId?: string; parentId?: string }
+    ): { isMe: boolean; authorLabel: string; align: 'right' | 'left' } {
+      const isMe =
+        dashboardRole === 'teacher'
+          ? message.senderRole === 'teacher' || (Boolean(currentUserId) && message.senderId === currentUserId && thread.teacherId !== thread.parentId)
+          : message.senderRole === 'parent' || (Boolean(currentUserId) && message.senderId === currentUserId && thread.teacherId !== thread.parentId);
+
+      const authorLabel = isMe
+        ? dashboardRole === 'teacher' ? 'You (Teacher)' : 'You (Parent)'
+        : dashboardRole === 'teacher' ? 'Jordan Adeyemi (Parent)' : 'Teacher Grace';
+
+      const align = isMe ? 'right' : 'left';
+      return { isMe, authorLabel, align };
+    }
+
+    const teacherMsg: ChatMessage = {
+      id: 'm1',
+      threadId: 't1',
+      senderId: 'user-teacher',
+      senderRole: 'teacher',
+      body: 'Welcome to Sunday class!',
+      read: false,
+      createdAt: '2026-09-06T10:00:00Z',
+    };
+
+    const parentMsg: ChatMessage = {
+      id: 'm2',
+      threadId: 't1',
+      senderId: 'user-parent',
+      senderRole: 'parent',
+      body: 'Thank you teacher!',
+      read: false,
+      createdAt: '2026-09-06T10:05:00Z',
+    };
+
+    const thread = { teacherId: 'user-teacher', parentId: 'user-parent' };
+
+    // From Teacher Dashboard perspective:
+    const teacherViewSent = computeIsMe(teacherMsg, 'teacher', 'user-teacher', thread);
+    assert.equal(teacherViewSent.isMe, true);
+    assert.equal(teacherViewSent.authorLabel, 'You (Teacher)');
+    assert.equal(teacherViewSent.align, 'right');
+
+    const teacherViewReceived = computeIsMe(parentMsg, 'teacher', 'user-teacher', thread);
+    assert.equal(teacherViewReceived.isMe, false);
+    assert.equal(teacherViewReceived.authorLabel, 'Jordan Adeyemi (Parent)');
+    assert.equal(teacherViewReceived.align, 'left');
+
+    // From Parent Dashboard perspective:
+    const parentViewSent = computeIsMe(parentMsg, 'parent', 'user-parent', thread);
+    assert.equal(parentViewSent.isMe, true);
+    assert.equal(parentViewSent.authorLabel, 'You (Parent)');
+    assert.equal(parentViewSent.align, 'right');
+
+    const parentViewReceived = computeIsMe(teacherMsg, 'parent', 'user-parent', thread);
+    assert.equal(parentViewReceived.isMe, false);
+    assert.equal(parentViewReceived.authorLabel, 'Teacher Grace');
+    assert.equal(parentViewReceived.align, 'left');
+  });
 });
 
 

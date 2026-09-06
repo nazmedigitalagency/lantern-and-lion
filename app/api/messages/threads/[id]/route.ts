@@ -47,15 +47,25 @@ export async function GET(
       // Table may not exist yet
     }
 
-    const messages: ChatMessage[] = (messagesData || []).map((m) => ({
-      id: m.id,
-      threadId: m.thread_id,
-      senderId: m.sender_id,
-      senderRole: m.sender_role as 'parent' | 'teacher',
-      body: m.body,
-      read: m.read,
-      createdAt: m.created_at,
-    }));
+    const messages: ChatMessage[] = (messagesData || []).map((m) => {
+      let role = m.sender_role as 'parent' | 'teacher';
+      if (thread && thread.teacher_id && thread.parent_id && thread.teacher_id !== thread.parent_id) {
+        if (m.sender_id === thread.teacher_id) {
+          role = 'teacher';
+        } else if (m.sender_id === thread.parent_id) {
+          role = 'parent';
+        }
+      }
+      return {
+        id: m.id,
+        threadId: m.thread_id,
+        senderId: m.sender_id,
+        senderRole: role,
+        body: m.body,
+        read: m.read,
+        createdAt: m.created_at,
+      };
+    });
 
     // 3. Mark unread messages as read for this caller if DB exists
     if (thread) {

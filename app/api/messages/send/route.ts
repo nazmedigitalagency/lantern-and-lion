@@ -8,6 +8,7 @@ const SendMessageSchema = z.object({
   threadId: z.string().trim().min(1).optional(),
   classroomId: z.string().trim().min(1).optional(),
   childId: z.string().trim().min(1).optional(),
+  senderRole: z.enum(['teacher', 'parent']).optional(),
   body: z.string().trim().min(1, 'Message cannot be empty').max(2000, 'Message is too long (max 2000 characters)'),
 });
 
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Invalid message payload' }, { status: 400 });
   }
 
-  const { threadId, classroomId, childId, body } = parsed.data;
+  const { threadId, classroomId, childId, body, senderRole: requestedSenderRole } = parsed.data;
 
   try {
     const admin = createServerAdminClient();
@@ -56,9 +57,11 @@ export async function POST(req: NextRequest) {
       // Table may not exist yet
     }
 
-    // Determine sender role
+    // Determine sender role - prioritize explicit senderRole from caller context
     let senderRole: 'parent' | 'teacher' = 'parent';
-    if (thread?.teacher_id === user.id) {
+    if (requestedSenderRole) {
+      senderRole = requestedSenderRole;
+    } else if (thread?.teacher_id === user.id && thread?.parent_id !== user.id) {
       senderRole = 'teacher';
     } else if (user.user_metadata?.connect_role === 'teacher') {
       senderRole = 'teacher';
@@ -68,6 +71,19 @@ export async function POST(req: NextRequest) {
         const { data: teacherClassrooms } = await admin.from('classrooms').select('id').eq('teacher_id', user.id).limit(1);
         if (teacherClassrooms && teacherClassrooms.length > 0) {
           senderRole = 'teacher';
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // Keep thread teacher_id / parent_id consistent if missing
+    if (thread) {
+      try {
+        if (senderRole === 'teacher' && !thread.teacher_id) {
+          await admin.from('parent_teacher_threads').update({ teacher_id: user.id }).eq('id', targetThreadId);
+        } else if (senderRole === 'parent' && !thread.parent_id) {
+          await admin.from('parent_teacher_threads').update({ parent_id: user.id }).eq('id', targetThreadId);
         }
       } catch {
         // ignore

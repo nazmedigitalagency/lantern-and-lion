@@ -519,6 +519,20 @@ export function useRealtimeMessages({
     };
   }, [threadId, currentRole]);
 
+  const [resolvedUserId, setResolvedUserId] = useState<string | undefined>(currentUserId);
+
+  useEffect(() => {
+    if (resolvedUserId) return;
+    const supabase = createClient();
+    if (supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user?.id) {
+          setResolvedUserId(data.user.id);
+        }
+      });
+    }
+  }, [resolvedUserId]);
+
   // Send message function with optimistic update and instant broadcast
   const sendMessage = useCallback(
     async (body: string) => {
@@ -529,7 +543,7 @@ export function useRealtimeMessages({
       const optimisticMsg: ChatMessage = {
         id: tempId,
         threadId,
-        senderId: currentUserId || 'caller',
+        senderId: currentUserId || resolvedUserId || 'caller',
         senderRole: currentRole,
         body: trimmed,
         read: false,
@@ -570,14 +584,22 @@ export function useRealtimeMessages({
         const res = await fetch('/api/messages/send', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ threadId, body: trimmed }),
+          body: JSON.stringify({
+            threadId,
+            body: trimmed,
+            senderRole: currentRole,
+          }),
         });
 
         if (res.ok) {
           const data = (await res.json()) as { message?: ChatMessage };
           if (data.message) {
+            const confirmedMsg: ChatMessage = {
+              ...data.message,
+              senderRole: data.message.senderRole || currentRole,
+            };
             setMessages((prev) => {
-              const next = prev.map((m) => (m.id === tempId ? data.message! : m));
+              const next = prev.map((m) => (m.id === tempId ? confirmedMsg : m));
               saveStoredMessages(threadId, next);
               return next;
             });
@@ -597,7 +619,7 @@ export function useRealtimeMessages({
       }
       return false;
     },
-    [threadId, currentRole, currentUserId]
+    [threadId, currentRole, currentUserId, resolvedUserId]
   );
 
   return {
