@@ -414,7 +414,6 @@ export default function ParentMessagesPanel({
 
               {/* Quick Starters */}
               <div className="saas-quick-starters-bar">
-                <span className="starters-label">💡 Quick Starters:</span>
                 <div className="starters-scroll">
                   {parentStarters.map((s, idx) => (
                     <button

@@ -12112,7 +12112,9 @@ footer a:hover{color:var(--gold)}
 /* Two-Pane SaaS Container */
 .saas-chat-panes {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  min-width: 0;
+  max-width: 100%;
   height: 680px;
   max-height: calc(100vh - 240px);
   min-height: 520px;
@@ -12670,30 +12672,55 @@ footer a:hover{color:var(--gold)}
 .saas-quick-starters-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 24px;
+  padding: 8px 18px;
   background: #f8fafc;
   border-top: 1px solid #f1f5f9;
   overflow: hidden;
 }
 
+.starters-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 2px 0;
+  width: 100%;
+}
+
+.starters-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.starters-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.starters-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
 .starter-chip {
-  padding: 6px 12px;
-  border-radius: 999px;
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 9999px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
   color: #334155;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.12s ease;
+  transition: all 0.14s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .starter-chip:hover {
   background: #eff6ff;
   border-color: #93c5fd;
   color: #1d4ed8;
+  transform: translateY(-1px);
 }
 
 /* Chat Input Bar */
@@ -12880,25 +12907,39 @@ footer a:hover{color:var(--gold)}
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Sidebar Layout & Section Grouping ── */
+.parent-dashboard-page,
+.teacher-dashboard {
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+}
+
 .teacher-sidebar,
 .parent-sidebar {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+  flex: 0 0 260px !important;
   background: #091a2e !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-sizing: border-box !important;
+  padding: 24px 16px !important;
 }
 
 .teacher-sidebar-sections,
 .parent-sidebar-sections,
 .teacher-mobile-drawer-nav {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  margin-top: 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
 }
 
 .sidebar-section-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 }
 
 .sidebar-section-title {
@@ -12908,43 +12949,44 @@ footer a:hover{color:var(--gold)}
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: #64748b;
-  padding: 4px 14px 6px;
+  padding: 4px 12px 6px;
   user-select: none;
 }
 
 .sidebar-section-links {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 }
 
 .teacher-sidebar-sections button,
 .parent-sidebar-sections button,
 .teacher-mobile-drawer-nav button {
-  width: 100%;
-  min-height: 44px;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 0;
-  border-radius: 9999px;
-  background: transparent;
-  color: #94a3b8;
-  font-family: var(--font-nunito), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 13.5px;
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 44px !important;
+  padding: 9px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  font-family: var(--font-nunito), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
 }
 
 .teacher-sidebar-sections button:hover,
 .parent-sidebar-sections button:hover,
 .teacher-mobile-drawer-nav button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f1f5f9 !important;
 }
 
 /* Active Pill Style Matching Reference Image */
@@ -12954,43 +12996,65 @@ footer a:hover{color:var(--gold)}
   background: #2563eb !important;
   color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38) !important;
-  font-weight: 800;
+  font-weight: 800 !important;
+}
+
+/* Reset any inherited borders or fixed box sizing on child spans */
+.teacher-sidebar nav button > span,
+.parent-sidebar nav button > span,
+.teacher-sidebar-sections button > span,
+.parent-sidebar-sections button > span,
+.teacher-mobile-drawer-nav button > span {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  opacity: 1 !important;
 }
 
 .sidebar-nav-icon {
-  font-size: 15px;
-  line-height: 1;
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  width: 22px !important;
+  height: 22px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 .sidebar-nav-label {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: inherit !important;
+  width: auto !important;
+  height: auto !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 /* Rounded Pill Badges */
 .sidebar-badge {
-  margin-left: auto;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
-  flex-shrink: 0;
+  margin-left: auto !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 6px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #cbd5e1 !important;
+  flex-shrink: 0 !important;
+  border: none !important;
 }
 
 .teacher-sidebar-sections button.active .sidebar-badge,
@@ -12998,12 +13062,54 @@ footer a:hover{color:var(--gold)}
 .teacher-mobile-drawer-nav button.active .sidebar-badge {
   background: #ffffff !important;
   color: #2563eb !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .sidebar-badge.warning {
   background: #ef4444 !important;
   color: #ffffff !important;
+}
+
+.parent-sidebar-bottom,
+.teacher-sidebar > div:last-child {
+  margin-top: auto !important;
+  padding: 20px 8px 0 !important;
+  display: grid !important;
+  gap: 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.parent-sidebar-bottom a,
+.teacher-sidebar > div:last-child a,
+.teacher-sidebar > div:last-child button {
+  color: rgba(255, 255, 255, 0.65) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-decoration: underline !important;
+  transition: color 140ms ease !important;
+}
+
+.parent-sidebar-bottom a:hover,
+.teacher-sidebar > div:last-child a:hover,
+.teacher-sidebar > div:last-child button:hover {
+  color: #ffffff !important;
+}
+
+@media (max-width: 950px) {
+  .teacher-dashboard {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .parent-dashboard-page {
+    grid-template-columns: 1fr !important;
+  }
+  .parent-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 
 /* ── Topbar Search Wrap ── */

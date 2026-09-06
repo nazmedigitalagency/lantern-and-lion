@@ -406,7 +406,6 @@ export default function TeacherMessagesPanel({
 
               {/* Quick Starters */}
               <div className="saas-quick-starters-bar">
-                <span className="starters-label">💡 Quick Starters:</span>
                 <div className="starters-scroll">
                   {QUICK_STARTERS.map((s, idx) => (
                     <button
