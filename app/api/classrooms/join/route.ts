@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getChildSessionFromCookies } from '../../../lib/child-session';
 import { createServerAdminClient } from '../../../lib/supabase/server';
+import { checkRateLimit, getClientIp } from '../../../lib/rate-limit';
 
 const JoinSchema = z.object({ code: z.string().trim().toUpperCase().min(4).max(8) });
 
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(`class-join:${clientIp}`, { maxRequests: 15, windowSeconds: 60 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please wait a moment.' },
+      { status: 429, headers: { 'Retry-After': String(rateLimit.resetSeconds) } }
+    );
+  }
+
   const session = await getChildSessionFromCookies();
   if (!session) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401 });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
+import { checkRateLimit, getClientIp } from '../../../lib/rate-limit';
 import {
   ensureConnectCode,
   normalizeConnectCode,
@@ -125,6 +126,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(`connect-code:${clientIp}`, { maxRequests: 15, windowSeconds: 60 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please wait a moment.' },
+      { status: 429, headers: { 'Retry-After': String(rateLimit.resetSeconds) } }
+    );
+  }
+
   const rawBody = await req.json().catch(() => null);
   const parsed = ConnectCodeBodySchema.safeParse(rawBody);
   if (!parsed.success) {
@@ -318,7 +328,7 @@ export async function POST(req: NextRequest) {
       const { data: cls } = await admin
         .from('classrooms')
         .select('id, name, teacher_id, church_or_org')
-        .or(`code.eq.${cleanCode},code.eq.${code}`)
+        .in('code', [cleanCode, code])
         .maybeSingle();
 
       if (cls) {

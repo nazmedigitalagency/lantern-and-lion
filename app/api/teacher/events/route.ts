@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
+import { sanitizeText } from '../../../lib/sanitize';
 
 const CreateEventSchema = z.object({
   classroomId: z.string().uuid(),
@@ -72,12 +73,12 @@ export async function POST(req: NextRequest) {
     .insert({
       teacher_id: user.id,
       classroom_id: parsed.data.classroomId,
-      title: parsed.data.title,
+      title: sanitizeText(parsed.data.title, 120),
       event_type: parsed.data.eventType,
       event_date: parsed.data.eventDate,
       start_time: parsed.data.startTime || null,
       end_time: parsed.data.endTime || null,
-      description: parsed.data.description || null,
+      description: parsed.data.description ? sanitizeText(parsed.data.description, 1000) : null,
     })
     .select()
     .single();

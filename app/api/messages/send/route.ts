@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
+import { sanitizeText } from '../../../lib/sanitize';
 import type { ChatMessage } from '../../../lib/messages/types';
 
 const SendMessageSchema = z.object({
@@ -25,6 +26,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { threadId, classroomId, childId, body, senderRole: requestedSenderRole } = parsed.data;
+  const cleanBody = sanitizeText(body);
+  if (!cleanBody) {
+    return NextResponse.json({ error: 'Message cannot be empty' }, { status: 400 });
+  }
 
   try {
     const admin = createServerAdminClient();
@@ -99,7 +104,7 @@ export async function POST(req: NextRequest) {
           thread_id: targetThreadId,
           sender_id: user.id,
           sender_role: senderRole,
-          body,
+          body: cleanBody,
           read: false,
         })
         .select('*')

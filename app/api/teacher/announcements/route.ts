@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../../lib/supabase/server';
+import { sanitizeText } from '../../../lib/sanitize';
 import { notifyChildOnce, notifyOnce } from '../../../lib/activity/server';
 
 const CreateAnnouncementSchema = z.object({
@@ -74,8 +75,8 @@ export async function POST(req: NextRequest) {
     .insert({
       teacher_id: user.id,
       classroom_id: parsed.data.classroomId,
-      title: parsed.data.title,
-      message: parsed.data.message,
+      title: sanitizeText(parsed.data.title, 120),
+      message: sanitizeText(parsed.data.message, 2000),
       event_date: parsed.data.eventDate || null,
     })
     .select()

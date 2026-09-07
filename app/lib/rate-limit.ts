@@ -90,3 +90,68 @@ export function checkRateLimit(
     resetSeconds: Math.max(1, resetSeconds),
   };
 }
+
+interface LockoutRecord {
+  failedCount: number;
+  lockoutUntil: number;
+}
+
+const lockoutMap = new Map<string, LockoutRecord>();
+
+/**
+ * Checks if an identifier is currently locked out from login attempts.
+ */
+export function isLockedOut(identifier: string): { locked: boolean; resetSeconds: number } {
+  const now = Date.now();
+  const record = lockoutMap.get(identifier);
+  if (!record) return { locked: false, resetSeconds: 0 };
+
+  if (record.lockoutUntil > now) {
+    const resetSeconds = Math.ceil((record.lockoutUntil - now) / 1000);
+    return { locked: true, resetSeconds: Math.max(1, resetSeconds) };
+  }
+
+  // Lockout expired
+  if (record.lockoutUntil !== 0) {
+    lockoutMap.delete(identifier);
+  }
+
+  return { locked: false, resetSeconds: 0 };
+}
+
+/**
+ * Records a failed credential attempt and locks out if threshold is reached.
+ */
+export function recordFailedAttempt(
+  identifier: string,
+  options: { maxAttempts: number; lockoutSeconds: number } = { maxAttempts: 5, lockoutSeconds: 900 }
+): { locked: boolean; remainingAttempts: number; lockoutResetSeconds: number } {
+  const now = Date.now();
+  const record = lockoutMap.get(identifier) || { failedCount: 0, lockoutUntil: 0 };
+
+  record.failedCount += 1;
+  if (record.failedCount >= options.maxAttempts) {
+    record.lockoutUntil = now + options.lockoutSeconds * 1000;
+    lockoutMap.set(identifier, record);
+    return {
+      locked: true,
+      remainingAttempts: 0,
+      lockoutResetSeconds: options.lockoutSeconds,
+    };
+  }
+
+  lockoutMap.set(identifier, record);
+  return {
+    locked: false,
+    remainingAttempts: Math.max(0, options.maxAttempts - record.failedCount),
+    lockoutResetSeconds: 0,
+  };
+}
+
+/**
+ * Resets failed attempts after a successful authentication.
+ */
+export function resetFailedAttempts(identifier: string): void {
+  lockoutMap.delete(identifier);
+}
+

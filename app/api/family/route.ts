@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '../../lib/supabase/route-client';
 import { createServerAdminClient } from '../../lib/supabase/server';
+import { hashPin } from '../../lib/crypto-pin';
 
 const ChildSchema = z.object({
   name: z.string().trim().min(1).max(48),
@@ -61,10 +62,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `The username "${child.username}" is already taken. Please choose another.` }, { status: 409 });
     }
 
+    const hashedPin = await hashPin(child.pin);
     if (existingUsername) {
-      await admin.from('children').update({ name: child.name, age: child.age, avatar: child.avatar, pin: child.pin }).eq('id', existingUsername.id);
+      await admin.from('children').update({ name: child.name, age: child.age, avatar: child.avatar, pin: hashedPin }).eq('id', existingUsername.id);
     } else {
-      await admin.from('children').insert({ family_id: family.id, name: child.name, username: child.username, age: child.age, avatar: child.avatar, pin: child.pin });
+      await admin.from('children').insert({ family_id: family.id, name: child.name, username: child.username, age: child.age, avatar: child.avatar, pin: hashedPin });
     }
   }
 
