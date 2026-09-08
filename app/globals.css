@@ -13278,15 +13278,15 @@ footer a:hover{color:var(--gold)}
 /* ── Sidebar Layout & Section Grouping ── */
 .parent-dashboard-page,
 .teacher-dashboard {
-  grid-template-columns: 260px minmax(0, 1fr) !important;
+  grid-template-columns: 280px minmax(0, 1fr) !important;
 }
 
 .teacher-sidebar,
 .parent-sidebar {
-  width: 260px !important;
-  min-width: 260px !important;
-  max-width: 260px !important;
-  flex: 0 0 260px !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  flex: 0 0 280px !important;
   background: #091a2e !important;
   border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-sizing: border-box !important;
@@ -13308,6 +13308,8 @@ footer a:hover{color:var(--gold)}
   padding: 4px 6px 16px !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   text-decoration: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .teacher-brand img,
@@ -13343,13 +13345,14 @@ footer a:hover{color:var(--gold)}
 .teacher-mobile-drawer-account {
   margin-top: 14px !important;
   padding: 10px 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   border-radius: 12px !important;
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
-  box-sizing: border-box !important;
   transition: background 140ms ease !important;
 }
 
@@ -13435,29 +13438,47 @@ footer a:hover{color:var(--gold)}
   margin-left: auto !important;
 }
 
-/* Nav sections */
+/* Nav sections - Full-width stretching, override global nav margin-left:auto */
+.teacher-sidebar nav,
+.parent-sidebar nav,
+nav.teacher-sidebar-sections,
+nav.parent-sidebar-sections,
 .teacher-sidebar-sections,
 .parent-sidebar-sections,
 .teacher-mobile-drawer-nav {
-  margin-top: 14px !important;
+  margin: 16px 0 0 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
-  border: 0 !important;
-  background: transparent !important;
+  align-items: stretch !important;
+  align-self: stretch !important;
   padding: 0 !important;
-  flex: 1 !important;
+  gap: 12px !important;
+  border: none !important;
+  background: transparent !important;
+  flex: 1 0 auto !important;
+  box-sizing: border-box !important;
 }
 
 .sidebar-section-group {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
+  align-items: stretch !important;
+  align-self: stretch !important;
   gap: 3px !important;
+  box-sizing: border-box !important;
 }
 
 .sidebar-section-group + .sidebar-section-group {
-  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
-  padding-top: 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  padding-top: 12px !important;
   margin-top: 6px !important;
 }
 
@@ -13465,27 +13486,40 @@ footer a:hover{color:var(--gold)}
   display: block !important;
   font-size: 11px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.05em !important;
+  letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
   color: #64748b !important;
-  padding: 4px 10px 4px !important;
+  padding: 4px 12px !important;
   user-select: none !important;
   line-height: 1.2 !important;
+  text-align: left !important;
 }
 
 .sidebar-section-links {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
+  align-items: stretch !important;
+  align-self: stretch !important;
+  gap: 3px !important;
+  box-sizing: border-box !important;
 }
 
-/* Menu items - Left aligned, stretched card */
+/* Menu items - Full-width stretched card with left-aligned icon and label */
+.teacher-sidebar nav button,
+.parent-sidebar nav button,
 .teacher-sidebar-sections button,
 .parent-sidebar-sections button,
 .teacher-mobile-drawer-nav button {
   width: 100% !important;
-  min-height: 40px !important;
-  padding: 9px 12px !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+  min-height: 42px !important;
+  padding: 10px 12px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
@@ -13500,11 +13534,13 @@ footer a:hover{color:var(--gold)}
   text-align: left !important;
   cursor: pointer !important;
   transition: all 140ms ease !important;
-  box-sizing: border-box !important;
   white-space: nowrap !important;
   outline: none !important;
+  margin: 0 !important;
 }
 
+.teacher-sidebar nav button:hover,
+.parent-sidebar nav button:hover,
 .teacher-sidebar-sections button:hover,
 .parent-sidebar-sections button:hover,
 .teacher-mobile-drawer-nav button:hover {
@@ -13513,6 +13549,8 @@ footer a:hover{color:var(--gold)}
 }
 
 /* Active Stretched Card Style Matching Reference */
+.teacher-sidebar nav button.active,
+.parent-sidebar nav button.active,
 .teacher-sidebar-sections button.active,
 .parent-sidebar-sections button.active,
 .teacher-mobile-drawer-nav button.active {
@@ -13532,16 +13570,24 @@ footer a:hover{color:var(--gold)}
   border-radius: 0 !important;
   background: transparent !important;
   opacity: 1 !important;
+  place-items: unset !important;
 }
 
-.sidebar-nav-icon {
+.sidebar-nav-icon,
+.teacher-sidebar nav button > span.sidebar-nav-icon,
+.parent-sidebar nav button > span.sidebar-nav-icon,
+.teacher-sidebar-sections button > span.sidebar-nav-icon,
+.parent-sidebar-sections button > span.sidebar-nav-icon,
+.teacher-mobile-drawer-nav button > span.sidebar-nav-icon {
   width: 20px !important;
   height: 20px !important;
-  display: inline-flex !important;
+  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
   color: inherit !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 .sidebar-nav-icon svg {
@@ -13551,8 +13597,17 @@ footer a:hover{color:var(--gold)}
   stroke: currentColor !important;
 }
 
-.sidebar-nav-label {
-  flex: 1 !important;
+.sidebar-nav-label,
+.teacher-sidebar nav button > span.sidebar-nav-label,
+.parent-sidebar nav button > span.sidebar-nav-label,
+.teacher-sidebar-sections button > span.sidebar-nav-label,
+.parent-sidebar-sections button > span.sidebar-nav-label,
+.teacher-mobile-drawer-nav button > span.sidebar-nav-label {
+  display: block !important;
+  text-align: left !important;
+  width: auto !important;
+  height: auto !important;
+  flex: 1 1 auto !important;
   min-width: 0 !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -13560,8 +13615,9 @@ footer a:hover{color:var(--gold)}
   font-size: 13.5px !important;
   font-weight: inherit !important;
   color: inherit !important;
-  text-align: left !important;
   line-height: 1.2 !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 /* Rounded Pill Badges */
@@ -13582,6 +13638,8 @@ footer a:hover{color:var(--gold)}
   border: none !important;
 }
 
+.teacher-sidebar nav button.active .sidebar-badge,
+.parent-sidebar nav button.active .sidebar-badge,
 .teacher-sidebar-sections button.active .sidebar-badge,
 .parent-sidebar-sections button.active .sidebar-badge,
 .teacher-mobile-drawer-nav button.active .sidebar-badge {
@@ -13600,9 +13658,12 @@ footer a:hover{color:var(--gold)}
 .teacher-sidebar-bottom,
 .teacher-sidebar > div:last-child {
   margin-top: auto !important;
-  padding: 16px 4px 0 !important;
+  padding: 16px 0 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
+  align-items: stretch !important;
   gap: 4px !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
@@ -13613,8 +13674,9 @@ footer a:hover{color:var(--gold)}
 .teacher-sidebar > div:last-child a,
 .teacher-sidebar > div:last-child button {
   width: 100% !important;
-  min-height: 36px !important;
-  padding: 8px 10px !important;
+  box-sizing: border-box !important;
+  min-height: 38px !important;
+  padding: 8px 12px !important;
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
@@ -13629,7 +13691,6 @@ footer a:hover{color:var(--gold)}
   cursor: pointer !important;
   text-align: left !important;
   font-family: inherit !important;
-  box-sizing: border-box !important;
 }
 
 .parent-sidebar-bottom a:hover,
@@ -13641,15 +13702,113 @@ footer a:hover{color:var(--gold)}
   color: #ffffff !important;
 }
 
+/* ── Dual Independent Scrolling on Desktop ── */
+@media (min-width: 951px) {
+  .teacher-dashboard {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  .teacher-sidebar {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .teacher-main {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+}
+
+@media (min-width: 901px) {
+  .parent-dashboard-page {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  .parent-sidebar {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .parent-dashboard-main {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+}
+
+/* Sleek custom scrollbars for sidebars and dashboard content */
+.teacher-sidebar::-webkit-scrollbar,
+.parent-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.teacher-sidebar::-webkit-scrollbar-track,
+.parent-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.teacher-sidebar::-webkit-scrollbar-thumb,
+.parent-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.teacher-sidebar::-webkit-scrollbar-thumb:hover,
+.parent-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.teacher-main::-webkit-scrollbar,
+.parent-dashboard-main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.teacher-main::-webkit-scrollbar-track,
+.parent-dashboard-main::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.teacher-main::-webkit-scrollbar-thumb,
+.parent-dashboard-main::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.teacher-main::-webkit-scrollbar-thumb:hover,
+.parent-dashboard-main::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 @media (max-width: 950px) {
   .teacher-dashboard {
     grid-template-columns: 1fr !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
 
 @media (max-width: 900px) {
   .parent-dashboard-page {
     grid-template-columns: 1fr !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
   .parent-sidebar {
     width: 100% !important;
