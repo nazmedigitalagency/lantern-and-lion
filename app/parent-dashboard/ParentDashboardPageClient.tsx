@@ -19,6 +19,7 @@ import { loadWorldContext } from '../adventure/storage';
 import { signOutOfPersona } from '../lib/session';
 import type { ParentChildClassroomInfo } from '../api/family/classrooms/route';
 import ParentMessagesPanel from './ParentMessagesPanel';
+import { SidebarNavIcon } from '../components/SidebarNavIcons';
 import type {
   ParentAssignmentItem,
   ParentAssignmentStatus,
@@ -912,27 +913,67 @@ export default function ParentDashboardPage() {
     <main className="parent-dashboard-page">
       <aside className="parent-sidebar">
         <Link className="parent-dashboard-brand" href="/">
-          <Image src="/lantern-lion-logo.png" alt="" width={58} height={58} priority />
+          <Image src="/lantern-lion-logo.png" alt="" width={38} height={38} priority />
           <span><strong>Lantern &amp; Lion</strong><small>Parent space</small></span>
         </Link>
+
+        <div className="parent-sidebar-account">
+          <div className="parent-sidebar-user">
+            <span className="parent-sidebar-avatar" aria-hidden="true">
+              {parentName[0]?.toUpperCase() || 'P'}
+            </span>
+            <div className="parent-sidebar-user-details">
+              <strong className="parent-sidebar-name" title={family.familyName || parentName}>
+                {family.familyName || parentName}
+              </strong>
+              <span className="parent-sidebar-sub">
+                {children.length} {children.length === 1 ? 'child enrolled' : 'children enrolled'}
+              </span>
+            </div>
+            <span className="parent-sidebar-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+            </span>
+          </div>
+        </div>
+
         <nav aria-label="Parent dashboard" className="parent-sidebar-sections">
           <div className="sidebar-section-group">
-            <span className="sidebar-section-title">MENU</span>
+            <span className="sidebar-section-title">Main Menu</span>
             <div className="sidebar-section-links">
-              <button aria-pressed={page === 'overview'} className={page === 'overview' ? 'active' : ''} onClick={() => setPage('overview')}>
-                <span className="sidebar-nav-icon">🏠</span>
+              <button
+                type="button"
+                aria-pressed={page === 'overview'}
+                className={page === 'overview' ? 'active' : ''}
+                onClick={() => setPage('overview')}
+              >
+                <span className="sidebar-nav-icon"><SidebarNavIcon name="overview" /></span>
                 <span className="sidebar-nav-label">Home</span>
               </button>
-              <button aria-pressed={page === 'children'} className={page === 'children' ? 'active' : ''} onClick={() => setPage('children')}>
-                <span className="sidebar-nav-icon">🧒</span>
+              <button
+                type="button"
+                aria-pressed={page === 'children'}
+                className={page === 'children' ? 'active' : ''}
+                onClick={() => setPage('children')}
+              >
+                <span className="sidebar-nav-icon"><SidebarNavIcon name="students" /></span>
                 <span className="sidebar-nav-label">Children</span>
               </button>
-              <button aria-pressed={page === 'assignments'} className={page === 'assignments' ? 'active' : ''} onClick={() => setPage('assignments')}>
-                <span className="sidebar-nav-icon">📋</span>
+              <button
+                type="button"
+                aria-pressed={page === 'assignments'}
+                className={page === 'assignments' ? 'active' : ''}
+                onClick={() => setPage('assignments')}
+              >
+                <span className="sidebar-nav-icon"><SidebarNavIcon name="assignments" /></span>
                 <span className="sidebar-nav-label">Assignments</span>
               </button>
-              <button aria-pressed={page === 'messages'} className={page === 'messages' ? 'active' : ''} onClick={() => setPage('messages')}>
-                <span className="sidebar-nav-icon">💬</span>
+              <button
+                type="button"
+                aria-pressed={page === 'messages'}
+                className={page === 'messages' ? 'active' : ''}
+                onClick={() => setPage('messages')}
+              >
+                <span className="sidebar-nav-icon"><SidebarNavIcon name="messages" /></span>
                 <span className="sidebar-nav-label">Messages</span>
                 <b className="sidebar-badge">1</b>
               </button>
@@ -940,24 +981,39 @@ export default function ParentDashboardPage() {
           </div>
 
           <div className="sidebar-section-group">
-            <span className="sidebar-section-title">COMMUNITY &amp; SETTINGS</span>
+            <span className="sidebar-section-title">Community &amp; Settings</span>
             <div className="sidebar-section-links">
-              <button aria-pressed={page === 'teachers'} className={page === 'teachers' ? 'active' : ''} onClick={() => setPage('teachers')}>
-                <span className="sidebar-nav-icon">🏛️</span>
+              <button
+                type="button"
+                aria-pressed={page === 'teachers'}
+                className={page === 'teachers' ? 'active' : ''}
+                onClick={() => setPage('teachers')}
+              >
+                <span className="sidebar-nav-icon"><SidebarNavIcon name="classes" /></span>
                 <span className="sidebar-nav-label">Teachers &amp; Classes</span>
               </button>
-              <button aria-pressed={page === 'settings'} className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}>
-                <span className="sidebar-nav-icon">⚙️</span>
+              <button
+                type="button"
+                aria-pressed={page === 'settings'}
+                className={page === 'settings' ? 'active' : ''}
+                onClick={() => setPage('settings')}
+              >
+                <span className="sidebar-nav-icon"><SidebarNavIcon name="settings" /></span>
                 <span className="sidebar-nav-label">Settings</span>
               </button>
             </div>
           </div>
         </nav>
+
         <div className="parent-sidebar-bottom">
           <a href={activeChild.age >= 13 ? `/teen-dashboard?preview=1&child=${activeChild.id}` : `/child-dashboard?preview=1&child=${activeChild.id}`}>
-            Preview {activeChild.age >= 13 ? 'teen space' : 'child space'}
+            <span className="sidebar-nav-icon"><SidebarNavIcon name="preview" /></span>
+            <span>Preview {activeChild.age >= 13 ? 'teen space' : 'child space'}</span>
           </a>
-          <a href="/family-setup">Edit family &amp; profiles</a>
+          <a href="/family-setup">
+            <span className="sidebar-nav-icon"><SidebarNavIcon name="settings" /></span>
+            <span>Edit family &amp; profiles</span>
+          </a>
           <a
             href="/parent-access"
             onClick={(event) => {
@@ -965,7 +1021,8 @@ export default function ParentDashboardPage() {
               signOutOfPersona('parent').finally(() => router.push('/parent-access'));
             }}
           >
-            Sign out
+            <span className="sidebar-nav-icon"><SidebarNavIcon name="signout" /></span>
+            <span>Sign out</span>
           </a>
         </div>
       </aside>
@@ -974,7 +1031,7 @@ export default function ParentDashboardPage() {
         <header className="parent-dashboard-top">
           <div className="parent-dashboard-top-brand">
             <p>{family.familyName}</p>
-            <span>Live Parent Dashboard · {children.length} {children.length === 1 ? 'child' : 'children'}</span>
+            <span>Parent Dashboard · {children.length} {children.length === 1 ? 'child' : 'children'}</span>
           </div>
 
           <div className="dashboard-search-wrap" role="search">

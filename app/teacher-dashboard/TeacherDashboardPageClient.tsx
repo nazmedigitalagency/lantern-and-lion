@@ -22,6 +22,7 @@ import TeacherNotificationBell from './TeacherNotificationBell';
 import NotificationPreferencesModal from './NotificationPreferencesModal';
 import TeacherMessagesPanel from './TeacherMessagesPanel';
 import type { TeacherDeepLink } from '../lib/notifications/types';
+import { SidebarNavIcon } from '../components/SidebarNavIcons';
 
 type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'challenges' | 'calendar' | 'insights' | 'messages' | 'safety';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
@@ -445,28 +446,28 @@ export default function TeacherDashboardPage() {
     items: Array<[Page, string, string]>;
   }> = [
     {
-      title: 'MENU',
+      title: 'Main Menu',
       items: [
-        ['overview', '🏠', 'Overview'],
-        ['students', '👥', 'My Students'],
-        ['classes', '🏛️', 'Classes'],
-        ['assignments', '📋', 'Assignments'],
-        ['messages', '💬', 'Parent messages'],
+        ['overview', 'overview', 'Overview'],
+        ['students', 'students', 'My Students'],
+        ['classes', 'classes', 'Classes'],
+        ['assignments', 'assignments', 'Assignments'],
+        ['messages', 'messages', 'Parent messages'],
       ],
     },
     {
-      title: 'ACADEMIC & LEARNING',
+      title: 'Academic & Learning',
       items: [
-        ['gradebook', '📊', 'Gradebook'],
-        ['challenges', '🏆', 'Challenges'],
-        ['calendar', '📅', 'Calendar'],
-        ['insights', '💡', 'Insights'],
+        ['gradebook', 'gradebook', 'Gradebook'],
+        ['challenges', 'challenges', 'Challenges'],
+        ['calendar', 'calendar', 'Calendar'],
+        ['insights', 'insights', 'Insights'],
       ],
     },
     {
-      title: 'SAFETY & SETTINGS',
+      title: 'Safety & Settings',
       items: [
-        ['safety', '🛡️', 'Safety'],
+        ['safety', 'safety', 'Safety'],
       ],
     },
   ];
@@ -486,7 +487,7 @@ export default function TeacherDashboardPage() {
     <main className="teacher-dashboard">
       <aside className="teacher-sidebar">
         <Link href="/" className="teacher-brand">
-          <Image src="/lantern-lion-logo.png" alt="" width={58} height={58} />
+          <Image src="/lantern-lion-logo.png" alt="" width={38} height={38} />
           <span>
             <strong>Lantern &amp; Lion</strong>
             <small>{isDemo ? 'Demo workspace' : 'Teacher space'}</small>
@@ -506,11 +507,8 @@ export default function TeacherDashboardPage() {
                 <span className="teacher-sidebar-email" title={teacherEmail}>{teacherEmail}</span>
               )}
             </div>
-          </div>
-          <div className="teacher-sidebar-status-row">
-            <span className={`teacher-account-badge ${isDemo ? 'is-demo' : 'is-live'}`}>
-              <span className="teacher-status-dot" aria-hidden="true"></span>
-              {isDemo ? 'Demo Account' : 'Live Account'}
+            <span className="teacher-sidebar-chevron" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
             </span>
           </div>
         </div>
@@ -523,11 +521,12 @@ export default function TeacherDashboardPage() {
                 {section.items.map(([id, mark, label]) => (
                   <button
                     key={id}
+                    type="button"
                     className={page === id ? 'active' : ''}
                     aria-pressed={page === id}
                     onClick={() => setPage(id)}
                   >
-                    <span className="sidebar-nav-icon">{mark}</span>
+                    <span className="sidebar-nav-icon"><SidebarNavIcon name={mark} /></span>
                     <span className="sidebar-nav-label">{label}</span>
                     {id === 'messages' ? <b className="sidebar-badge">1</b> : null}
                     {id === 'safety' && helpStudents.length > 0 ? (
@@ -539,10 +538,14 @@ export default function TeacherDashboardPage() {
             </div>
           ))}
         </nav>
-        <div>
-          <Link href="/learn?activity=david-chooses-courage">Preview an activity</Link>
+        <div className="teacher-sidebar-bottom">
+          <Link href="/learn?activity=david-chooses-courage">
+            <span className="sidebar-nav-icon"><SidebarNavIcon name="preview" /></span>
+            <span>Preview an activity</span>
+          </Link>
           <button type="button" onClick={signOut} className="teacher-signout-btn">
-            {isDemo ? 'Sign out of demo' : 'Sign out'}
+            <span className="sidebar-nav-icon"><SidebarNavIcon name="signout" /></span>
+            <span>{isDemo ? 'Sign out of demo' : 'Sign out'}</span>
           </button>
         </div>
       </aside>
@@ -562,9 +565,11 @@ export default function TeacherDashboardPage() {
             <div className="teacher-topbar-title">
               <div className="teacher-topbar-meta">
                 <span>{isDemo ? 'Demo space' : 'Teacher workspace'}</span>
-                <span className={`teacher-status-pill ${isDemo ? 'pill-demo' : 'pill-live'}`}>
-                  {isDemo ? 'Demo' : 'Live Account'}
-                </span>
+                {isDemo && (
+                  <span className="teacher-status-pill pill-demo">
+                    Demo
+                  </span>
+                )}
               </div>
               <strong>
                 {teacherName}
@@ -707,7 +712,7 @@ export default function TeacherDashboardPage() {
                 <section className="teacher-panel teacher-class-overview-panel">
                   <div className="teacher-panel-head">
                     <div>
-                      <p className="teacher-kicker">Live class activity</p>
+                      <p className="teacher-kicker">Class activity</p>
                       <h2>{liveSummary?.classroom.name || 'Create a class to see real activity'}</h2>
                     </div>
                     {liveClassrooms.length > 1 && (
@@ -727,7 +732,7 @@ export default function TeacherDashboardPage() {
                         Class name
                         <input value={newLiveClassName} onChange={(e) => setNewLiveClassName(e.target.value)} placeholder="e.g. Sunday Juniors" />
                       </label>
-                      <button onClick={createLiveClass}>Create your first live class</button>
+                      <button onClick={createLiveClass}>Create your first class</button>
                     </div>
                   ) : (
                     liveSummary && (
@@ -1137,12 +1142,6 @@ export default function TeacherDashboardPage() {
                     )}
                   </div>
                 </div>
-                <div className="teacher-sidebar-status-row">
-                  <span className={`teacher-account-badge ${isDemo ? 'is-demo' : 'is-live'}`}>
-                    <span className="teacher-status-dot" aria-hidden="true"></span>
-                    {isDemo ? 'Demo Account' : 'Live Account'}
-                  </span>
-                </div>
               </div>
 
               <nav className="teacher-mobile-drawer-nav" aria-label="Teacher mobile dashboard">
@@ -1161,7 +1160,7 @@ export default function TeacherDashboardPage() {
                             setMobileMenuOpen(false);
                           }}
                         >
-                          <span className="sidebar-nav-icon">{mark}</span>
+                          <span className="sidebar-nav-icon"><SidebarNavIcon name={mark} /></span>
                           <span className="sidebar-nav-label">{label}</span>
                           {id === 'messages' ? <b className="sidebar-badge">1</b> : null}
                           {id === 'safety' && helpStudents.length > 0 ? (
