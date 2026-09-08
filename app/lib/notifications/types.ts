@@ -276,3 +276,59 @@ export const DEFAULT_TEACHER_PREFERENCES: TeacherNotificationPreferences = {
   student_performance_alerts: true,
 };
 
+// ── PARENT NOTIFICATIONS ─────────────────────────────────────────
+
+export type ParentNotificationType =
+  | 'PARENT_CHILD_ACTIVITY'
+  | 'PARENT_CHILD_ACHIEVEMENT'
+  | 'PARENT_MEMORY_VERSE_COMPLETED'
+  | 'PARENT_ASSIGNMENT_GIVEN'
+  | 'PARENT_HELP_REQUEST'
+  | 'PARENT_TEACHER_ANNOUNCEMENT'
+  | 'PARENT_WEEKLY_SUMMARY';
+
+export type ParentNotification = {
+  id: string;
+  type: ParentNotificationType | string;
+  title: string;
+  body: string;
+  priority?: 'high' | 'normal' | 'low';
+  payload?: Record<string, unknown>;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export const PARENT_NOTIFICATION_ICON: Record<string, string> = {
+  PARENT_CHILD_ACTIVITY: '⭐',
+  PARENT_CHILD_ACHIEVEMENT: '🏆',
+  PARENT_MEMORY_VERSE_COMPLETED: '📖',
+  PARENT_ASSIGNMENT_GIVEN: '📋',
+  PARENT_HELP_REQUEST: '🙋',
+  PARENT_TEACHER_ANNOUNCEMENT: '📢',
+  PARENT_WEEKLY_SUMMARY: '📊',
+};
+
+export function parentNotificationDestination(n: ParentNotification): {
+  page: 'overview' | 'children' | 'assignments' | 'teachers' | 'messages' | 'settings';
+  childId?: number | string;
+  actionLabel?: string;
+} | null {
+  const childId = n.payload?.childId as number | string | undefined;
+  switch (n.type) {
+    case 'PARENT_HELP_REQUEST':
+      return { page: 'overview', childId, actionLabel: 'Review Request' };
+    case 'PARENT_CHILD_ACHIEVEMENT':
+    case 'PARENT_MEMORY_VERSE_COMPLETED':
+    case 'PARENT_CHILD_ACTIVITY':
+      return { page: 'children', childId, actionLabel: 'View Child Report' };
+    case 'PARENT_ASSIGNMENT_GIVEN':
+      return { page: 'assignments', childId, actionLabel: 'View Assignment' };
+    case 'PARENT_TEACHER_ANNOUNCEMENT':
+      return { page: 'teachers', actionLabel: 'Open Classroom' };
+    case 'PARENT_WEEKLY_SUMMARY':
+      return { page: 'overview', actionLabel: 'View Summary' };
+    default:
+      return { page: 'overview', actionLabel: 'View' };
+  }
+}
+

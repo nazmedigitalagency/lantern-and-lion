@@ -23,8 +23,9 @@ import NotificationPreferencesModal from './NotificationPreferencesModal';
 import TeacherMessagesPanel from './TeacherMessagesPanel';
 import type { TeacherDeepLink } from '../lib/notifications/types';
 import { SidebarNavIcon } from '../components/SidebarNavIcons';
+import TeacherProfileSection from './TeacherProfileSection';
 
-type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'challenges' | 'calendar' | 'insights' | 'messages' | 'safety';
+type Page = 'overview' | 'students' | 'classes' | 'assignments' | 'gradebook' | 'challenges' | 'calendar' | 'insights' | 'messages' | 'safety' | 'profile';
 type Student = { id: number; name: string; age: number; progress: number; needsHelp: boolean; parent: string; approved: boolean };
 type Classroom = { id: number; name: string; ageBand: string; code: string; students: Student[]; teacherEmail: string; teacherName: string };
 type Assignment = { id: number; classId: number; title: string; due: string; completed: number };
@@ -357,6 +358,65 @@ export default function TeacherDashboardPage() {
     localStorage.setItem('lanternLionTeacherClasses', JSON.stringify(next));
   }
 
+  function handleUpdateTeacher(name: string, email: string, phone: string, title: string) {
+    setTeacherName(name);
+    setTeacherEmail(email);
+    const stored = localStorage.getItem('lanternLionTeacherSession');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        parsed.name = name;
+        parsed.email = email;
+        parsed.phone = phone;
+        parsed.title = title;
+        localStorage.setItem('lanternLionTeacherSession', JSON.stringify(parsed));
+      } catch {}
+    }
+  }
+
+  function handleUpdateChurch(newChurchName: string, address: string, website: string) {
+    setChurchName(newChurchName);
+    const stored = localStorage.getItem('lanternLionTeacherSession');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        parsed.churchName = newChurchName;
+        parsed.churchAddress = address;
+        parsed.churchWebsite = website;
+        localStorage.setItem('lanternLionTeacherSession', JSON.stringify(parsed));
+      } catch {}
+    }
+  }
+
+  function handleAddStudentToClass(classroomId: number, studentName: string, studentAgeBand: string) {
+    const next = allClasses.map((cls) => {
+      if (cls.id === classroomId) {
+        const newStudent: Student = {
+          id: nextId(),
+          name: studentName,
+          age: studentAgeBand.includes('13') ? 14 : studentAgeBand.includes('8') ? 9 : 6,
+          progress: 0,
+          needsHelp: false,
+          parent: `Parent of ${studentName}`,
+          approved: true,
+        };
+        return { ...cls, students: [...cls.students, newStudent] };
+      }
+      return cls;
+    });
+    saveAllClasses(next);
+  }
+
+  function handleRemoveStudentFromClass(classroomId: number, studentId: number) {
+    const next = allClasses.map((cls) => {
+      if (cls.id === classroomId) {
+        return { ...cls, students: cls.students.filter((s) => s.id !== studentId) };
+      }
+      return cls;
+    });
+    saveAllClasses(next);
+  }
+
   function createClass() {
     if (!newClass.trim()) {
       setNotice('Add a class name first.');
@@ -468,6 +528,7 @@ export default function TeacherDashboardPage() {
       title: 'Safety & Settings',
       items: [
         ['safety', 'safety', 'Safety'],
+        ['profile', 'settings', 'Profile & Settings'],
       ],
     },
   ];
@@ -494,7 +555,19 @@ export default function TeacherDashboardPage() {
           </span>
         </Link>
 
-        <div className="teacher-sidebar-account">
+        <div
+          className="teacher-sidebar-account clickable-account"
+          role="button"
+          tabIndex={0}
+          onClick={() => setPage('profile')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setPage('profile');
+            }
+          }}
+          title="Teacher Profile & Settings"
+        >
           <div className="teacher-sidebar-user">
             <span className="teacher-sidebar-avatar" aria-hidden="true">
               {teacherName[0]?.toUpperCase() || 'T'}
@@ -562,7 +635,19 @@ export default function TeacherDashboardPage() {
             >
               ☰
             </button>
-            <div className="teacher-topbar-title">
+            <div
+              className="teacher-topbar-title clickable-title"
+              role="button"
+              tabIndex={0}
+              onClick={() => setPage('profile')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setPage('profile');
+                }
+              }}
+              title="Open Teacher Profile & Settings"
+            >
               <div className="teacher-topbar-meta">
                 <span>{isDemo ? 'Demo space' : 'Teacher workspace'}</span>
                 {isDemo && (
@@ -633,7 +718,18 @@ export default function TeacherDashboardPage() {
           </div>
         )}
 
-        {classes.length === 0 || !classroom ? (
+        {page === 'profile' ? (
+          <TeacherProfileSection
+            teacherName={teacherName}
+            teacherEmail={teacherEmail}
+            churchName={churchName}
+            classes={allClasses}
+            onUpdateTeacher={handleUpdateTeacher}
+            onUpdateChurch={handleUpdateChurch}
+            onAddStudent={handleAddStudentToClass}
+            onRemoveStudent={handleRemoveStudentFromClass}
+          />
+        ) : classes.length === 0 || !classroom ? (
           <div className="teacher-content">
             <div className="teacher-title">
               <p className="teacher-kicker">Welcome, {teacherName}</p>
@@ -1128,7 +1224,15 @@ export default function TeacherDashboardPage() {
                 </button>
               </div>
 
-              <div className="teacher-mobile-drawer-account">
+              <div
+                className="teacher-mobile-drawer-account clickable-account"
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setPage('profile');
+                  setMobileMenuOpen(false);
+                }}
+              >
                 <div className="teacher-sidebar-user">
                   <span className="teacher-sidebar-avatar" aria-hidden="true">
                     {teacherName[0]?.toUpperCase() || 'T'}

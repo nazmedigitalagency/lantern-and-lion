@@ -20,6 +20,8 @@ import { signOutOfPersona } from '../lib/session';
 import type { ParentChildClassroomInfo } from '../api/family/classrooms/route';
 import ParentMessagesPanel from './ParentMessagesPanel';
 import { SidebarNavIcon } from '../components/SidebarNavIcons';
+import ParentNotificationBell from './ParentNotificationBell';
+import ParentProfileSection from './ParentProfileSection';
 import type {
   ParentAssignmentItem,
   ParentAssignmentStatus,
@@ -138,6 +140,20 @@ export default function ParentDashboardPage() {
   const [hasFamily, setHasFamily] = useState(true);
   const [connectedClass, setConnectedClass] = useState<{ id: number; name: string; ageBand: string; code: string; teacher: string } | null>(null);
   const [parentName, setParentName] = useState('Jordan Adeyemi');
+  const [parentEmail, setParentEmail] = useState('jordan@adeyemi.family');
+
+  const handleParentNotificationNavigate = (dest: {
+    page: Page;
+    childId?: number | string;
+  }) => {
+    setPage(dest.page);
+    if (dest.childId) {
+      const cid = Number(dest.childId);
+      if (!isNaN(cid) && family.children.some((c) => c.id === cid)) {
+        setSelectedChild(cid);
+      }
+    }
+  };
   const [selectedChild, setSelectedChild] = useState<number>(fallbackFamily.children[0].id);
   const [assignments, setAssignments] = useState<Assignment[]>([{ id: 1, childId: 1, title: 'David chooses courage', due: 'Friday' }]);
   const [childProgressMap, setChildProgressMap] = useState<Record<number, string[]>>({});
@@ -223,6 +239,7 @@ export default function ParentDashboardPage() {
           }
         }
         if (session?.name) setParentName(session.name);
+        if (session?.email) setParentEmail(session.email);
 
         const normalizedMap = { ...progressMap };
         if (storedFamily?.children?.length) {
@@ -917,7 +934,15 @@ export default function ParentDashboardPage() {
           <span><strong>Lantern &amp; Lion</strong><small>Parent space</small></span>
         </Link>
 
-        <div className="parent-sidebar-account">
+        <div
+          className="parent-sidebar-account"
+          onClick={() => setPage('settings')}
+          style={{ cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setPage('settings'); }}
+          title="Open Profile & Settings"
+        >
           <div className="parent-sidebar-user">
             <span className="parent-sidebar-avatar" aria-hidden="true">
               {parentName[0]?.toUpperCase() || 'P'}
@@ -1046,9 +1071,18 @@ export default function ParentDashboardPage() {
             />
           </div>
 
-          <div className="parent-account-button">
-            <span>{parentName.slice(0, 1)}</span>
-            <div><strong>{parentName}</strong><small>Family owner</small></div>
+          <div className="parent-topbar-actions">
+            <ParentNotificationBell onNavigate={handleParentNotificationNavigate} />
+            <button
+              type="button"
+              className="parent-account-button"
+              onClick={() => setPage('settings')}
+              aria-label="Parent Profile & Settings"
+              title="Open Profile & Settings"
+            >
+              <span>{parentName.slice(0, 1)}</span>
+              <div><strong>{parentName}</strong><small>Family owner</small></div>
+            </button>
           </div>
         </header>
 
@@ -2227,64 +2261,60 @@ export default function ParentDashboardPage() {
 
         {page === 'settings' && (
           <div className="parent-dashboard-content">
-            <div className="parent-page-title">
-              <p className="parent-dash-kicker">Family settings</p>
-              <h1>Privacy choices in one place.</h1>
-              <p>These demo settings are saved on this device. Child-facing screens cannot change them.</p>
-            </div>
-            <section className="parent-settings-card">
-              <div>
-                <h2>Sharing and contact</h2>
-                <p>Choose how work stays private and when you hear from the club.</p>
-              </div>
-              <div className="parent-setting-list">
-                <label>
-                  <div>
-                    <strong>Keep creations inside the family</strong>
-                    <small>Artwork and written answers stay private unless you share them.</small>
-                  </div>
-                  <input type="checkbox" checked={family.privateArtwork} onChange={(event) => saveSettings({ ...family, privateArtwork: event.target.checked })} />
-                  <span></span>
-                </label>
-                <label>
-                  <div>
-                    <strong>Allow assigned teacher messages</strong>
-                    <small>Teachers can contact this parent account, never the child privately.</small>
-                  </div>
-                  <input type="checkbox" checked={family.teacherMessages} onChange={(event) => saveSettings({ ...family, teacherMessages: event.target.checked })} />
-                  <span></span>
-                </label>
-                <label>
-                  <div>
-                    <strong>Weekly progress email</strong>
-                    <small>One summary each week. No daily reminders.</small>
-                  </div>
-                  <input type="checkbox" checked={family.progressEmails} onChange={(event) => saveSettings({ ...family, progressEmails: event.target.checked })} />
-                  <span></span>
-                </label>
-              </div>
-
-              <div className="parent-classroom-connect-section">
-                <h3>Sunday School &amp; School Classroom</h3>
-                <p>Enter your child’s group code to sync with approved teachers and Sunday School classes.</p>
-                {connectedClass ? (
-                  <div className="parent-code-box">
-                    <span>Current Class Link:</span>
-                    <strong>{connectedClass.name} (Code: {connectedClass.code}) · Teacher {connectedClass.teacher}</strong>
-                  </div>
-                ) : (
-                  <div className="parent-code-box">
-                    <span>No class connected yet.</span>
-                    <strong>Ask your child to enter a class code from their dashboard.</strong>
-                  </div>
-                )}
-              </div>
-
-              <div className="parent-settings-links">
-                <a href="/family-setup">Edit family and child profiles (Parent only)</a>
-                <a href="/parent-access">Parent account details</a>
-              </div>
-            </section>
+            <ParentProfileSection
+              parentName={parentName}
+              parentEmail={parentEmail}
+              family={family}
+              connectedClass={connectedClass}
+              onUpdateParent={(name, email, phone) => {
+                setParentName(name);
+                setParentEmail(email);
+                const nextFamily = { ...family, phone };
+                setFamily(nextFamily);
+                localStorage.setItem('lanternLionDemoFamily', JSON.stringify(nextFamily));
+                const sess = JSON.parse(localStorage.getItem('lanternLionDemoSession') || '{}');
+                localStorage.setItem('lanternLionDemoSession', JSON.stringify({ ...sess, name, email }));
+              }}
+              onUpdateFamily={(next) => {
+                const sanitizedChildren: Child[] = next.children.map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                  age: c.age,
+                  avatar: c.avatar || '🦁',
+                  pin: c.pin || '1234',
+                }));
+                saveSettings({
+                  familyName: next.familyName,
+                  country: next.country,
+                  children: sanitizedChildren,
+                  privateArtwork: next.privateArtwork,
+                  teacherMessages: next.teacherMessages,
+                  progressEmails: next.progressEmails,
+                });
+              }}
+              onUpdateChildPin={(childId, nextPin) => {
+                const nextChildren = family.children.map((c) => (c.id === childId ? { ...c, pin: nextPin } : c));
+                saveSettings({ ...family, children: nextChildren });
+              }}
+              onAddChild={(newChild) => {
+                const childToAdd: Child = {
+                  id: newChild.id,
+                  name: newChild.name,
+                  age: newChild.age,
+                  avatar: newChild.avatar || '🦁',
+                  pin: newChild.pin || '1234',
+                };
+                saveSettings({ ...family, children: [...family.children, childToAdd] });
+              }}
+              onRemoveChild={(childId) => {
+                const nextChildren = family.children.filter((c) => c.id !== childId);
+                const nextFamily = { ...family, children: nextChildren };
+                saveSettings(nextFamily);
+                if (selectedChild === childId && nextChildren.length > 0) {
+                  setSelectedChild(nextChildren[0].id);
+                }
+              }}
+            />
           </div>
         )}
 
