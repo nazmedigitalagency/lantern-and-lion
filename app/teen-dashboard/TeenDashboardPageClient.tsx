@@ -790,7 +790,7 @@ export default function TeenDashboardPage() {
   function submitJourney() { playRewardSound('questComplete'); setJourneySubmitted(true); addPoints(20); }
 
   function handleChatSafetyFlag(message: string) {
-    const report = { child: teen.name, kind: 'Chat: please check in', message, time: new Date().toISOString() };
+    const report = { child: teen.name, kind: 'Chat · Please check in', message, time: new Date().toISOString() };
     try {
       localStorage.setItem('lanternLionDemoHelpRequest', JSON.stringify(report));
     } catch { /* Storage error */ }

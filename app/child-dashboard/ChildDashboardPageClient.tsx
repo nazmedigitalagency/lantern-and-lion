@@ -501,7 +501,7 @@ export default function ChildDashboardPage() {
   }
 
   function handleChatSafetyFlag(message: string) {
-    const report = { child: child.name, kind: 'Chat: please check in', message, time: new Date().toISOString() };
+    const report = { child: child.name, kind: 'Chat · Please check in', message, time: new Date().toISOString() };
     localStorage.setItem('lanternLionSafetyAlert', JSON.stringify(report));
     setHelpNotice('A note has been shared with your family.');
   }

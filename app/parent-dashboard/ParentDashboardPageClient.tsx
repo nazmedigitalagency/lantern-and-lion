@@ -1101,7 +1101,7 @@ export default function ParentDashboardPage() {
                 <small>activities across family</small>
               </article>
               <article>
-                <span>Returned</span>
+                <span>Return streak</span>
                 <strong>3 days</strong>
                 <small>active return streak</small>
               </article>
@@ -1143,7 +1143,7 @@ export default function ParentDashboardPage() {
                         <div><b>{summary?.games_played || 0}</b><span>🎮 Games played</span></div>
                         <div><b>{summary?.lessons_completed || 0}</b><span>📚 Lessons</span></div>
                         <div><b>{summary?.xp_earned || 0}</b><span>⭐ XP earned</span></div>
-                        <div><b>{summary?.quests_completed || 0}</b><span>🔥 Quests</span></div>
+                        <div><b>{summary?.quests_completed || 0}</b><span>🧭 Quests</span></div>
                         <div><b>{summary?.achievements_earned || 0}</b><span>🏆 Achievements</span></div>
                       </div>
                       <p className="parent-streak-note">
@@ -1224,12 +1224,24 @@ export default function ParentDashboardPage() {
                   </div>
                 </div>
                 <ul className="parent-notification-list">
-                  {notifications.map((n) => (
-                    <li key={n.id} className={n.read_at ? '' : 'unread'} onClick={() => !n.read_at && markNotificationRead(n.id)}>
-                      <strong>{n.title}</strong>
-                      <p style={{ margin: '4px 0 0' }}>{n.body}</p>
-                    </li>
-                  ))}
+                  {[...notifications]
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .map((n) => {
+                      const created = new Date(n.created_at);
+                      const isToday = created.toDateString() === new Date().toDateString();
+                      const stamp = isToday
+                        ? created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : created.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <li key={n.id} className={n.read_at ? '' : 'unread'} onClick={() => !n.read_at && markNotificationRead(n.id)}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                            <strong>{n.title}</strong>
+                            <span style={{ fontSize: '11px', color: 'var(--pd-text-secondary, #64748B)', flexShrink: 0 }}>{stamp}</span>
+                          </div>
+                          <p style={{ margin: '4px 0 0' }}>{n.body}</p>
+                        </li>
+                      );
+                    })}
                 </ul>
               </section>
             )}
@@ -1246,18 +1258,20 @@ export default function ParentDashboardPage() {
                 <div className="parent-child-rows">
                   {children.map((child, index) => {
                     const cDone = childProgressMap[child.id] || (index === 0 ? activeChildCompleted : []);
-                    const cPoints = 42 + cDone.length * 8;
+                    const weeklyGoal = 5;
+                    const childXp = getWallet(child.id).xp;
                     return (
                       <article key={child.id}>
                         <span className={child.age >= 13 ? 'teen' : ''}>{child.name.slice(0, 1)}</span>
                         <div>
                           <strong>{child.name}</strong>
                           <small>
-                            {child.age >= 13 ? 'Lion’s Den (Teen)' : 'The Lantern Club'} · ★ {cPoints} pts
+                            {child.age >= 13 ? 'Lion’s Den (Teen)' : 'The Lantern Club'} · ★ {childXp.toLocaleString()} XP
                           </small>
                           <div>
-                            <i style={{ width: `${Math.min(100, Math.max(25, cDone.length * 20))}%` }} />
+                            <i style={{ width: `${Math.min(100, Math.max(cDone.length ? 8 : 0, (cDone.length / weeklyGoal) * 100))}%` }} />
                           </div>
+                          <small>{cDone.length} of {weeklyGoal} activities this week</small>
                         </div>
                         <b>{cDone.length} done</b>
                         <button onClick={() => { setSelectedChild(child.id); setPage('children'); }}>
@@ -1292,7 +1306,7 @@ export default function ParentDashboardPage() {
                 )}
                 <p>Asking for help is celebrated in Lantern &amp; Lion. Use flagged moments for warm family conversations.</p>
                 {helpRequest && (
-                  <button onClick={() => { localStorage.removeItem('lanternLionDemoHelpRequest'); setHelpRequest(null); setShowHelpDetail(false); setSavedNotice('Help flag marked as resolved.'); }}>
+                  <button className="primary" onClick={() => { localStorage.removeItem('lanternLionDemoHelpRequest'); setHelpRequest(null); setShowHelpDetail(false); setSavedNotice('Help flag marked as resolved.'); }}>
                     Mark as reviewed
                   </button>
                 )}
@@ -1333,16 +1347,19 @@ export default function ParentDashboardPage() {
                 </div>
               </div>
               <div>
-                {activityLogs.slice(0, 5).map((log) => (
-                  <article key={log.id}>
-                    <span>{log.type.slice(0, 1)}</span>
-                    <div>
-                      <strong>{log.title}</strong>
-                      <small>{log.childName} · {log.type} {log.attempts > 1 ? `(${log.attempts} attempts)` : 'finished'}</small>
-                    </div>
-                    <b>{log.time}</b>
-                  </article>
-                ))}
+                {activityLogs.slice(0, 5).map((log) => {
+                  const logChildName = children.find((c) => c.id === log.childId)?.name || log.childName;
+                  return (
+                    <article key={log.id}>
+                      <span>{logChildName.slice(0, 1)}</span>
+                      <div>
+                        <strong>{log.title}</strong>
+                        <small>{logChildName} · {log.type} {log.attempts > 1 ? `(${log.attempts} attempts)` : 'finished'}</small>
+                      </div>
+                      <b>{log.time}</b>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -1433,7 +1450,7 @@ export default function ParentDashboardPage() {
                 const userInPod = childPod.participants.find((p) => p.isCurrentUser);
 
                 return (
-                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem', borderTop: `3px solid ${progress.currentTier.badgeTone}` }}>
+                  <section className="parent-skill-panel" style={{ marginTop: '1.25rem', borderTop: '3px solid var(--pd-violet, #6D28D9)' }}>
                     <div className="panel-heading">
                       <div>
                         <p className="parent-dash-kicker">Competitive League &amp; Season Progress</p>
@@ -1458,7 +1475,7 @@ export default function ParentDashboardPage() {
                           style={{
                             width: `${progress.progressPercent}%`,
                             height: '100%',
-                            background: progress.currentTier.badgeTone,
+                            background: 'var(--pd-violet, #6D28D9)',
                             borderRadius: '9999px',
                           }}
                         />
@@ -1486,7 +1503,7 @@ export default function ParentDashboardPage() {
                       Tracking biblical exploration across the 8 canonical regions from Creation through to the Early Church.
                     </p>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem', marginTop: '1rem' }}>
+                    <div className="adventure-region-grid" style={{ marginTop: '1rem' }}>
                       {canonicalRegions.map((reg) => {
                         const pct = getRegionCompletionPercent(reg, advCtx);
                         return (
@@ -1554,16 +1571,23 @@ export default function ParentDashboardPage() {
 
               <div className="child-report-list">
                 {activeChildCompleted.length > 0 ? (
-                  activeChildCompleted.map((actTitle, i) => (
-                    <article key={i}>
-                      <span className="complete">Done</span>
-                      <div>
-                        <strong>{actTitle}</strong>
-                        <small>Completed in child space</small>
-                      </div>
-                      <b>Today</b>
-                    </article>
-                  ))
+                  activeChildCompleted.map((actTitle, i) => {
+                    const matchingLog = activityLogs.find((log) => log.childId === activeChild.id && log.title === actTitle);
+                    return (
+                      <article key={i}>
+                        <span className="complete">Done</span>
+                        <div>
+                          <strong>{actTitle}</strong>
+                          <small>
+                            {matchingLog
+                              ? `${matchingLog.type} ${matchingLog.attempts > 1 ? `(${matchingLog.attempts} attempts)` : 'finished'}`
+                              : 'Completed in child space'}
+                          </small>
+                        </div>
+                        <b>{matchingLog ? matchingLog.time : 'Today'}</b>
+                      </article>
+                    );
+                  })
                 ) : (
                   <article>
                     <span>Next</span>

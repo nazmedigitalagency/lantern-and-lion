@@ -2746,6 +2746,9 @@ footer a:hover{color:var(--gold)}
 .parent-attention-panel>button{width:100%;min-height:46px;padding:10px 18px;border:2px solid #cbd5e1;border-radius:12px;background:#ffffff;color:var(--navy);font:900 13px var(--font-nunito);cursor:pointer;box-shadow:0 4px 0 #cbd5e1;transition:transform 140ms ease,background-color 140ms ease,border-color 140ms ease,box-shadow 140ms ease;user-select:none}
 .parent-attention-panel>button:hover{background:#f8fafc;border-color:#94a3b8;color:var(--navy-dark);transform:translateY(-2px);box-shadow:0 5px 0 #94a3b8}
 .parent-attention-panel>button:active{background:#f1f5f9;transform:translateY(2px);box-shadow:0 1px 0 #94a3b8}
+.parent-attention-panel>button.primary{background:var(--pd-cobalt);border-color:var(--pd-cobalt);color:#ffffff;box-shadow:0 4px 0 var(--pd-cobalt-dark)}
+.parent-attention-panel>button.primary:hover{background:var(--pd-cobalt-dark);border-color:var(--pd-cobalt-dark);color:#ffffff;box-shadow:0 5px 0 var(--pd-cobalt-dark)}
+.parent-attention-panel>button.primary:active{background:var(--pd-cobalt-dark);box-shadow:0 1px 0 var(--pd-cobalt-dark)}
 .recent-learning{margin-top:20px}
 .recent-learning>div:last-child article{padding:15px 22px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;border-bottom:1px solid var(--pd-divider)}
 .recent-learning>div:last-child article:last-child{border:0}
@@ -14889,6 +14892,18 @@ nav.parent-sidebar-sections,
 .profile-status-pill.active {
   background: #ecfdf5;
   color: #047857;
+}
+
+.adventure-region-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+}
+
+@media (max-width: 700px) {
+  .adventure-region-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ── Modals & Overlays ── */
