@@ -1368,6 +1368,7 @@ export default function ParentDashboardPage() {
                     <strong>{child.name}</strong>
                     <small>Age {child.age} · {child.age >= 13 ? 'Lion’s Den' : 'Lantern Club'}</small>
                   </div>
+                  <svg className="child-tab-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
               ))}
               <a href="/family-setup">Manage profiles in family setup</a>
@@ -1389,14 +1390,16 @@ export default function ParentDashboardPage() {
                       <div style={{ flex: 1 }}>
                         <p className="parent-dash-kicker">{activeChild.age >= 13 ? 'Lion’s Den (Ages 13–17)' : 'The Lantern Club (Ages 5–12)'}</p>
                         <h2>{activeChild.name} · Level {childLvl.level} {childLvl.title}</h2>
-                        <small>PIN: {activeChild.pin} · Username: @{activeChild.username || activeChild.name.toLowerCase()}</small>
+                        <small>PIN: •••• · Username: @{activeChild.username || activeChild.name.toLowerCase()}</small>
                         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                           <span style={{ fontSize: '0.8rem', background: 'var(--pd-gold-tint, #FFFBEB)', color: 'var(--pd-ink, #1E293B)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>⭐ {childWallet.xp.toLocaleString()} XP</span>
                           <span style={{ fontSize: '0.8rem', background: 'var(--pd-emerald-tint, #EFFDF4)', color: 'var(--pd-emerald-dark, #15803D)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>🪙 {childWallet.coins.toLocaleString()} Coins</span>
                           <span style={{ fontSize: '0.8rem', background: 'var(--pd-violet-tint, #F5F3FF)', color: 'var(--pd-violet-dark, #6D28D9)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>💎 {childWallet.gems.toLocaleString()} Gems</span>
                         </div>
-                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--pd-text-secondary, #64748B)' }}>
-                          <span>Gear: {getItem(childEq.clothing || 'starter-tunic')?.name} · {getItem(childEq.lantern || 'starter-lantern')?.name}{childEq.pet ? ` · Companion: ${getItem(childEq.pet)?.name}` : ''}</span>
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '0.8rem', background: 'var(--pd-well, #F1F5F9)', color: 'var(--pd-text-secondary, #64748B)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>
+                            Gear: {getItem(childEq.clothing || 'starter-tunic')?.name} · {getItem(childEq.lantern || 'starter-lantern')?.name}{childEq.pet ? ` · Companion: ${getItem(childEq.pet)?.name}` : ''}
+                          </span>
                         </div>
                       </div>
                       <a href={activeChild.age >= 13 ? `/teen-dashboard?preview=1&child=${activeChild.id}` : `/child-dashboard?preview=1&child=${activeChild.id}`}>
@@ -1418,7 +1421,7 @@ export default function ParentDashboardPage() {
                 </article>
                 <article>
                   <strong>{versesLearnedCount}</strong>
-                  <span>Memory verses locked</span>
+                  <span>Memory verses mastered</span>
                 </article>
               </div>
 

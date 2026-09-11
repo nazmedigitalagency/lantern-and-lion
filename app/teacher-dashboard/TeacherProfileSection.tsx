@@ -40,6 +40,7 @@ export default function TeacherProfileSection({
 }) {
   const [activeTab, setActiveTab] = useState<'profile' | 'church' | 'students' | 'security'>('profile');
   const [toastMessage, setToastMessage] = useState('');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
 
   // Modals
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -153,7 +154,7 @@ export default function TeacherProfileSection({
               <span>•</span>
               <span>📞 {formPhone}</span>
               <span>•</span>
-              <span className="active-dot-text"><span className="active-dot" /> Active Educator</span>
+              <span className="profile-status-badge active"><span className="profile-status-badge-dot" /> Active Educator</span>
             </div>
           </div>
 
@@ -265,7 +266,7 @@ export default function TeacherProfileSection({
             <div className="profile-credentials-list">
               <div className="profile-credential-item">
                 <span className="credential-icon">🛡️</span>
-                <div>
+                <div className="profile-info-block">
                   <strong>Ministry Safety &amp; Background Checked</strong>
                   <small>Verified for child-safe education · Renewed 2026</small>
                 </div>
@@ -273,7 +274,7 @@ export default function TeacherProfileSection({
               </div>
               <div className="profile-credential-item">
                 <span className="credential-icon">📜</span>
-                <div>
+                <div className="profile-info-block">
                   <strong>Scripture Curriculum Certification</strong>
                   <small>Lantern &amp; Lion Certified Sunday School Instructor</small>
                 </div>
@@ -424,30 +425,41 @@ export default function TeacherProfileSection({
       {/* ── TAB 4: Security & Credentials ── */}
       {activeTab === 'security' && (
         <div className="profile-grid">
-          <div className="profile-card full-width">
-            <div className="profile-security-highlight">
-              <div className="profile-security-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div className="profile-card">
+            <div className="profile-card-head">
+              <div className="profile-card-head-title">
+                <svg className="profile-card-head-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <h3>Educator Two-Factor Authentication</h3>
               </div>
-              <div className="profile-security-text">
-                <h4>Educator Two-Factor Authentication</h4>
-                <p>Enforce 2FA verification when logging in to view student progress or send announcements.</p>
-              </div>
-              <span className="profile-security-status-badge">Enabled</span>
             </div>
+            <p className="profile-modal-help">Enforce 2FA verification when logging in to view student progress or send announcements.</p>
+            <label className="profile-toggle-row">
+              <span className="profile-status-chip">{twoFactorEnabled ? 'Enabled' : 'Disabled'}</span>
+              <input
+                type="checkbox"
+                checked={twoFactorEnabled}
+                onChange={(e) => setTwoFactorEnabled(e.target.checked)}
+              />
+              <span className="profile-switch" />
+            </label>
           </div>
 
           <div className="profile-card">
             <div className="profile-card-head">
-              <h3>Active Educator Session</h3>
+              <div className="profile-card-head-title">
+                <svg className="profile-card-head-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                <h3>Active Educator Session</h3>
+              </div>
+              <span className="profile-status-chip">Current</span>
             </div>
-            <div className="profile-data-grid single-col">
-              <div className="profile-session-item">
-                <div>
-                  <strong>Current Desktop Session</strong>
-                  <small>Teacher workspace · Signed in via secure session</small>
-                </div>
-                <span className="profile-status-chip">Current</span>
+            <div className="profile-data-grid">
+              <div className="profile-data-cell">
+                <small>Device</small>
+                <strong>Current Desktop Session</strong>
+              </div>
+              <div className="profile-data-cell full-width">
+                <small>Details</small>
+                <strong>Teacher workspace · Signed in via secure session</strong>
               </div>
             </div>
           </div>
@@ -456,59 +468,65 @@ export default function TeacherProfileSection({
 
       {/* ── MODAL: Edit Teacher Profile ── */}
       {editProfileOpen && (
-        <div className="profile-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="profile-modal-box">
-            <div className="profile-modal-head">
+        <div className="profile-modal-overlay" role="dialog" aria-modal="true">
+          <div className="profile-modal-card">
+            <div className="profile-modal-header">
               <h3>Edit Teacher Profile</h3>
-              <button type="button" onClick={() => setEditProfileOpen(false)} className="profile-modal-close">✕</button>
+              <button type="button" onClick={() => setEditProfileOpen(false)} className="profile-modal-close" aria-label="Close">✕</button>
             </div>
-            <form onSubmit={handleSaveProfile} className="profile-modal-form">
-              <div className="profile-form-row">
-                <label>
-                  Teacher Full Name
-                  <input
-                    type="text"
-                    required
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder="e.g. Prince Idoma"
-                  />
-                </label>
-                <label>
-                  Ministry Title / Role
-                  <input
-                    type="text"
-                    required
-                    value={formTitle}
-                    onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder="e.g. Lead Sunday School Teacher"
-                  />
-                </label>
+            <form onSubmit={handleSaveProfile}>
+              <div className="profile-modal-body">
+                <div className="profile-modal-row">
+                  <div className="profile-modal-field">
+                    <label htmlFor="editTeacherName">Teacher Full Name</label>
+                    <input
+                      id="editTeacherName"
+                      type="text"
+                      required
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      placeholder="e.g. Prince Idoma"
+                    />
+                  </div>
+                  <div className="profile-modal-field">
+                    <label htmlFor="editTeacherTitle">Ministry Title / Role</label>
+                    <input
+                      id="editTeacherTitle"
+                      type="text"
+                      required
+                      value={formTitle}
+                      onChange={(e) => setFormTitle(e.target.value)}
+                      placeholder="e.g. Lead Sunday School Teacher"
+                    />
+                  </div>
+                </div>
+
+                <div className="profile-modal-row">
+                  <div className="profile-modal-field">
+                    <label htmlFor="editTeacherEmail">Teacher Email</label>
+                    <input
+                      id="editTeacherEmail"
+                      type="email"
+                      required
+                      value={formEmail}
+                      onChange={(e) => setFormEmail(e.target.value)}
+                      placeholder="e.g. teacher@church.org"
+                    />
+                  </div>
+                  <div className="profile-modal-field">
+                    <label htmlFor="editTeacherPhone">Phone Number</label>
+                    <input
+                      id="editTeacherPhone"
+                      type="tel"
+                      value={formPhone}
+                      onChange={(e) => setFormPhone(e.target.value)}
+                      placeholder="e.g. +1 (555) 728-1920"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="profile-form-row">
-                <label>
-                  Teacher Email
-                  <input
-                    type="email"
-                    required
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    placeholder="e.g. teacher@church.org"
-                  />
-                </label>
-                <label>
-                  Phone Number
-                  <input
-                    type="tel"
-                    value={formPhone}
-                    onChange={(e) => setFormPhone(e.target.value)}
-                    placeholder="e.g. +1 (555) 728-1920"
-                  />
-                </label>
-              </div>
-
-              <div className="profile-modal-foot">
+              <div className="profile-modal-footer">
                 <button type="button" onClick={() => setEditProfileOpen(false)} className="profile-btn-secondary">
                   Cancel
                 </button>
@@ -523,46 +541,51 @@ export default function TeacherProfileSection({
 
       {/* ── MODAL: Edit Church / Organization (Requested) ── */}
       {editChurchOpen && (
-        <div className="profile-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="profile-modal-box">
-            <div className="profile-modal-head">
+        <div className="profile-modal-overlay" role="dialog" aria-modal="true">
+          <div className="profile-modal-card">
+            <div className="profile-modal-header">
               <h3>Edit Church &amp; School Details</h3>
-              <button type="button" onClick={() => setEditChurchOpen(false)} className="profile-modal-close">✕</button>
+              <button type="button" onClick={() => setEditChurchOpen(false)} className="profile-modal-close" aria-label="Close">✕</button>
             </div>
-            <form onSubmit={handleSaveChurch} className="profile-modal-form">
-              <label>
-                Church or School Name
-                <input
-                  type="text"
-                  required
-                  value={formChurchName}
-                  onChange={(e) => setFormChurchName(e.target.value)}
-                  placeholder="e.g. Grace Community Church"
-                  autoFocus
-                />
-              </label>
+            <form onSubmit={handleSaveChurch}>
+              <div className="profile-modal-body">
+                <div className="profile-modal-field">
+                  <label htmlFor="editChurchName">Church or School Name</label>
+                  <input
+                    id="editChurchName"
+                    type="text"
+                    required
+                    value={formChurchName}
+                    onChange={(e) => setFormChurchName(e.target.value)}
+                    placeholder="e.g. Grace Community Church"
+                    autoFocus
+                  />
+                </div>
 
-              <label>
-                Campus / Physical Address
-                <input
-                  type="text"
-                  value={formChurchAddress}
-                  onChange={(e) => setFormChurchAddress(e.target.value)}
-                  placeholder="e.g. 150 Faith Boulevard, Lagos"
-                />
-              </label>
+                <div className="profile-modal-field">
+                  <label htmlFor="editChurchAddress">Campus / Physical Address</label>
+                  <input
+                    id="editChurchAddress"
+                    type="text"
+                    value={formChurchAddress}
+                    onChange={(e) => setFormChurchAddress(e.target.value)}
+                    placeholder="e.g. 150 Faith Boulevard, Lagos"
+                  />
+                </div>
 
-              <label>
-                Website URL
-                <input
-                  type="url"
-                  value={formChurchWebsite}
-                  onChange={(e) => setFormChurchWebsite(e.target.value)}
-                  placeholder="e.g. https://gracechurch.org"
-                />
-              </label>
+                <div className="profile-modal-field">
+                  <label htmlFor="editChurchWebsite">Website URL</label>
+                  <input
+                    id="editChurchWebsite"
+                    type="url"
+                    value={formChurchWebsite}
+                    onChange={(e) => setFormChurchWebsite(e.target.value)}
+                    placeholder="e.g. https://gracechurch.org"
+                  />
+                </div>
+              </div>
 
-              <div className="profile-modal-foot">
+              <div className="profile-modal-footer">
                 <button type="button" onClick={() => setEditChurchOpen(false)} className="profile-btn-secondary">
                   Cancel
                 </button>
@@ -577,60 +600,65 @@ export default function TeacherProfileSection({
 
       {/* ── MODAL: Add Student (Requested) ── */}
       {addStudentOpen && (
-        <div className="profile-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="profile-modal-box">
-            <div className="profile-modal-head">
+        <div className="profile-modal-overlay" role="dialog" aria-modal="true">
+          <div className="profile-modal-card">
+            <div className="profile-modal-header">
               <h3>Add Student to Class Roster</h3>
-              <button type="button" onClick={() => setAddStudentOpen(false)} className="profile-modal-close">✕</button>
+              <button type="button" onClick={() => setAddStudentOpen(false)} className="profile-modal-close" aria-label="Close">✕</button>
             </div>
-            <form onSubmit={handleAddStudentSubmit} className="profile-modal-form">
-              <p className="profile-modal-help">
-                Enroll a new learner directly into your selected classroom circle.
-              </p>
+            <form onSubmit={handleAddStudentSubmit}>
+              <div className="profile-modal-body">
+                <p>
+                  Enroll a new learner directly into your selected classroom circle.
+                </p>
 
-              {studentError && <div className="profile-form-error">{studentError}</div>}
+                {studentError && <div className="profile-modal-error">{studentError}</div>}
 
-              <label>
-                Student Full Name
-                <input
-                  type="text"
-                  required
-                  value={newStudentName}
-                  onChange={(e) => setNewStudentName(e.target.value)}
-                  placeholder="e.g. Samuel Okafor"
-                  autoFocus
-                />
-              </label>
+                <div className="profile-modal-field">
+                  <label htmlFor="newStudentName">Student Full Name</label>
+                  <input
+                    id="newStudentName"
+                    type="text"
+                    required
+                    value={newStudentName}
+                    onChange={(e) => setNewStudentName(e.target.value)}
+                    placeholder="e.g. Samuel Okafor"
+                    autoFocus
+                  />
+                </div>
 
-              <div className="profile-form-row">
-                <label>
-                  Assign to Classroom
-                  <select
-                    value={newStudentClass}
-                    onChange={(e) => setNewStudentClass(Number(e.target.value))}
-                  >
-                    {classes.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="profile-modal-row">
+                  <div className="profile-modal-field">
+                    <label htmlFor="newStudentClassroom">Assign to Classroom</label>
+                    <select
+                      id="newStudentClassroom"
+                      value={newStudentClass}
+                      onChange={(e) => setNewStudentClass(Number(e.target.value))}
+                    >
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <label>
-                  Age Group
-                  <select
-                    value={newStudentAgeBand}
-                    onChange={(e) => setNewStudentAgeBand(e.target.value)}
-                  >
-                    <option value="Ages 5–7">Ages 5–7 (Early Explorers)</option>
-                    <option value="Ages 8–11">Ages 8–11 (Lantern Club)</option>
-                    <option value="Ages 13–16">Ages 13–16 (Lion’s Den Teens)</option>
-                  </select>
-                </label>
+                  <div className="profile-modal-field">
+                    <label htmlFor="newStudentAgeBand">Age Group</label>
+                    <select
+                      id="newStudentAgeBand"
+                      value={newStudentAgeBand}
+                      onChange={(e) => setNewStudentAgeBand(e.target.value)}
+                    >
+                      <option value="Ages 5–7">Ages 5–7 (Early Explorers)</option>
+                      <option value="Ages 8–11">Ages 8–11 (Lantern Club)</option>
+                      <option value="Ages 13–16">Ages 13–16 (Lion’s Den Teens)</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <div className="profile-modal-foot">
+              <div className="profile-modal-footer">
                 <button type="button" onClick={() => setAddStudentOpen(false)} className="profile-btn-secondary">
                   Cancel
                 </button>
@@ -645,25 +673,25 @@ export default function TeacherProfileSection({
 
       {/* ── MODAL: Remove Student Confirmation (Requested) ── */}
       {removeConfirmStudent && (
-        <div className="profile-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="profile-modal-box">
-            <div className="profile-modal-head">
+        <div className="profile-modal-overlay" role="dialog" aria-modal="true">
+          <div className="profile-modal-card">
+            <div className="profile-modal-header">
               <h3>Remove {removeConfirmStudent.studentName}?</h3>
-              <button type="button" onClick={() => setRemoveConfirmStudent(null)} className="profile-modal-close">✕</button>
+              <button type="button" onClick={() => setRemoveConfirmStudent(null)} className="profile-modal-close" aria-label="Close">✕</button>
             </div>
-            <div className="profile-modal-form">
-              <p className="profile-modal-help">
+            <div className="profile-modal-body">
+              <p>
                 Are you sure you want to remove <strong>{removeConfirmStudent.studentName}</strong> from this classroom?
                 Their completed activities and submissions will be archived.
               </p>
-              <div className="profile-modal-foot">
-                <button type="button" onClick={() => setRemoveConfirmStudent(null)} className="profile-btn-secondary">
-                  Cancel
-                </button>
-                <button type="button" onClick={handleRemoveStudentConfirm} className="profile-btn-danger">
-                  Remove Student
-                </button>
-              </div>
+            </div>
+            <div className="profile-modal-footer">
+              <button type="button" onClick={() => setRemoveConfirmStudent(null)} className="profile-btn-secondary">
+                Cancel
+              </button>
+              <button type="button" onClick={handleRemoveStudentConfirm} className="profile-btn-danger">
+                Remove Student
+              </button>
             </div>
           </div>
         </div>
